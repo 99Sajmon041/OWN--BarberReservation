@@ -1,11 +1,13 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Infrastructure.Database;
+using BarberReservation.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace BarberReservation.Infrastructure.Extensions;
@@ -55,10 +57,15 @@ public static class InfrastructureServiceRegistration
                 ValidIssuer = issuer,
                 ValidateAudience = true,
                 ValidAudience = audience,
+                NameClaimType = ClaimTypes.NameIdentifier,
+                RoleClaimType = ClaimTypes.Role,
                 ValidateLifetime = true,
+                RequireExpirationTime = true,
                 ClockSkew = TimeSpan.Zero
             };
         });
+
+        services.AddScoped<DefaultSeeder>();
 
         return services;
     }
