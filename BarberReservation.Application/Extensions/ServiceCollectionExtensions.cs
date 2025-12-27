@@ -1,4 +1,8 @@
-﻿using BarberReservation.Application.UserIdentity;
+﻿using BarberReservation.Application.Authorization.Command.Login;
+using BarberReservation.Application.Behaviors;
+using BarberReservation.Application.UserIdentity;
+using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BarberReservation.Application.Extensions;
@@ -7,8 +11,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<IUserContext, UserContext>();
-        services.AddHttpContextAccessor();
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        services.AddValidatorsFromAssembly(typeof(LoginCommandValidator).Assembly);
+
+        services.AddMediatR(typeof(LoginCommandHandler).Assembly);
 
         return services;
     }

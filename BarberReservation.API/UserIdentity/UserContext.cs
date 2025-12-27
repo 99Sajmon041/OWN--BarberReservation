@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BarberReservation.Application.UserIdentity;
 using System.Security.Claims;
 
-namespace BarberReservation.Application.UserIdentity;
+namespace BarberReservation.API.UserIdentity;
 
 public sealed class UserContext(IHttpContextAccessor httpContextAccessor) : IUserContext
 {
     public CurrentUser? GetCurrentUser()
     {
         var user = httpContextAccessor.HttpContext?.User;
-        if(user?.Identity is null || !user.Identity.IsAuthenticated)
+        if (user?.Identity is null || !user.Identity.IsAuthenticated)
             return null;
 
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -25,4 +25,3 @@ public sealed class UserContext(IHttpContextAccessor httpContextAccessor) : IUse
         return new CurrentUser(userId, email, roles);
     }
 }
- 

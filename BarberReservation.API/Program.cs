@@ -1,4 +1,5 @@
 using BarberReservation.API.MiddleWare;
+using BarberReservation.API.ServiceCollectionApiExtentions;
 using BarberReservation.Application.Extensions;
 using BarberReservation.Infrastructure.Extensions;
 using BarberReservation.Infrastructure.Seed;
@@ -17,6 +18,7 @@ builder.Services.AddTransient<ErrorHandlingMiddleware>();
 
 builder.Services.AddControllers();
 builder.Services.AddApplication();
+builder.Services.AddApi();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();

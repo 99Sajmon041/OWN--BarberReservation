@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BarberReservation.Application\BarberReservation.Application.csproj" />
     <ProjectReference Include="..\BarberReservation.Domain\BarberReservation.Domain.csproj" />
   </ItemGroup>
 

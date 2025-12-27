@@ -11,11 +11,19 @@
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="MediatR" Version="9.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BarberReservation.Domain\BarberReservation.Domain.csproj" />
-    <ProjectReference Include="..\BarberReservation.Shared\BarberReservation.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Authorization\Command\ForgotPassword\" />
+    <Folder Include="Authorization\Command\ChangePassword\" />
+    <Folder Include="Authorization\Command\ResetPassword\" />
+    <Folder Include="Authorization\Command\Register\" />
   </ItemGroup>
 
 </Project>

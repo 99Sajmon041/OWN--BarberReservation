@@ -1,6 +1,5 @@
 ﻿using BarberReservation.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.API.MiddleWare;
 

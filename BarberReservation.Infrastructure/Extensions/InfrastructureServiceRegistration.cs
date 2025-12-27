@@ -1,4 +1,5 @@
-﻿using BarberReservation.Domain.Entities;
+﻿using BarberReservation.Application.Authorization.Jwt;
+using BarberReservation.Domain.Entities;
 using BarberReservation.Infrastructure.Database;
 using BarberReservation.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -65,6 +66,7 @@ public static class InfrastructureServiceRegistration
             };
         });
 
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<DefaultSeeder>();
 
         return services;

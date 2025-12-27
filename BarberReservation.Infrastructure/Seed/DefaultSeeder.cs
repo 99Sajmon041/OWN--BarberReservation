@@ -35,6 +35,7 @@ public sealed class DefaultSeeder(IOptions<DefaultUser> options, UserManager<App
                 LastName = defaultUser.LastName,
                 UserName = defaultUser.Email,
                 Email = defaultUser.Email,
+                MustChangePassword = true,
                 IsActive = true
             };
 
