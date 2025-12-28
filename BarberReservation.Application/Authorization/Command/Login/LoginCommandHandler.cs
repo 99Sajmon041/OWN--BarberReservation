@@ -21,18 +21,20 @@ public sealed class LoginCommandHandler(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
-            logger.LogWarning("Login failed - user not found. Email: {Email}", request.Email);
+            logger.LogWarning("Login failed - user not found. Email: {Email}.", request.Email);
             throw new UnauthorizedException("Neplatné přihlašovací údaje.");
         }
 
         var loginResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
         if(!loginResult.Succeeded)
         {
-            logger.LogWarning("Login failed. Email: {Email}, LockedOut: {LockedOut}", request.Email, loginResult.IsLockedOut);
+            logger.LogWarning("Login failed. Email: {Email}, LockedOut: {LockedOut}.", request.Email, loginResult.IsLockedOut);
             throw new UnauthorizedException("Neplatné přihlašovací údaje.");
         }
 
         var (token, expiresAt) = await jwtTokenService.CreateTokenAsync(user, request.RememberMe);
+
+        logger.LogInformation("Login successful - Users e-mail: {UserEmail}, FullName: {UserFullName}.", request.Email, user.FullName);
 
         return new LoginResponse
         {

@@ -1,6 +1,8 @@
 using BarberReservation.API.MiddleWare;
 using BarberReservation.API.ServiceCollectionApiExtentions;
 using BarberReservation.Application.Extensions;
+using BarberReservation.Domain.Interfaces;
+using BarberReservation.Infrastructure.Email;
 using BarberReservation.Infrastructure.Extensions;
 using BarberReservation.Infrastructure.Seed;
 using Serilog;
@@ -20,6 +22,9 @@ builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddApi();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

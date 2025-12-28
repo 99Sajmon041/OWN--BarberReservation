@@ -1,6 +1,7 @@
 ﻿using BarberReservation.Application.Authorization.Jwt;
 using BarberReservation.Domain.Entities;
 using BarberReservation.Infrastructure.Database;
+using BarberReservation.Infrastructure.Options;
 using BarberReservation.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +22,8 @@ public static class InfrastructureServiceRegistration
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
         });
+
+        services.Configure<DefaultUser>(configuration.GetSection("DefaultUser"));
 
         services.AddIdentityCore<ApplicationUser>(opt =>
         {
