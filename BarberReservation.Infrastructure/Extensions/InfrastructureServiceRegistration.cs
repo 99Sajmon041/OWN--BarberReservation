@@ -1,7 +1,9 @@
 ﻿using BarberReservation.Application.Authorization.Jwt;
 using BarberReservation.Domain.Entities;
+using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
 using BarberReservation.Infrastructure.Options;
+using BarberReservation.Infrastructure.Repositories;
 using BarberReservation.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -68,6 +70,8 @@ public static class InfrastructureServiceRegistration
                 ClockSkew = TimeSpan.Zero
             };
         });
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<DefaultSeeder>();

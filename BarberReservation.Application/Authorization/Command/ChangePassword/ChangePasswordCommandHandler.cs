@@ -16,27 +16,21 @@ public sealed class ChangePasswordCommandHandler(
     {
         ct.ThrowIfCancellationRequested();
 
-        var appUser = userContext.GetCurrentUser();
-        if (appUser is null)
-        {
-            logger.LogWarning("Attempt to change password failed: current user not found in context.");
-            throw new UnauthorizedException("Uživatel není přihlášen.");
-        }
+        var current = userContext.GetCurrentUser() ?? throw new UnauthorizedException("Uživatel není přihlášen.");
 
-        var user = await userManager.FindByEmailAsync(appUser.Email);
-        if (user is null)
-        {
-            logger.LogWarning("Attempt to change password failed: user not found by email {UserEmail}.", appUser.Email);
-            throw new NotFoundException("Uživatel nebyl nalezen.");
-        }
+        var user = await userManager.FindByIdAsync(current.Id) ?? throw new UnauthorizedException("Uživatel nebyl nalezen.");
 
         var result = await userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
         if (!result.Succeeded)
         {
-            var errors = ErrorBuilder.SetErrorMessage(result.Errors);
-            logger.LogWarning("Attempt to change password failed for user {UserId}: {Errors}", user.Id, errors);
+            var errors = new Dictionary<string, string[]>
+            {
+                ["error"] = result.Errors.Select(e => e.Description).ToArray()
+            };
 
-            throw new DomainException(errors);
+            logger.LogWarning("Attempt to change password failed for user {UserId}. Errors: {Errors}", user.Id, string.Join(", ", errors["error"]));
+
+            throw new ValidationException("Změna hesla se nezdařila.", errors);
         }
 
         return Unit.Value;

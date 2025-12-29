@@ -1,11 +1,11 @@
-﻿using BarberReservation.Application;
-using BarberReservation.Application.Authorization.Command.ResetPassword;
-using BarberReservation.Application.Exceptions;
+﻿using BarberReservation.Application.Exceptions;
 using BarberReservation.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System.Net;
+
+namespace BarberReservation.Application.Authorization.Command.ResetPassword;
 
 public sealed class ResetPasswordCommandHandler(
     ILogger<ResetPasswordCommandHandler> logger,
@@ -20,8 +20,7 @@ public sealed class ResetPasswordCommandHandler(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
-            logger.LogInformation("Password reset failed (invalid/expired link) for email: {Email}.", request.Email);
-            throw new DomainException("Odkaz pro reset hesla je neplatný nebo vypršel.");
+            return Unit.Value;
         }
 
         var token = WebUtility.UrlDecode(request.Token);
@@ -29,11 +28,13 @@ public sealed class ResetPasswordCommandHandler(
         var result = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
         if (!result.Succeeded)
         {
-            var errors = ErrorBuilder.SetErrorMessage(result.Errors);
+            var errors = new Dictionary<string, string[]>
+            {
+                ["error"] = result.Errors.Select(e => e.Description).ToArray()
+            };
 
-            logger.LogWarning("Password reset failed for user {UserId} ({Email}). Errors: {Errors}.", user.Id, user.Email, errors);
-
-            throw new DomainException("Nepodařilo se změnit heslo.");
+            logger.LogWarning("Password reset failed for user {UserId} ({Email}).", user.Id, user.Email);
+            throw new ValidationException("Reset hesla se nezdařil.", errors);
         }
 
         logger.LogInformation("Password reset succeeded for user {UserId} ({Email}).", user.Id, user.Email);

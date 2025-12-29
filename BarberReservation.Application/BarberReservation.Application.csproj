@@ -19,4 +19,9 @@
     <ProjectReference Include="..\BarberReservation.Domain\BarberReservation.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="User\Commands\Admin\" />
+    <Folder Include="User\Queries\Admin\" />
+  </ItemGroup>
+
 </Project>
