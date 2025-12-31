@@ -3,6 +3,6 @@ using MediatR;
 
 namespace BarberReservation.Application.User.Commands.Self.DeactivateAccount;
 
-public sealed class DeactivateAccountCommand : IRequest, IRequireUser
+public sealed class DeactivateAccountCommand : IRequest, IRequireActiveUser
 {
 }

@@ -1,6 +1,7 @@
-﻿using BarberReservation.Application.User.Mapping;
-using BarberReservation.Application.Authorization.Command.Login;
+﻿using BarberReservation.Application.Authorization.Command.Login;
 using BarberReservation.Application.Behaviors;
+using BarberReservation.Application.User.Mapping;
+using BarberReservation.Application.UserIdentity;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddScoped<ICurrentAppUser, CurrentAppUser>();
+
         services.AddAutoMapper(cfg => { }, typeof(UserMappingProfile).Assembly);
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequireUserBehavior<,>));

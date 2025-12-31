@@ -1,6 +1,8 @@
-﻿using BarberReservation.Application.User.Commands.Self.DeactivateAccount;
+﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.User.Commands.Self.DeactivateAccount;
 using BarberReservation.Application.User.Queries.Self.GetProfile;
 using BarberReservation.Shared.Models.User.Common;
+using BarberReservation.Shared.Models.User.Self;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,9 +22,17 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost("deactivate")]
-        public async Task<IActionResult> Deactivate(CancellationToken ct)
+        public async Task<IActionResult> DeactivateProfile(CancellationToken ct)
         {
             await mediator.Send(new DeactivateAccountCommand(), ct);
+            return NoContent();
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserRequest request, CancellationToken ct)
+        {
+            var command = request.GetUpdateAccountCommand();
+            await mediator.Send(command, ct);
             return NoContent();
         }
     }

@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MediatR;
-using System.Xml.Linq;
 
 namespace BarberReservation.Application.Behaviors;
 

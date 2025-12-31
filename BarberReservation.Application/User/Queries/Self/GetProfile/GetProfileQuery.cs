@@ -4,6 +4,4 @@ using MediatR;
 
 namespace BarberReservation.Application.User.Queries.Self.GetProfile;
 
-public sealed class GetProfileQuery : IRequest<UserDto>, IRequireActiveUser
-{
-}
+public sealed class GetProfileQuery : IRequest<UserDto>, IRequireActiveUser { }

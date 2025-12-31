@@ -8,9 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.Application.Behaviors;
 
-internal class RequireUserBehavior<TRequest, TResponse>(
+public sealed class RequireUserBehavior<TRequest, TResponse>(
     ILogger<RequireUserBehavior<TRequest, TResponse>> logger,
     IUserContext userContext,
+    ICurrentAppUser currentAppUser,
     UserManager<ApplicationUser> userManager) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
@@ -37,6 +38,8 @@ internal class RequireUserBehavior<TRequest, TResponse>(
             logger.LogWarning("User with ID: {UserId} is not active. Request: {RequestType}", current.Id, typeof(TRequest).Name);
             throw new UnauthorizedException("Uživatel není aktivní.");
         }
+
+        currentAppUser.User = appUser;
 
         return await next();
     }
