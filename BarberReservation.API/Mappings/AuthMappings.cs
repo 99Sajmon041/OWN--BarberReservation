@@ -9,7 +9,7 @@ namespace BarberReservation.API.Mappings;
 
 public static class AuthMappings
 {
-    public static LoginCommand GetLoginCommand(this LoginRequest request)
+    public static LoginCommand ToLoginCommand(this LoginRequest request)
     {
         return new LoginCommand
         {
@@ -19,7 +19,7 @@ public static class AuthMappings
         };
     }
 
-    public static ChangePasswordCommand GetChangePasswordCommand(this ChangePasswordRequest request)
+    public static ChangePasswordCommand ToChangePasswordCommand(this ChangePasswordRequest request)
     {
         return new ChangePasswordCommand
         {
@@ -29,7 +29,7 @@ public static class AuthMappings
         };
     }
 
-    public static RegisterCommand GetRegisterCommand(this RegisterRequest request)
+    public static RegisterCommand ToRegisterCommand(this RegisterRequest request)
     {
         return new RegisterCommand
         {
@@ -41,7 +41,7 @@ public static class AuthMappings
         };
     }
 
-    public static ForgotPasswordCommand GetForgotPasswordCommand(this ForgotPasswordRequest request)
+    public static ForgotPasswordCommand ToForgotPasswordCommand(this ForgotPasswordRequest request)
     {
         return new ForgotPasswordCommand
         {
@@ -49,7 +49,7 @@ public static class AuthMappings
         };
     }
 
-    public static ResetPasswordCommand GetResetPasswordCommand(this ResetPasswordRequest request)
+    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request)
     {
         return new ResetPasswordCommand
         {

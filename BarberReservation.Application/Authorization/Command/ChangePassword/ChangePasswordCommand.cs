@@ -3,7 +3,7 @@ using MediatR;
 
 namespace BarberReservation.Application.Authorization.Command.ChangePassword;
 
-public sealed class ChangePasswordCommand : IRequest, IRequireActiveUser
+public sealed class ChangePasswordCommand : IRequest, IRequireActiveUser, IAllowMustChangePassword
 {
     public string OldPassword { get; init; } = default!;
     public string NewPassword { get; init; } = default!;

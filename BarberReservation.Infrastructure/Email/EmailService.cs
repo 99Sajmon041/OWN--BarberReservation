@@ -21,12 +21,12 @@ public sealed class EmailService(IOptions<EmailSettings> options, ILogger<EmailS
         var bodyBuilder = new StringBuilder();
         bodyBuilder.AppendLine("<p>Dobrý den,</p>");
         bodyBuilder.AppendLine();
-        bodyBuilder.AppendLine("<p>obdrželi jsme požadavek na obnovení hesla k Vašemu účtu v Barber-Shopu.</p>");
+        bodyBuilder.AppendLine("<p>Posíláme Vá informace k obnovení hesla k Vašemu účtu v Barber-Shopu.</p>");
         bodyBuilder.AppendLine("<p>Pro změnu hesla klikněte na tento odkaz:</p>");
         bodyBuilder.AppendLine();
         bodyBuilder.AppendLine($"<p><a href='{resetUrl}'>Obnovit heslo</a></p>");
         bodyBuilder.AppendLine();
-        bodyBuilder.AppendLine("<p>Pokud jste o změnu hesla nežádali, tento e-mail prosím ignorujte.</p>");
+        bodyBuilder.AppendLine("<p>Pokud jste o změnu hesla nežádali / nebo nemáte nově založený účet, tento e-mail prosím ignorujte.</p>");
         bodyBuilder.AppendLine();
         bodyBuilder.AppendLine("<p>S pozdravem<br/>Tým Barber-shop</p>");
 

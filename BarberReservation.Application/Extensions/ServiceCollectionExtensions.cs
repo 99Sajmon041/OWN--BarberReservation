@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddAutoMapper(cfg => { }, typeof(UserMappingProfile).Assembly);
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequireUserBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequirePasswordChangeBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         services.AddValidatorsFromAssembly(typeof(LoginCommandValidator).Assembly);

@@ -14,8 +14,9 @@ namespace BarberReservation.API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request, CancellationToken ct)
         {
-            var command = request.GetLoginCommand();
+            var command = request.ToLoginCommand();
             var result = await mediator.Send(command, ct);
+
             return Ok(result);
         }
 
@@ -23,8 +24,9 @@ namespace BarberReservation.API.Controllers
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
         {
-            var command = request.GetChangePasswordCommand();
+            var command = request.ToChangePasswordCommand();
             await mediator.Send(command, ct);
+
             return NoContent();
         }
 
@@ -32,8 +34,9 @@ namespace BarberReservation.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
-            var command = request.GetRegisterCommand();
+            var command = request.ToRegisterCommand();
             await mediator.Send(command, ct);
+
             return NoContent();
         }
 
@@ -41,8 +44,9 @@ namespace BarberReservation.API.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
         {
-            var command = request.GetForgotPasswordCommand();
+            var command = request.ToForgotPasswordCommand();
             await mediator.Send(command, ct);
+
             return NoContent();
         }
 
@@ -50,8 +54,9 @@ namespace BarberReservation.API.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
         {
-            var command = request.GetResetPasswordCommand();
+            var command = request.ToResetPasswordCommand();
             await mediator.Send(command, ct);
+
             return NoContent();
         }
     }

@@ -37,6 +37,20 @@ public sealed class ResetPasswordCommandHandler(
             throw new ValidationException("Reset hesla se nezdařil.", errors);
         }
 
+        user.MustChangePassword = false;
+        
+        var updateResult = await userManager.UpdateAsync(user);
+        if(!updateResult.Succeeded)
+        {
+            var errors = new Dictionary<string, string[]>
+            {
+                ["error"] = updateResult.Errors.Select(e => e.Description).ToArray()
+            };
+
+            logger.LogError("Update user after password reset failed. Error: {Errors}", string.Join(", ", errors["error"]));
+            throw new BarberReservation.Application.Exceptions.ValidationException("Operace selhala.", errors);
+        }
+
         logger.LogInformation("Password reset succeeded for user {UserId} ({Email}).", user.Id, user.Email);
 
         return Unit.Value;

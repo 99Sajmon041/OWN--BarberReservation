@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.User.Self;
+namespace BarberReservation.Shared.Models.User.Common;
 
 public sealed class UpdateUserRequest
 {
