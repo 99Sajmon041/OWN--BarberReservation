@@ -20,4 +20,9 @@
     <ProjectReference Include="..\BarberReservation.Domain\BarberReservation.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="HairdresserService\Commands\Self\" />
+    <Folder Include="HairdresserService\Queries\Self\" />
+  </ItemGroup>
+
 </Project>

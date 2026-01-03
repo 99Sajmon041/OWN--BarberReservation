@@ -3,6 +3,7 @@ using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Service;
 using MediatR;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.Application.Service.Queries.GetAllServices;
@@ -14,7 +15,7 @@ public sealed class GetAllServicesQueryHandler(
 {
     public async Task<PagedResult<ServiceDto>> Handle(GetAllServicesQuery request, CancellationToken ct)
     {
-        var (services, totalItemsCount) = await unitOfWork.ServiceRepository.GetAllAsync(
+        var (items, total) = await unitOfWork.ServiceRepository.GetAllAsync(
             request.Page,
             request.PageSize,
             request.IsActive,
@@ -23,16 +24,16 @@ public sealed class GetAllServicesQueryHandler(
             request.Desc,
             ct);
 
-        var servicesDto = mapper.Map<IReadOnlyList<ServiceDto>>(services);
+        var servicesDto = mapper.Map<IReadOnlyList<ServiceDto>>(items);
 
-        logger.LogInformation("Admin fetched filtered {ItemsCount} records of services.", totalItemsCount);
+        logger.LogInformation("Admin fetched filtered {ItemsCount} records of services.", items.Count);
 
         return new PagedResult<ServiceDto>
         {
             Items = servicesDto,
             Page = request.Page,
             PageSize = request.PageSize,
-            TotalItemsCount = totalItemsCount
+            TotalItemsCount = total
         };
     }
 }

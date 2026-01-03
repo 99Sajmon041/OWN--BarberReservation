@@ -2,7 +2,7 @@
 
 namespace BarberReservation.Shared.Models.Common;
 
-public sealed class PagedRequest
+public class PagedRequest
 {
     [Range(1, 150, ErrorMessage = "Zobrazená stránka musí být v rozmezí 1 - 150")]
     public int Page { get; set; } = 1;

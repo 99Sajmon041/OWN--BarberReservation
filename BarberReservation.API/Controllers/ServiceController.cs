@@ -45,7 +45,7 @@ namespace BarberReservation.API.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = nameof(UserRoles.Admin))]
-        public async Task<IActionResult> UpdateById([FromBody] UpsertServiceRequest request, [FromRoute] int id, CancellationToken ct)
+        public async Task<IActionResult> Update([FromBody] UpsertServiceRequest request, [FromRoute] int id, CancellationToken ct)
         {
             var command = request.ToUpdateServiceCommand(id);
             await mediator.Send(command, ct);

@@ -53,7 +53,7 @@ public sealed class ServiceRepository(BarberDbContext context) : IServiceReposit
             "description" => desc ? query.OrderByDescending(x => x.Description) : query.OrderBy(x => x.Description),
             "id" => desc ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id),
             "isactive" => desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
-            _ => query.OrderBy(x => x.Id)
+            _ => desc ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
         };
 
         var items = await query.
