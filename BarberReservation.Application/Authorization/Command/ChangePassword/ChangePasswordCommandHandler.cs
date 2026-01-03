@@ -16,7 +16,7 @@ public sealed class ChangePasswordCommandHandler(
     {
         ct.ThrowIfCancellationRequested();
 
-        var current = currentAppUser.User ?? throw new UnauthorizedException("Uživatel není přihlášen.");
+        var current = currentAppUser.User;
 
         var result = await userManager.ChangePasswordAsync(current, request.OldPassword, request.NewPassword);
         if (!result.Succeeded)

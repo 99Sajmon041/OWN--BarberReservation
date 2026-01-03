@@ -14,7 +14,7 @@ public sealed class GetProfileQueryHandler(
     {
         ct.ThrowIfCancellationRequested();
 
-        var appUser = currentAppUser.User ?? throw new UnauthorizedException("Uživatel není přihlášen.");
+        var appUser = currentAppUser.User;
 
         return Task.FromResult(mapper.Map<UserDto>(appUser));
     }

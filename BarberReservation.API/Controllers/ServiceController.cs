@@ -1,4 +1,5 @@
 ﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.Service.Commands.DeactivateService;
 using BarberReservation.Application.Service.Queries.GetAllServices;
 using BarberReservation.Application.Service.Queries.GetServiceById;
 using BarberReservation.Shared.Enums;
@@ -60,6 +61,14 @@ namespace BarberReservation.API.Controllers
             var id = await mediator.Send(command, ct);
 
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
+        }
+
+        [HttpPatch("{id}/deactivate")]
+        [Authorize(Roles = nameof(UserRoles.Admin))]
+        public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
+        {
+            await mediator.Send(new DeactivateServiceCommand(id), ct);
+            return NoContent();
         }
     }
 }

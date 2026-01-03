@@ -34,7 +34,7 @@ public sealed class PartlyUpdateUserCommandHandler(
             };
 
             logger.LogError("Failed to update user. Error: {Errors}", string.Join(", ", errors["error"]));
-            throw new ValidationException(errors);
+            throw new ValidationException("Úprava profilu se nezdařila.", errors);
         }
 
         logger.LogInformation("User with ID: {UserId} was updated successfuly.", user.Id);

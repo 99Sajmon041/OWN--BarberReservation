@@ -2,8 +2,5 @@
 
 public interface IHairdresserServiceRepository
 {
-
-    //GetByHairdresserAsync(...)
-    //UpsertAsync(...) (typicky pracovní hodiny se spíš přepisují)
-    //DeleteAsync(id) (hard)
+    Task<bool> ExistsByServiceIdAsync(int serviceId, CancellationToken ct);
 }

@@ -18,8 +18,7 @@ public sealed class UpdateAccountCommandHandler(
     {
         ct.ThrowIfCancellationRequested();
 
-        var user = currentAppUser.User
-            ?? throw new UnauthorizedException("Uživatel nebyl rozpoznán.");
+        var user = currentAppUser.User;
 
         mapper.Map(request, user);
 

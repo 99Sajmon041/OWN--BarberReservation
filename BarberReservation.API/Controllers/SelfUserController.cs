@@ -21,7 +21,7 @@ namespace BarberReservation.API.Controllers
             return Ok(result);
         }
 
-        [HttpPost("deactivate")]
+        [HttpPatch("deactivate")]
         public async Task<IActionResult> DeactivateProfile(CancellationToken ct)
         {
             await mediator.Send(new DeactivateAccountCommand(), ct);

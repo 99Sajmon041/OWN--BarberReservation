@@ -15,7 +15,7 @@ public sealed class RequirePasswordChangeBehavior<TRequest, TResponse>(ICurrentA
         if (request is IAllowMustChangePassword)
             return await next();
 
-        var user = currentAppUser.User ?? throw new UnauthorizedException("Uživatel nebyl rozpoznán.");
+        var user = currentAppUser.User;
 
         if(user.MustChangePassword)
             throw new ForbiddenException("Nejprve si musíte změnit heslo.");

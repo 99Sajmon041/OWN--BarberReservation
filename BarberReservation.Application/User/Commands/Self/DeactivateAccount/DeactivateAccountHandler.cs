@@ -16,7 +16,7 @@ public sealed class DeactivateAccountHandler(
     {
         ct.ThrowIfCancellationRequested();
 
-        var appUser = currentAppUser.User ?? throw new UnauthorizedException("Uživatel nebyl rozpoznán.");
+        var appUser = currentAppUser.User;
 
         appUser.IsActive = false;
 
@@ -27,7 +27,7 @@ public sealed class DeactivateAccountHandler(
             errors["error"] = updateResult.Errors.Select(e => e.Description).ToArray();
 
             logger.LogError("Deactivation of the user failed, error: {Errors}", string.Join(", ", errors["error"]));
-            throw new ValidationException("Operace selhala.", errors);
+            throw new ValidationException("Deaktivace účtu se nezdařila.", errors);
         }
 
         logger.LogInformation("User with ID: {UserId} was deactivated successfully.", appUser.Id);
