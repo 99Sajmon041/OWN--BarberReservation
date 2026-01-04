@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <Folder Include="HairdresserService\Commands\Self\" />
-    <Folder Include="HairdresserService\Queries\Self\" />
   </ItemGroup>
 
 </Project>

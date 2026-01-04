@@ -3,7 +3,6 @@ using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Service;
 using MediatR;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.Application.Service.Queries.GetAllServices;

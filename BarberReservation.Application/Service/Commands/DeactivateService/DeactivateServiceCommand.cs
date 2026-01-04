@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using BarberReservation.Application.Common.Validation.IdValidatikon;
+using MediatR;
 
 namespace BarberReservation.Application.Service.Commands.DeactivateService;
 
-public sealed class DeactivateServiceCommand(int id) : IRequest
+public sealed class DeactivateServiceCommand(int id) : IRequest, IHasId
 {
     public int Id { get; init; } = id;
 }

@@ -1,16 +1,15 @@
-﻿using BarberReservation.Application.Common.PagedResultSettings;
+﻿using BarberReservation.Application.Common.Validation.PagingValidation;
+using BarberReservation.Application.Common.Validation.SearchValidation;
+using BarberReservation.Application.HairdresserService.Queries.Admin.GetAllHairdresserServices;
 using FluentValidation;
 
 namespace BarberReservation.Application.Service.Queries.GetAllServices;
 
-public sealed class GetAllServicesQueryValidator : AbstractValidator<GetAllServicesQuery>
+public sealed class GetAllServicesQueryValidator : AbstractValidator<GetAllServicesQuery> 
 {
     public GetAllServicesQueryValidator()
     {
-        RuleFor(x => x.Page)
-            .InclusiveBetween(PageSettings.MinimumPage, PageSettings.MaximumPage);
-
-        RuleFor(x => x.PageSize)
-            .InclusiveBetween(PageSettings.MinimumPageSize, PageSettings.MaximumPageSize);
+        Include(new PagingValidator<GetAllServicesQuery>());
+        Include(new SearchValidator<GetAllServicesQuery>());
     }
 }

@@ -5,7 +5,28 @@ namespace BarberReservation.Domain.Interfaces;
 public interface IHairdresserServiceRepository
 {
     Task<bool> ExistsByServiceIdAsync(int serviceId, CancellationToken ct);
-    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(int page, int pageSize, string? hairdresserId, int? serviceId, string? sortBy, bool desc, bool? isActive, CancellationToken ct);
     Task<HairdresserService?> GetByIdForAdminAsync(int id, CancellationToken ct);
+    bool Deactivate(HairdresserService hairdresserService);
     void Delete(HairdresserService hairdresserService);
+    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(
+        int page,
+        int pageSize,
+        string? hairdresserId,
+        int? serviceId,
+        string? search,
+        string? sortBy,
+        bool desc,
+        bool? isActive,
+        CancellationToken ct);
+
+    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(
+        int page,
+        int pageSize,
+        string userId,
+        int? serviceId,
+        string? search,
+        string? sortBy,
+        bool desc,
+        bool? isActive,
+        CancellationToken ct);
 }

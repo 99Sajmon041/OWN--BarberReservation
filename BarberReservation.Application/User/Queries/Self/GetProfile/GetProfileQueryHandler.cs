@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using BarberReservation.Application.Exceptions;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Shared.Models.User.Common;
 using MediatR;

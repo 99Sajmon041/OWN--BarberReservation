@@ -1,9 +1,10 @@
-﻿using BarberReservation.Shared.Models.HairdresserService;
+﻿using BarberReservation.Application.Common.Validation.IdValidatikon;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 
 namespace BarberReservation.Application.HairdresserService.Queries.Admin.GetHairdresserService;
 
-public sealed class GetHairdresserServiceByIdQueryQuery(int id) : IRequest<HairdresserServiceDto>
+public sealed class GetHairdresserServiceByIdQueryQuery(int id) : IRequest<HairdresserServiceDto>, IHasId
 {
     public int Id { get; init; } = id;
 }

@@ -7,6 +7,5 @@ public interface IUnitOfWork
     IReservationRepository ReservationRepository { get; }
     IHairdresserTimeOffRepository HairdresserTimeOffRepository { get; }
     IHairdresserWorkingHoursRepository HairdresserWorkingHoursRepository { get; }
-
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

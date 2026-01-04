@@ -2,7 +2,7 @@
 
 namespace BarberReservation.Application.Service.Validation;
 
-public sealed class ServiceUpsertRules
+public static class ServiceUpsertRules
 {
     public static void Apply<T>(IRuleBuilderInitial<T, string> name, IRuleBuilderInitial<T, string> description)
     {

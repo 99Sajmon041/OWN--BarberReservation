@@ -17,14 +17,15 @@ namespace BarberReservation.API.Controllers
     public class AdminHairdresserController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] HairdresserServicePagedRequest request, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] HairdresserAdminServicePagedRequest request, CancellationToken ct)
         {
-            var query = new GetAllHairdresserServicesQuery
+            var query = new GetAllHairdressersServicesQuery
             {
                 Page = request.Page,
                 PageSize = request.PageSize,
                 HairdresserId = request.HairdresserId,
                 ServiceId = request.ServiceId,
+                Search = request.Search,
                 IsActive = request.IsActive,
                 SortBy = request.SortBy,
                 Desc = request.Desc

@@ -25,11 +25,12 @@ public sealed class DeactivateServiceCommandHandler(
             throw new ConflictException("Služba nelze deaktivovat, je využívaná kadeřníky.");
         }
 
-        await unitOfWork.ServiceRepository.DeactivateAsync(service, ct);
-
-        await unitOfWork.SaveChangesAsync(ct);
-
-        logger.LogInformation("Service with ID: {ServiceId} was deactivated.", request.Id);
+        var changed = unitOfWork.ServiceRepository.Deactivate(service);
+        if (changed)
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+            logger.LogInformation("Service with ID: {ServiceId} was deactivated.", request.Id);
+        }
 
         return Unit.Value;
     }

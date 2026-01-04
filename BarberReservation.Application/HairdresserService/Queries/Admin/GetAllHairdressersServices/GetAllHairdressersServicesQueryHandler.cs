@@ -10,15 +10,16 @@ namespace BarberReservation.Application.HairdresserService.Queries.Admin.GetAllH
 public sealed class GetAllHairdressersServicesQueryHandler(
     ILogger<GetAllHairdressersServicesQueryHandler> logger,
     IUnitOfWork unitOfWork,
-    IMapper mapper) : IRequestHandler<GetAllHairdresserServicesQuery, PagedResult<HairdresserServiceDto>>
+    IMapper mapper) : IRequestHandler<GetAllHairdressersServicesQuery, PagedResult<HairdresserServiceDto>>
 {
-    public async Task<PagedResult<HairdresserServiceDto>> Handle(GetAllHairdresserServicesQuery request, CancellationToken ct)
+    public async Task<PagedResult<HairdresserServiceDto>> Handle(GetAllHairdressersServicesQuery request, CancellationToken ct)
     {
         var (items, total) = await unitOfWork.HairdresserServiceRepository.GetAllPagedForAdminAsync(
             request.Page,
             request.PageSize,
             request.HairdresserId,
             request.ServiceId,
+            request.Search,
             request.SortBy,
             request.Desc,
             request.IsActive,

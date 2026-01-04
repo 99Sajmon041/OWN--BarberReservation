@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;
 
-public sealed class ServiceRepository(BarberDbContext context) : IServiceRepository
+public sealed class ServiceRepository(BarberDbContext context) : BaseRepository, IServiceRepository
 {
     private readonly BarberDbContext _context = context;
 
@@ -14,10 +14,9 @@ public sealed class ServiceRepository(BarberDbContext context) : IServiceReposit
         await _context.Services.AddAsync(service, ct);
     }
 
-    public Task DeactivateAsync(Service service, CancellationToken ct)
+    public bool Deactivate(Service service)
     {
-        service.IsActive = false;
-        return Task.CompletedTask;
+        return TryDeactivate(service);
     }
 
     public async Task<Service?> GetByIdAsync(int id, CancellationToken ct)
@@ -27,12 +26,9 @@ public sealed class ServiceRepository(BarberDbContext context) : IServiceReposit
 
     public async Task<(IReadOnlyList<Service>, int)> GetAllAsync(int page, int pageSize, bool? isActive, string? search, string? sortBy, bool desc, CancellationToken ct)
     {
-        page = page <= 0 ? 1 : page;
-        pageSize = pageSize <= 0 ? 10 : pageSize;
         search ??= string.Empty;
-        sortBy ??= string.Empty;
 
-        IQueryable<Service> query = _context.Services.AsNoTracking();
+        var query = _context.Services.AsNoTracking();
 
         if(isActive.HasValue)
             query = query.Where(x => x.IsActive == isActive.Value);

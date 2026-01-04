@@ -19,14 +19,12 @@ public sealed class DeactivateHairdresserServiceCommandHandler(
             throw new NotFoundException("Služba kadeřníka nebyla nalezena.");
         }
 
-        if (!hairdresserService.IsActive)
-            return Unit.Value;
-
-        hairdresserService.IsActive = false;
-
-        await unitOfWork.SaveChangesAsync(ct);
-
-        logger.LogInformation("Hairdresser service with ID: {HairdresserServiceId} was deactivated.", request.Id);
+        var changed = unitOfWork.HairdresserServiceRepository.Deactivate(hairdresserService);
+        if(changed)
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+            logger.LogInformation("Hairdresser service with ID: {HairdresserServiceId} was deactivated.", request.Id);
+        }
 
         return Unit.Value;
     }

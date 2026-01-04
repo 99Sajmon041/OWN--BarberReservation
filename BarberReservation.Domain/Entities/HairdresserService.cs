@@ -1,6 +1,8 @@
-﻿namespace BarberReservation.Domain.Entities;
+﻿using BarberReservation.Domain.Interfaces;
 
-public sealed class HairdresserService
+namespace BarberReservation.Domain.Entities;
+
+public sealed class HairdresserService : IActivatable
 {
     public int Id { get; set; }
     public ApplicationUser Hairdresser { get; set; } = default!;
