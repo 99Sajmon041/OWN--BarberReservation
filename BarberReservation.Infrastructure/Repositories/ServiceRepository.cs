@@ -59,4 +59,9 @@ public sealed class ServiceRepository(BarberDbContext context) : BaseRepository,
 
         return (items, total);
     }
+
+    public async Task<bool> ExistsAsync(int id, CancellationToken ct)
+    {
+        return await _context.Services.AnyAsync(x => x.Id == id, ct);
+    }
 }

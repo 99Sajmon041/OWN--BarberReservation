@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Common.Validation.IdValidatikon;
+﻿using BarberReservation.Application.Common.Validation.IdValidation;
 using MediatR;
 
 namespace BarberReservation.Application.HairdresserService.Commands.Admin.NewFolder;

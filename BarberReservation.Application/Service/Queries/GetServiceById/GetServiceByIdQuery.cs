@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Common.Validation.IdValidatikon;
+﻿using BarberReservation.Application.Common.Validation.IdValidation;
 using BarberReservation.Shared.Models.Service;
 using MediatR;
 

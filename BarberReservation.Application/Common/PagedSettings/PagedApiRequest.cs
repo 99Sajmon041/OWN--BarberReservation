@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Application.Common.Validation.PagingValidation;
 
-namespace BarberReservation.Application.Common.PagedResultSettings;
+namespace BarberReservation.Application.Common.PagedSettings;
 
 public class PagedApiRequest : IHasPaging
 {

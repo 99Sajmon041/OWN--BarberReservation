@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Common.Validation.IdValidatikon;
+﻿using BarberReservation.Application.Common.Validation.IdValidation;
 using BarberReservation.Application.Service.Validation;
 
 namespace BarberReservation.Application.Service.Commands.PartlyUpdateService;

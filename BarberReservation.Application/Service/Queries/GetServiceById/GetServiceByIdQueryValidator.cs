@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Common.Validation.IdValidatikon;
+﻿using BarberReservation.Application.Common.Validation.IdValidation;
 
 namespace BarberReservation.Application.Service.Queries.GetServiceById;
 

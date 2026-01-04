@@ -1,5 +1,5 @@
 ﻿
-namespace BarberReservation.Application.Common.PagedResultSettings;
+namespace BarberReservation.Application.Common.PagedSettings;
 
 public static class PageSettings
 {

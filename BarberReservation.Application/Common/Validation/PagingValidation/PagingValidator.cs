@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Common.PagedResultSettings;
+﻿using BarberReservation.Application.Common.PagedSettings;
 using FluentValidation;
 
 namespace BarberReservation.Application.Common.Validation.PagingValidation;

@@ -6,6 +6,9 @@ public interface IHairdresserServiceRepository
 {
     Task<bool> ExistsByServiceIdAsync(int serviceId, CancellationToken ct);
     Task<HairdresserService?> GetByIdForAdminAsync(int id, CancellationToken ct);
+    Task<HairdresserService?> GetByIdForCurrentUserAsync(int id, string hairdresserId, CancellationToken ct);
+    Task CreateAsync(HairdresserService hairdresserService, CancellationToken ct);
+    Task<bool> ExistsActiveWithSameServiceAsync(string hairdresserId, int serviceId, CancellationToken ct);
     bool Deactivate(HairdresserService hairdresserService);
     void Delete(HairdresserService hairdresserService);
     Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(

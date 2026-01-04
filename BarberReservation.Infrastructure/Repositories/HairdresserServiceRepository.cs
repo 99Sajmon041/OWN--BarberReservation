@@ -29,6 +29,25 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
+    public async Task<HairdresserService?> GetByIdForCurrentUserAsync(int id, string hairdresserId, CancellationToken ct)
+    {
+        return await _context
+            .HairdresserServices
+            .Include(x => x.Service)
+            .Include(x => x.Hairdresser)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
+    }
+
+    public async Task CreateAsync(HairdresserService hairdresserService, CancellationToken ct)
+    {
+        await _context.HairdresserServices.AddAsync(hairdresserService, ct);
+    }
+    public async Task<bool> ExistsActiveWithSameServiceAsync(string hairdresserId, int serviceId, CancellationToken ct)
+    {
+        return await _context.HairdresserServices.AnyAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive, ct);
+    }
+
     public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(
         int page,
         int pageSize,

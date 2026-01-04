@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Common.PagedResultSettings;
+﻿using BarberReservation.Application.Common.PagedSettings;
 using BarberReservation.Application.Common.Validation.SearchValidation;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.HairdresserService;

@@ -1,4 +1,6 @@
-﻿using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
+﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
+using BarberReservation.Application.HairdresserService.Queries.Self.GetSelfHairdressersService;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.HairdresserService;
@@ -29,6 +31,21 @@ namespace BarberReservation.API.Controllers
 
             var result = await mediator.Send(query, ct);
             return Ok(result);
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<HairdresserServiceDto>> GetById(int id, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetSelfHairdresserServiceByIdQuery(id), ct);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateHairdresserServiceRequest request, CancellationToken ct)
+        {
+            var command = request.ToCreateHairdresserServiceSelfCommand();
+            var id = await mediator.Send(command, ct);
+            return CreatedAtAction(nameof(GetById), new { id }, new { id });
         }
     }
 }
