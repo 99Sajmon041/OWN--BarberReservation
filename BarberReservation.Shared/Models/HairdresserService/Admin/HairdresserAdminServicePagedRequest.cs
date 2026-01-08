@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BarberReservation.Shared.Models.Common;
+using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.Common;
+namespace BarberReservation.Shared.Models.HairdresserService.Admin;
 
 public sealed class HairdresserAdminServicePagedRequest : PagedRequest
 {
@@ -9,4 +10,5 @@ public sealed class HairdresserAdminServicePagedRequest : PagedRequest
 
     [Range(1, int.MaxValue, ErrorMessage = "ID služby musí být větší než 0.")]
     public int? ServiceId { get; set; }
+    public bool? IsActive { get; set; }
 }

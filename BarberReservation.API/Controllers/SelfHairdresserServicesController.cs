@@ -1,9 +1,10 @@
 ﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.HairdresserService.Commands.Self.DeactivateSelfHairdresserService;
 using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
 using BarberReservation.Application.HairdresserService.Queries.Self.GetSelfHairdressersService;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService;
+using BarberReservation.Shared.Models.HairdresserService.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,22 +14,11 @@ namespace BarberReservation.API.Controllers
     [Authorize(Roles = nameof(UserRoles.Hairdresser))]
     [Route("api/hairdresser-services")]
     [ApiController]
-    public class HairdresserController(IMediator mediator) : ControllerBase
+    public class SelfHairdresserServicesController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] HairdresserSelfServicePagedRequest request, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] GetAllSelfHairdressersServicesQuery query, CancellationToken ct)
         {
-            var query = new GetAllSelfHairdressersServicesQuery
-            {
-                Page = request.Page,
-                PageSize = request.PageSize,
-                ServiceId = request.ServiceId,
-                Search = request.Search,
-                IsActive = request.IsActive,
-                SortBy = request.SortBy,
-                Desc = request.Desc
-            };
-
             var result = await mediator.Send(query, ct);
             return Ok(result);
         }
@@ -46,6 +36,13 @@ namespace BarberReservation.API.Controllers
             var command = request.ToCreateHairdresserServiceSelfCommand();
             var id = await mediator.Send(command, ct);
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
+        }
+
+        [HttpPatch("{id:int}/deactivate")]
+        public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
+        {
+            await mediator.Send(new DeactivateSelfHairdresserServiceCommand(id), ct);
+            return NoContent();
         }
     }
 }

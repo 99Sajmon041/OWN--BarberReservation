@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService;
+using BarberReservation.Shared.Models.HairdresserService.Admin;
+using BarberReservation.Shared.Models.HairdresserService.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -14,16 +15,18 @@ public sealed class GetAllHairdressersServicesQueryHandler(
 {
     public async Task<PagedResult<HairdresserServiceDto>> Handle(GetAllHairdressersServicesQuery request, CancellationToken ct)
     {
-        var (items, total) = await unitOfWork.HairdresserServiceRepository.GetAllPagedForAdminAsync(
-            request.Page,
-            request.PageSize,
-            request.HairdresserId,
-            request.ServiceId,
-            request.Search,
-            request.SortBy,
-            request.Desc,
-            request.IsActive,
-            ct);
+        var (items, total) = await unitOfWork.HairdresserServiceRepository.GetAllPagedForAdminAsync(new HairdresserAdminServicePagedRequest
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+            Search = request.Search,
+            HairdresserId = request.HairdresserId,
+            ServiceId = request.ServiceId,
+            IsActive = request.IsActive,
+            SortBy = request.SortBy,
+            Desc = request.Desc
+        },
+        ct);
 
         var hairdresserServicesDtos = mapper.Map<IReadOnlyList<HairdresserServiceDto>>(items);
 

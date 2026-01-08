@@ -1,6 +1,8 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
+using BarberReservation.Shared.Models.Common;
+using BarberReservation.Shared.Models.Service;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;
@@ -24,37 +26,35 @@ public sealed class ServiceRepository(BarberDbContext context) : BaseRepository,
         return await _context.Services.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
-    public async Task<(IReadOnlyList<Service>, int)> GetAllAsync(int page, int pageSize, bool? isActive, string? search, string? sortBy, bool desc, CancellationToken ct)
+    public async Task<(IReadOnlyList<Service>, int)> GetAllAsync(ServicePageRequest request, CancellationToken ct)
     {
-        search ??= string.Empty;
-
         var query = _context.Services.AsNoTracking();
 
-        if(isActive.HasValue)
-            query = query.Where(x => x.IsActive == isActive.Value);
+        if (request.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == request.IsActive.Value);
 
-        if(!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var term = search.Trim();
-            query = query.Where(x => x.Name.Contains(term) || x.Description.Contains(term));
+            var term = request.Search.Trim();
+            query = query.Where(x => x.Name.Contains(term) || (x.Description != null &&  x.Description.Contains(term)));
         }
 
         var total = await query.CountAsync(ct);
 
-        sortBy = string.IsNullOrWhiteSpace(sortBy) ? "id" : sortBy.Trim().ToLowerInvariant();
+        var sortBy = string.IsNullOrWhiteSpace(request.SortBy) ? "id" : request.SortBy.Trim().ToLowerInvariant();
 
         query = sortBy switch
         {
-            "name" => desc ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
-            "description" => desc ? query.OrderByDescending(x => x.Description) : query.OrderBy(x => x.Description),
-            "id" => desc ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id),
-            "isactive" => desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
-            _ => desc ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+            "name" => request.Desc ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
+            "description" => request.Desc ? query.OrderByDescending(x => x.Description) : query.OrderBy(x => x.Description),
+            "id" => request.Desc ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id),
+            "isactive" => request.Desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
+            _ => request.Desc ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
         };
 
         var items = await query.
-            Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(ct);
 
         return (items, total);

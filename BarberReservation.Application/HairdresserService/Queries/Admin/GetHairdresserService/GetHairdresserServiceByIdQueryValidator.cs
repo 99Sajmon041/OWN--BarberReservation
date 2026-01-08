@@ -3,4 +3,4 @@ using FluentValidation;
 
 namespace BarberReservation.Application.HairdresserService.Queries.Admin.GetHairdresserService;
 
-public sealed class GetHairdresserServiceByIdQueryValidator : IdValidator<GetHairdresserServiceByIdQueryQuery> { }
+public sealed class GetHairdresserServiceByIdQueryValidator : IdValidator<GetHairdresserServiceByIdQuery> { }

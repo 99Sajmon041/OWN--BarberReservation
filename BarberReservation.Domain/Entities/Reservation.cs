@@ -15,9 +15,9 @@ public sealed class Reservation
     public DateTime CreatedAt { get; set; }
     public DateTime? CanceledAt { get; set; }
     public ReservationCanceledBy? CanceledBy { get; set; }
-    public string? CanceledReason  { get; set; }
-    public ApplicationUser Customer { get; set; } = default!;
-    public string CustomerId { get; set; } = default!;
+    public CanceledReason? CanceledReason  { get; set; }
+    public ApplicationUser? Customer { get; set; }
+    public string? CustomerId { get; set; }
     public string CustomerName { get; set; } = default!;
     public string CustomerEmail { get; set; } = default!;
     public string CustomerPhone { get; set; } = default!;

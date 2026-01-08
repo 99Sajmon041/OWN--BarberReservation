@@ -1,6 +1,8 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
+using BarberReservation.Shared.Models.HairdresserService.Admin;
+using BarberReservation.Shared.Models.HairdresserService.Self;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;
@@ -35,8 +37,12 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
             .HairdresserServices
             .Include(x => x.Service)
             .Include(x => x.Hairdresser)
-            .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
+    }
+
+    public bool Deactivate(HairdresserService hairdresserService)
+    {
+        return TryDeactivate(hairdresserService);
     }
 
     public async Task CreateAsync(HairdresserService hairdresserService, CancellationToken ct)
@@ -48,115 +54,88 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
         return await _context.HairdresserServices.AnyAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive, ct);
     }
 
-    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(
-        int page,
-        int pageSize,
-        string? hairdresserId,
-        int? serviceId,
-        string? search,
-        string? sortBy, 
-        bool desc,
-        bool? isActive, 
-        CancellationToken ct)
+    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(HairdresserAdminServicePagedRequest request, CancellationToken ct)
     {
-        search ??= string.Empty;
-
         var query = _context.HairdresserServices
             .Include(x => x.Hairdresser)
             .Include(x => x.Service)
             .AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var term = search.Trim();
-            query = query.Where(x => x.Service.Name.Contains(term));
+            var term = request.Search.Trim();
+            query = query.Where(x => x.Service.Name.Contains(term) || (x.Hairdresser.FirstName.Contains(term) || x.Hairdresser.LastName.Contains(term)));
         }
 
-        if (!string.IsNullOrWhiteSpace(hairdresserId))
-            query = query.Where(x => x.HairdresserId == hairdresserId);
+        if (!string.IsNullOrWhiteSpace(request.HairdresserId))
+            query = query.Where(x => x.HairdresserId == request.HairdresserId);
 
-        if (serviceId is not null)
-            query = query.Where(x => x.ServiceId == serviceId);
+        if (request.ServiceId is not null)
+            query = query.Where(x => x.ServiceId == request.ServiceId);
 
-        if (isActive.HasValue)
-            query = query.Where(x => x.IsActive == isActive.Value);
+        if (request.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == request.IsActive.Value);
         else
             query = query.Where(x => x.IsActive == true);
 
         var total = await query.CountAsync(ct);
 
-        sortBy = string.IsNullOrWhiteSpace(sortBy) ? "price" : sortBy.Trim().ToLowerInvariant();
+        var sortBy = string.IsNullOrWhiteSpace(request.SortBy) ? "price" : request.SortBy.Trim().ToLowerInvariant();
 
         query = sortBy switch
         {
-            "isactive" => desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
-            "durationminutes" => desc ? query.OrderByDescending(x => x.DurationMinutes): query.OrderBy(x => x.DurationMinutes),
-            "servicename" => desc ? query.OrderByDescending(x => x.Service.Name) : query.OrderBy(x => x.Service.Name),
-            "hairdresserlastname" => desc ? query.OrderByDescending(x => x.Hairdresser.LastName) : query.OrderBy(x => x.Hairdresser.LastName),
-            _ => desc ? query.OrderByDescending(x => x.Price) : query.OrderBy(x => x.Price)
+            "isactive" => request.Desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
+            "durationminutes" => request.Desc ? query.OrderByDescending(x => x.DurationMinutes): query.OrderBy(x => x.DurationMinutes),
+            "servicename" => request.Desc ? query.OrderByDescending(x => x.Service.Name) : query.OrderBy(x => x.Service.Name),
+            "hairdresserlastname" => request.Desc ? query.OrderByDescending(x => x.Hairdresser.LastName) : query.OrderBy(x => x.Hairdresser.LastName),
+            _ => request.Desc ? query.OrderByDescending(x => x.Price) : query.OrderBy(x => x.Price)
         };
 
         var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(ct);
 
         return (items, total);
     }
 
-    public bool Deactivate(HairdresserService hairdresserService)
+    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(HairdresserSelfServicePagedRequest request, string userId, CancellationToken ct)
     {
-        return TryDeactivate(hairdresserService);
-    }
-
-    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(
-        int page,
-        int pageSize,
-        string userId,
-        int? serviceId,
-        string? search,
-        string? sortBy,
-        bool desc,
-        bool? isActive,
-        CancellationToken ct)
-    {
-        search ??= string.Empty;
-
         var query = _context.HairdresserServices
             .Include(x => x.Service)
             .Include(x => x.Hairdresser)
             .Where(x => x.HairdresserId == userId)
             .AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var term = search.Trim();
+            var term = request.Search.Trim();
             query = query.Where(x => x.Service.Name.Contains(term));
         }
 
-        if (serviceId is not null)
-            query = query.Where(x => x.ServiceId == serviceId);
+        if (request.ServiceId is not null)
+            query = query.Where(x => x.ServiceId == request.ServiceId);
 
-        if (isActive.HasValue)
-            query = query.Where(x => x.IsActive == isActive.Value);
+        if (request.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == request.IsActive.Value);
         else
             query = query.Where(x => x.IsActive == true);
 
         var total = await query.CountAsync(ct);
 
-        sortBy = string.IsNullOrWhiteSpace(sortBy) ? "price" : sortBy.Trim().ToLowerInvariant();
+        var sortBy = string.IsNullOrWhiteSpace(request.SortBy) ? "price" : request.SortBy.Trim().ToLowerInvariant();
 
         query = sortBy switch
         {
-            "isactive" => desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
-            "durationminutes" => desc ? query.OrderByDescending(x => x.DurationMinutes) : query.OrderBy(x => x.DurationMinutes),
-            "servicename" => desc ? query.OrderByDescending(x => x.Service.Name) : query.OrderBy(x => x.Service.Name),
-            _ => desc ? query.OrderByDescending(x => x.Price) : query.OrderBy(x => x.Price)
+            "isactive" => request.Desc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
+            "durationminutes" => request.Desc ? query.OrderByDescending(x => x.DurationMinutes) : query.OrderBy(x => x.DurationMinutes),
+            "servicename" => request.Desc ? query.OrderByDescending(x => x.Service.Name) : query.OrderBy(x => x.Service.Name),
+            _ => request.Desc ? query.OrderByDescending(x => x.Price) : query.OrderBy(x => x.Price)
         };
 
         var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(ct);
 
         return (items, total);

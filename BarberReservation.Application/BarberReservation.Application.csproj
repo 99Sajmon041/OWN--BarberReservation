@@ -18,6 +18,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BarberReservation.Domain\BarberReservation.Domain.csproj" />
+    <ProjectReference Include="..\BarberReservation.Shared\BarberReservation.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Reservation\Commands\Admin\" />
+    <Folder Include="Reservation\Commands\Hairdresser\" />
+    <Folder Include="Reservation\Commands\Self\" />
+    <Folder Include="Reservation\Queries\Hairdresser\" />
+    <Folder Include="Reservation\Queries\Self\" />
   </ItemGroup>
 
 </Project>

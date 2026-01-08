@@ -1,6 +1,5 @@
 ﻿using BarberReservation.API.Mappings;
 using BarberReservation.Application.User.Commands.Admin.DeactivateUser;
-using BarberReservation.Application.User.Commands.Admin.PartlyUpdateUser;
 using BarberReservation.Application.User.Queries.Admin.GetAllUsers;
 using BarberReservation.Application.User.Queries.Admin.GetUserById;
 using BarberReservation.Shared.Enums;
@@ -27,7 +26,7 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] PagedRequest request, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] UserPageRequest request, CancellationToken ct)
         {
             var result = await mediator.Send(new GetAllUsersQuery
             {

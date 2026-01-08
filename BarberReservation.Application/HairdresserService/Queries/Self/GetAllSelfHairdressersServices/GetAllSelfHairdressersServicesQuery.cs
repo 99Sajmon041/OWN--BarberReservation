@@ -2,7 +2,7 @@
 using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Common.Validation.SearchValidation;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService;
+using BarberReservation.Shared.Models.HairdresserService.Common;
 using MediatR;
 
 namespace BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;

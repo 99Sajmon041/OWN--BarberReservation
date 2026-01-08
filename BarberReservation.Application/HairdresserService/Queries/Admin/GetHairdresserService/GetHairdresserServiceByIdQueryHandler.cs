@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.Exceptions;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.HairdresserService;
+using BarberReservation.Shared.Models.HairdresserService.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -10,9 +10,9 @@ namespace BarberReservation.Application.HairdresserService.Queries.Admin.GetHair
 public sealed class GetHairdresserServiceByIdQueryHandler(
     ILogger<GetHairdresserServiceByIdQueryHandler> logger,
     IUnitOfWork unitOfWork,
-    IMapper mapper) : IRequestHandler<GetHairdresserServiceByIdQueryQuery, HairdresserServiceDto>
+    IMapper mapper) : IRequestHandler<GetHairdresserServiceByIdQuery, HairdresserServiceDto>
 {
-    public async Task<HairdresserServiceDto> Handle(GetHairdresserServiceByIdQueryQuery request, CancellationToken ct)
+    public async Task<HairdresserServiceDto> Handle(GetHairdresserServiceByIdQuery request, CancellationToken ct)
     {
         var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForAdminAsync(request.Id, ct);
         if(hairdresserService is null)

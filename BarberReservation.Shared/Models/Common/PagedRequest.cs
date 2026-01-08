@@ -9,7 +9,6 @@ public class PagedRequest
 
     [Range(5, 50, ErrorMessage = "Výsledků na stránku musí být v rozmezí 5 - 50")]
     public int PageSize { get; set; } = 20;
-    public bool? IsActive { get; set; }
 
     [StringLength(120, MinimumLength = 0, ErrorMessage = "Vyhledávání musí mít 0–120 znaků.")]
     public string? Search { get; set; }

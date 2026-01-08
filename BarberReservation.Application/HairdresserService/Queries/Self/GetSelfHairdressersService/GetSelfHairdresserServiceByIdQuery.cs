@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Common.Validation.IdValidation;
-using BarberReservation.Shared.Models.HairdresserService;
+using BarberReservation.Shared.Models.HairdresserService.Common;
 using MediatR;
 
 namespace BarberReservation.Application.HairdresserService.Queries.Self.GetSelfHairdressersService;

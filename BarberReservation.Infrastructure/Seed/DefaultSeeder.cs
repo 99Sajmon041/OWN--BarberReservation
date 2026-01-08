@@ -19,7 +19,7 @@ public sealed class DefaultSeeder(IOptions<DefaultUser> options, UserManager<App
                 var roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
                 if (!roleResult.Succeeded)
                 {
-                    LogErrors("Create role failed", roleResult.Errors);
+                    LogErrors("Create role failed.", roleResult.Errors);
                     return;
                 }
             }
@@ -42,18 +42,21 @@ public sealed class DefaultSeeder(IOptions<DefaultUser> options, UserManager<App
             var createResult = await userManager.CreateAsync(user, defaultUser.Password);
             if (!createResult.Succeeded)
             {
-                LogErrors("Create user failed", createResult.Errors);
+                LogErrors("Create user failed.", createResult.Errors);
                 return;
             }
         }
 
-        if (!await userManager.IsInRoleAsync(user, defaultUser.Role))
+        foreach (var role in defaultUser.Roles)
         {
-            var addRoleResult = await userManager.AddToRoleAsync(user, defaultUser.Role);
-            if (!addRoleResult.Succeeded)
+            if (!await userManager.IsInRoleAsync(user, role))
             {
-                LogErrors("Add to role failed", addRoleResult.Errors);
-                return;
+                var addRoleResult = await userManager.AddToRoleAsync(user, role);
+                if (!addRoleResult.Succeeded)
+                {
+                    LogErrors("Add to role failed.", addRoleResult.Errors);
+                    return;
+                }
             }
         }
     }
@@ -72,6 +75,6 @@ public sealed class DefaultSeeder(IOptions<DefaultUser> options, UserManager<App
     private static void LogErrors(string prefix, IEnumerable<IdentityError> errors)
     {
         var msg = string.Join(", ", errors.Select(e => e.Description));
-        Console.WriteLine($"{prefix}: {msg}");
+        Console.WriteLine($"{prefix}: {msg}.");
     }
 }

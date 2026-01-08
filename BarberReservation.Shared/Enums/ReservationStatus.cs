@@ -2,7 +2,7 @@
 
 public enum ReservationStatus
 {
-    Pending = 0,
+    Booked = 0,
     Canceled = 1,
     NoShow = 2,
     Paid = 3

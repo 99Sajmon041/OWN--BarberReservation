@@ -1,4 +1,4 @@
-﻿namespace BarberReservation.Shared.Models.HairdresserService;
+﻿namespace BarberReservation.Shared.Models.HairdresserService.Common;
 
 public sealed class HairdresserServiceDto
 {

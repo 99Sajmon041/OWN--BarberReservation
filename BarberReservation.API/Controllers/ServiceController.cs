@@ -17,18 +17,8 @@ namespace BarberReservation.API.Controllers
     {
         [HttpGet]
         [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Hairdresser))]
-        public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll([FromQuery] PagedRequest request, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll([FromQuery] GetAllServicesQuery query, CancellationToken ct)
         {
-            var query = new GetAllServicesQuery
-            {
-                Page = request.Page,
-                PageSize = request.PageSize,
-                IsActive = request.IsActive,
-                Search = request.Search,
-                SortBy = request.SortBy,
-                Desc = request.Desc
-            };
-
             var result = await mediator.Send(query, ct);
 
             return Ok(result);

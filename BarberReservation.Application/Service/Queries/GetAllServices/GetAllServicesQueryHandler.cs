@@ -14,14 +14,15 @@ public sealed class GetAllServicesQueryHandler(
 {
     public async Task<PagedResult<ServiceDto>> Handle(GetAllServicesQuery request, CancellationToken ct)
     {
-        var (items, total) = await unitOfWork.ServiceRepository.GetAllAsync(
-            request.Page,
-            request.PageSize,
-            request.IsActive,
-            request.Search,
-            request.SortBy,
-            request.Desc,
-            ct);
+        var (items, total) = await unitOfWork.ServiceRepository.GetAllAsync(new ServicePageRequest
+        {
+            IsActive = request.IsActive,
+            Search = request.Search,
+            SortBy = request.SortBy,
+            Desc = request.Desc,
+            Page = request.Page,
+            PageSize = request.PageSize
+        }, ct);
 
         var servicesDto = mapper.Map<IReadOnlyList<ServiceDto>>(items);
 
