@@ -16,9 +16,9 @@ public sealed class AdminReservationDto
     public ReservationStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CanceledAt { get; set; }
-    public ReservationCanceledBy? CanceledBy { get; set; } 
+    public ReservationCanceledBy? CanceledBy { get; set; }
     public CanceledReason? CanceledReason { get; set; }
-    public string? CustomerId { get; set; }
+    public string CustomerId { get; set; } = default!;
     public string ClientFullName { get; set; } = default!;
     public string ClientEmail { get; set; } = default!;
     public string ClientPhone { get; set; } = default!;

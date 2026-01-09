@@ -24,7 +24,7 @@ namespace BarberReservation.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Hairdresser))]
         public async Task<ActionResult<ServiceDto>> GetById([FromRoute] int id, CancellationToken ct)
         {
@@ -33,7 +33,7 @@ namespace BarberReservation.API.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [Authorize(Roles = nameof(UserRoles.Admin))]
         public async Task<IActionResult> Update([FromBody] UpsertServiceRequest request, [FromRoute] int id, CancellationToken ct)
         {
@@ -53,7 +53,7 @@ namespace BarberReservation.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
         }
 
-        [HttpPatch("{id}/deactivate")]
+        [HttpPatch("{id:int}/deactivate")]
         [Authorize(Roles = nameof(UserRoles.Admin))]
         public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
         {

@@ -4,7 +4,8 @@ public enum CanceledReason
 {
     CustomerSick = 0,
     CustomerPersonal = 1,
-    HairdresserSick = 2,
-    HairdresserUnavailable = 3,
-    Other = 4
+    CustomerRequest = 2,
+    HairdresserSick = 3,
+    HairdresserUnavailable = 4,
+    Other = 5
 }

@@ -11,12 +11,12 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .Length(2, 20).WithMessage("Délka jména musí být v rozmezí 2 - 20 znaků.");
 
         RuleFor(x => x.LastName)
-             .NotEmpty().WithMessage("Příjmení je povinné.")
+            .NotEmpty().WithMessage("Příjmení je povinné.")
             .Length(2, 20).WithMessage("Délka příjmení musí být v rozmezí 2 - 20 znaků.");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("E-mail je povinný.")
-            .EmailAddress().WithMessage("Zajdete E-mail ve správném formátu.");
+            .EmailAddress().WithMessage("Zadejte E-mail ve správném formátu.");
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Heslo je povinné.")

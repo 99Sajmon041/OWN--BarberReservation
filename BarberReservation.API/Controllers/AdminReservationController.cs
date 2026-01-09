@@ -1,4 +1,6 @@
-﻿using BarberReservation.Application.Reservation.Queries.Admin.GetAllReservations;
+﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.Reservation.Queries.Admin.GetAllReservations;
+using BarberReservation.Application.Reservation.Queries.Admin.GetReservation;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Rezervation.Admin;
@@ -18,6 +20,29 @@ namespace BarberReservation.API.Controllers
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<AdminReservationDto>> GetById(int id, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetReservationQuery(id), ct);
+            return Ok(result);
+        }
+
+        [HttpPatch("{id:int}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateReservationRequest request, CancellationToken ct)
+        {
+            var command = request.ToAdminUpdateReservationCommand(id);
+            await mediator.Send(command, ct);
+            return NoContent();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<int>> Create([FromBody] CreateAdminReservationRequest request, CancellationToken ct)
+        {
+            var command = request.ToCreateAdminReservationCommand();
+            var reservationId = await mediator.Send(command, ct);
+            return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
         }
     }
 }

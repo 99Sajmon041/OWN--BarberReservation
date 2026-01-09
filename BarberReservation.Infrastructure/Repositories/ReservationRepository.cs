@@ -15,7 +15,21 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         return await _context.Reservations.AnyAsync(x => x.HairdresserServiceId == hairDresserServiceId, ct);
     }
 
-    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync( AdminReservationPagedRequest request, CancellationToken ct)
+    public async Task<Reservation?> GetForAdminAsync(int id, CancellationToken ct)
+    {
+        return await _context.Reservations
+            .Include(x => x.Hairdresser)
+            .Include(x => x.HairdresserService)
+            .ThenInclude(x => x.Service)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+    }
+
+    public async Task CreateForAdminAsync(Reservation reservation, CancellationToken ct)
+    {
+        await _context.Reservations.AddAsync(reservation, ct);
+    }
+
+    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(AdminReservationPagedRequest request, CancellationToken ct)
     {
         var query = GetBaseQuery();
 
@@ -104,7 +118,6 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
 
         return (items, total);
     }
-
 
     private IQueryable<Reservation> GetBaseQuery()
     {

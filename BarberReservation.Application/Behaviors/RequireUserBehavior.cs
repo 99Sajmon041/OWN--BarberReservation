@@ -39,7 +39,7 @@ public sealed class RequireUserBehavior<TRequest, TResponse>(
             throw new UnauthorizedException("Uživatel není aktivní.");
         }
 
-        currentAppUser.User = appUser;
+        currentAppUser.Initialize(appUser);
 
         return await next();
     }

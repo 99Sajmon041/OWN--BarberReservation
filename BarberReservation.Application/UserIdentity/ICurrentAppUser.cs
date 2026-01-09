@@ -4,5 +4,8 @@ namespace BarberReservation.Application.UserIdentity;
 
 public interface ICurrentAppUser
 {
-    ApplicationUser User { get; set; }
+    ApplicationUser User { get; }
+    bool IsInitialized { get; }
+
+    void Initialize(ApplicationUser user);
 }
