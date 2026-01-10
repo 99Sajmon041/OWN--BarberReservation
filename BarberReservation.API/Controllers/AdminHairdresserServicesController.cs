@@ -1,10 +1,9 @@
 ﻿using BarberReservation.Application.HairdresserService.Commands.Admin.DeleteHairdresserService;
 using BarberReservation.Application.HairdresserService.Commands.Admin.NewFolder;
-using BarberReservation.Application.HairdresserService.Queries.Admin.GetAllHairdresserServices;
-using BarberReservation.Application.HairdresserService.Queries.Admin.GetHairdresserService;
+using BarberReservation.Application.HairdresserService.Queries.Admin.GetAdminHairdresserService;
+using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService.Admin;
 using BarberReservation.Shared.Models.HairdresserService.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,18 +17,16 @@ namespace BarberReservation.API.Controllers
     public class AdminHairdresserServicesController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] GetAllHairdressersServicesQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] GetAllSelfHairdressersServicesQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
-
             return Ok(result);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<HairdresserServiceDto>> GetById(int id, CancellationToken ct)
         {
-            var result = await mediator.Send(new GetHairdresserServiceByIdQuery(id), ct);
-
+            var result = await mediator.Send(new GetAdminHairdresserServiceByIdQuery(id), ct);
             return Ok(result);
         }
 
@@ -37,7 +34,6 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
         {
             await mediator.Send(new DeactivateHairdresserServiceCommand(id), ct);
-
             return NoContent();
         }
 
@@ -45,7 +41,6 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
             await mediator.Send(new DeleteHairdresserServiceCommand(id), ct);
-
             return NoContent();
         }
     }

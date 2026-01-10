@@ -1,0 +1,6 @@
+﻿using BarberReservation.Application.Reservation.Commands.Admin.UpdateAdminReservationStatuss;
+using BarberReservation.Application.Reservation.Validation;
+
+namespace BarberReservation.Application.Reservation.Commands.Admin.UpdateAdminReservationStatus;
+
+public sealed class UpdateAdminReservationStatusCommandValidator : ReservationStatusUpdateValidatorBase<UpdateAdminReservationStatusCommand> { }

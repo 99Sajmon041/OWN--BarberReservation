@@ -20,7 +20,6 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll([FromQuery] GetAllServicesQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
-
             return Ok(result);
         }
 
@@ -29,7 +28,6 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<ServiceDto>> GetById([FromRoute] int id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetServiceByIdQuery(id), ct);
-
             return Ok(result);
         }
 
@@ -39,7 +37,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToUpdateServiceCommand(id);
             await mediator.Send(command, ct);
-
             return NoContent();
         }
 
@@ -49,7 +46,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToCreateServiceCommand();
             var id = await mediator.Send(command, ct);
-
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
         }
 

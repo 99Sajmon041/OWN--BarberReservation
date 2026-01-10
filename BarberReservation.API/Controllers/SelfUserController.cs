@@ -17,7 +17,6 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<UserDto>> GetProfile(CancellationToken ct)
         {
             var result = await mediator.Send(new GetProfileQuery(), ct);
-
             return Ok(result);
         }
 
@@ -25,7 +24,6 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> DeactivateProfile(CancellationToken ct)
         {
             await mediator.Send(new DeactivateAccountCommand(), ct);
-
             return NoContent();
         }
 
@@ -34,7 +32,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToUpdateAccountCommand();
             await mediator.Send(command, ct);
-
             return NoContent();
         }
     }

@@ -21,7 +21,6 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<UserDto>> GetUserbyId([FromRoute] string id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetUserByIdQuery(id), ct);
-
             return Ok(result);
         }
 
@@ -45,8 +44,7 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request, CancellationToken ct)
         {
             var command = request.ToCreateAccountCommand();
-            await mediator.Send(command, ct);       
-            
+            await mediator.Send(command, ct);                  
             return NoContent();
         }
 
@@ -54,7 +52,6 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> DeactivateAccount([FromRoute] string id, CancellationToken ct)
         {
             await mediator.Send(new DeactivateUserCommand(id), ct);
-
             return NoContent();
         }
 
@@ -63,7 +60,6 @@ namespace BarberReservation.API.Controllers
         {
             var commad = request.ToUpdateUserCommand(id);
             await mediator.Send(commad, ct);
-
             return NoContent();
         }
 
@@ -72,7 +68,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToUpdateUserEmailCommnad(id);
             await mediator.Send(command, ct);
-
             return NoContent();
         }
     }

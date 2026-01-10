@@ -16,7 +16,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToLoginCommand();
             var result = await mediator.Send(command, ct);
-
             return Ok(result);
         }
 
@@ -26,7 +25,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToChangePasswordCommand();
             await mediator.Send(command, ct);
-
             return NoContent();
         }
 
@@ -36,7 +34,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToRegisterCommand();
             await mediator.Send(command, ct);
-
             return NoContent();
         }
 
@@ -46,7 +43,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToForgotPasswordCommand();
             await mediator.Send(command, ct);
-
             return NoContent();
         }
 
@@ -56,7 +52,6 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToResetPasswordCommand();
             await mediator.Send(command, ct);
-
             return NoContent();
         }
     }

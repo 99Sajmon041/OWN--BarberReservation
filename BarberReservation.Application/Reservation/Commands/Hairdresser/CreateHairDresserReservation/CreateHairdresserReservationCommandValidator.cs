@@ -1,0 +1,5 @@
+﻿using BarberReservation.Application.Reservation.Validation;
+
+namespace BarberReservation.Application.Reservation.Commands.Hairdresser.CreateHairDresserReservation;
+
+public sealed class CreateHairdresserReservationCommandValidator : ReservationCreateValidatorBase<CreateHairDresserReservationCommand> { }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BarberReservation.Application.Service.Mapping;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Service;
@@ -14,15 +15,9 @@ public sealed class GetAllServicesQueryHandler(
 {
     public async Task<PagedResult<ServiceDto>> Handle(GetAllServicesQuery request, CancellationToken ct)
     {
-        var (items, total) = await unitOfWork.ServiceRepository.GetAllAsync(new ServicePageRequest
-        {
-            IsActive = request.IsActive,
-            Search = request.Search,
-            SortBy = request.SortBy,
-            Desc = request.Desc,
-            Page = request.Page,
-            PageSize = request.PageSize
-        }, ct);
+        var servicePageRequest = request.ToServicePageRequest();
+
+        var (items, total) = await unitOfWork.ServiceRepository.GetAllAsync(servicePageRequest, ct);
 
         var servicesDto = mapper.Map<IReadOnlyList<ServiceDto>>(items);
 

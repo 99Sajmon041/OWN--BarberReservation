@@ -1,12 +1,13 @@
 ﻿using BarberReservation.API.Mappings;
-using BarberReservation.Application.Reservation.Queries.Admin.GetAllReservations;
-using BarberReservation.Application.Reservation.Queries.Admin.GetReservation;
+using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
+using BarberReservation.Application.Reservation.Queries.Admin.GetAdminReservation;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Rezervation.Admin;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BarberReservation.Shared.Models.Rezervation.Common;
 
 namespace BarberReservation.API.Controllers
 {
@@ -16,7 +17,7 @@ namespace BarberReservation.API.Controllers
     public class AdminReservationController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<AdminReservationDto>>> GetAll([FromQuery] GetAllReservationsQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<AdminReservationDto>>> GetAll([FromQuery] GetAllAdminReservationsQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);
@@ -25,7 +26,7 @@ namespace BarberReservation.API.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<AdminReservationDto>> GetById(int id, CancellationToken ct)
         {
-            var result = await mediator.Send(new GetReservationQuery(id), ct);
+            var result = await mediator.Send(new GetAdminReservationQuery(id), ct);
             return Ok(result);
         }
 

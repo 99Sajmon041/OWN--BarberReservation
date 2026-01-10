@@ -1,14 +1,16 @@
-﻿using BarberReservation.Application.Reservation.Commands.Admin.CreateReservation;
-using BarberReservation.Application.Reservation.Commands.Admin.UpdateReservationStatus;
+﻿using BarberReservation.Application.Reservation.Commands.Admin.CreateAdminReservation;
+using BarberReservation.Application.Reservation.Commands.Admin.UpdateAdminReservationStatuss;
+using BarberReservation.Application.Reservation.Commands.Hairdresser.UpdateHairDresserReservationStatus;
 using BarberReservation.Shared.Models.Rezervation.Admin;
+using BarberReservation.Shared.Models.Rezervation.Common;
 
 namespace BarberReservation.API.Mappings
 {
     public static class ReservationMapping
     {
-        public static UpdateReservationStatusCommand ToAdminUpdateReservationCommand(this UpdateReservationRequest request, int id)
+        public static UpdateAdminReservationStatusCommand ToAdminUpdateReservationCommand(this UpdateReservationRequest request, int id)
         {
-            return new UpdateReservationStatusCommand
+            return new UpdateAdminReservationStatusCommand
             {
                 Id = id,
                 NewReservationStatus = request.NewReservationStatus,
@@ -21,12 +23,22 @@ namespace BarberReservation.API.Mappings
             return new CreateAdminReservationCommand
             {
                 HairdresserId = request.HairdresserId,
-                HairdresserServiceId = request.HairdresserServiceId,
+                HairDresserServiceId = request.HairdresserServiceId,
                 StartAt = request.StartAt,
                 CustomerId = request.CustomerId,
                 CustomerName = request.CustomerName,
                 CustomerEmail = request.CustomerEmail,
                 CustomerPhone = request.CustomerPhone
+            };
+        }
+
+        public static UpdateHairDresserReservationStatusCommand ToHairDresserUpdateReservationCommand(this UpdateReservationRequest request, int id)
+        {
+            return new UpdateHairDresserReservationStatusCommand
+            {
+                Id = id,
+                NewReservationStatus = request.NewReservationStatus,
+                CanceledReason = request.CanceledReason
             };
         }
     }
