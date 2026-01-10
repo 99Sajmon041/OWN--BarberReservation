@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.Rezervation.Common;
+namespace BarberReservation.Shared.Models.Reservation.Common;
 
 public sealed class AdminReservationPagedRequest : ReservationPagedBaseRequest
 {

@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Shared.Enums;
 
-namespace BarberReservation.Shared.Models.Rezervation.Common;
+namespace BarberReservation.Shared.Models.Reservation.Common;
 
 public sealed class UpdateReservationRequest
 {

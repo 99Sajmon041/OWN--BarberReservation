@@ -1,53 +1,55 @@
 ﻿using BarberReservation.Application.Reservation.Commands.Hairdresser.CreateHairDresserReservation;
 using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
-using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservation;
-using BarberReservation.Shared.Models.Rezervation.Common;
-using BarberReservation.Shared.Models.Rezervation.Hairdresser;
+using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
+using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
+using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation.Self;
 
 namespace BarberReservation.Application.Reservation.Mapping;
 
 public static class ReservationRequestMappingExtensions
 {
-    public static AdminReservationPagedRequest ToAdminReservationPagedRequest(this GetAllAdminReservationsQuery request)
+    public static AdminReservationPagedRequest ToAdminReservationPagedRequest(this GetAllAdminReservationsQuery query)
     {
         return new AdminReservationPagedRequest
         {
-            Page = request.Page,
-            PageSize = request.PageSize,
-            HairdresserId = request.HairdresserId,
-            Status = request.Status,
-            CanceledBy = request.CanceledBy,
-            CanceledReason = request.CanceledReason,
-            CreatedFrom = request.CreatedFrom,
-            CreatedTo = request.CreatedTo,
-            StartFrom = request.StartFrom,
-            StartTo = request.StartTo,
-            CanceledFrom = request.CanceledFrom,
-            CanceledTo = request.CanceledTo,
-            Search = request.Search,
-            SortBy = request.SortBy,
-            Desc = request.Desc
+            Page = query.Page,
+            PageSize = query.PageSize,
+            HairdresserId = query.HairdresserId,
+            Status = query.Status,
+            CanceledBy = query.CanceledBy,
+            CanceledReason = query.CanceledReason,
+            CreatedFrom = query.CreatedFrom,
+            CreatedTo = query.CreatedTo,
+            StartFrom = query.StartFrom,
+            StartTo = query.StartTo,
+            CanceledFrom = query.CanceledFrom,
+            CanceledTo = query.CanceledTo,
+            Search = query.Search,
+            SortBy = query.SortBy,
+            Desc = query.Desc
         };
     }
 
-    public static HairdresserReservationPagedRequest ToHairDresserReservationPagedRequest(this GetAllHairdresserReservationQuery request)
+    public static HairdresserReservationPagedRequest ToHairDresserReservationPagedRequest(this GetAllHairdresserReservationsQuery query)
     {
         return new HairdresserReservationPagedRequest
         {
-            Page = request.Page,
-            PageSize = request.PageSize,
-            Status = request.Status,
-            CanceledBy = request.CanceledBy,
-            CanceledReason = request.CanceledReason,
-            CreatedFrom = request.CreatedFrom,
-            CreatedTo = request.CreatedTo,
-            StartFrom = request.StartFrom,
-            StartTo = request.StartTo,
-            CanceledFrom = request.CanceledFrom,
-            CanceledTo = request.CanceledTo,
-            Search = request.Search,
-            SortBy = request.SortBy,
-            Desc = request.Desc
+            Page = query.Page,
+            PageSize = query.PageSize,
+            Status = query.Status,
+            CanceledBy = query.CanceledBy,
+            CanceledReason = query.CanceledReason,
+            CreatedFrom = query.CreatedFrom,
+            CreatedTo = query.CreatedTo,
+            StartFrom = query.StartFrom,
+            StartTo = query.StartTo,
+            CanceledFrom = query.CanceledFrom,
+            CanceledTo = query.CanceledTo,
+            Search = query.Search,
+            SortBy = query.SortBy,
+            Desc = query.Desc
         };
     }
 
@@ -61,6 +63,28 @@ public static class ReservationRequestMappingExtensions
             CustomerName = request.CustomerName,
             CustomerEmail = request.CustomerEmail,
             CustomerPhone = request.CustomerPhone
+        };
+    }
+
+    public static SelfReservationPagedRequest ToSelfReservationPagedRequest(this GetAllSelfReservationsQuery query)
+    {
+        return new SelfReservationPagedRequest
+        {
+            Page = query.Page,
+            PageSize = query.PageSize,
+            HairdresserId = query.HairdresserId,
+            Status = query.Status,
+            CanceledBy = query.CanceledBy,
+            CanceledReason = query.CanceledReason,
+            CreatedFrom = query.CreatedFrom,
+            CreatedTo = query.CreatedTo,
+            StartFrom = query.StartFrom,
+            StartTo = query.StartTo,
+            CanceledFrom = query.CanceledFrom,
+            CanceledTo = query.CanceledTo,
+            Search = query.Search,
+            SortBy = query.SortBy,
+            Desc = query.Desc
         };
     }
 }

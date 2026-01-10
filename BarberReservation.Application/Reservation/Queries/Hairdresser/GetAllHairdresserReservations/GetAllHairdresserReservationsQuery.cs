@@ -3,11 +3,11 @@ using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Reservation.Common;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Rezervation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation.Hairdresser;
 using MediatR;
-namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservation;
+namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 
-public sealed class GetAllHairdresserReservationQuery : PagedApiRequest, IRequireActiveUser, IReservationListFilter, IRequest<PagedResult<HairdresserReservationDto>>
+public sealed class GetAllHairdresserReservationsQuery : PagedApiRequest, IRequireActiveUser, IReservationListFilter, IRequest<PagedResult<HairdresserReservationDto>>
 {
     public ReservationStatus? Status { get; init; }
     public ReservationCanceledBy? CanceledBy { get; init; }

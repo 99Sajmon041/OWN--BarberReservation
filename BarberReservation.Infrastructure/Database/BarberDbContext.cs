@@ -64,6 +64,11 @@ public sealed class BarberDbContext(DbContextOptions options) : IdentityDbContex
             .WithOne(r => r.Customer)
             .HasForeignKey(r => r.CustomerId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<HairdresserService>()
+            .HasIndex(x => new { x.HairdresserId, x.ServiceId })
+            .IsUnique()
+            .HasFilter("[IsActive] = 1");
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

@@ -3,19 +3,19 @@ using BarberReservation.Application.Reservation.Mapping;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Rezervation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation.Hairdresser;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservation;
+namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 
 public sealed class GetAllHairdresserReservationQueryHandler(
     ILogger<GetAllHairdresserReservationQueryHandler> logger,
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser,
-    IMapper mapper) : IRequestHandler<GetAllHairdresserReservationQuery, PagedResult<HairdresserReservationDto>>
+    IMapper mapper) : IRequestHandler<GetAllHairdresserReservationsQuery, PagedResult<HairdresserReservationDto>>
 {
-    public async Task<PagedResult<HairdresserReservationDto>> Handle(GetAllHairdresserReservationQuery request, CancellationToken ct)
+    public async Task<PagedResult<HairdresserReservationDto>> Handle(GetAllHairdresserReservationsQuery request, CancellationToken ct)
     {
         var hairdresserReservationPagedRequest = request.ToHairDresserReservationPagedRequest();
 

@@ -27,7 +27,7 @@ public sealed class CreateSelfHairdresserServiceCommandHandler(
         var existSameService = await unitOfWork.HairdresserServiceRepository.ExistsActiveWithSameServiceAsync(currentUser.Id, request.ServiceId, ct);
         if(existSameService)
         {
-            logger.LogWarning("Service with ID: {ServiceId} by hairdresser with ID: {HairdresserId} is in use.", request.ServiceId, currentUser.Id);
+            logger.LogWarning("Service with ID: {ServiceId} by hairdresser with ID: {HairdresserId} already exists.", request.ServiceId, currentUser.Id);
             throw new ConflictException("Tuto službu už máte aktivní. Nejdřív ji deaktivujte.");
         }
 

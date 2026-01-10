@@ -21,9 +21,4 @@
     <ProjectReference Include="..\BarberReservation.Shared\BarberReservation.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Reservation\Commands\Self\" />
-    <Folder Include="Reservation\Queries\Self\" />
-  </ItemGroup>
-
 </Project>

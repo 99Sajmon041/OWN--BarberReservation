@@ -1,5 +1,5 @@
 ﻿using BarberReservation.Application.Common.Validation.IdValidation;
-using BarberReservation.Shared.Models.Rezervation.Admin;
+using BarberReservation.Shared.Models.Reservation.Admin;
 using MediatR;
 
 namespace BarberReservation.Application.Reservation.Queries.Admin.GetAdminReservation;

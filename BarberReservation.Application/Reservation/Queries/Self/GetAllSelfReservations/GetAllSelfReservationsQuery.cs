@@ -1,13 +1,14 @@
 ﻿using BarberReservation.Application.Common.PagedSettings;
+using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Reservation.Common;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Admin;
+using BarberReservation.Shared.Models.Reservation.Self;
 using MediatR;
 
-namespace BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
+namespace BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
 
-public sealed class GetAllAdminReservationsQuery : PagedApiRequest, IReservationListFilter, IRequest<PagedResult<AdminReservationDto>>
+public sealed class GetAllSelfReservationsQuery : PagedApiRequest, IReservationListFilter, IRequireActiveUser, IRequest<PagedResult<SelfReservationDto>>
 {
     public string? HairdresserId { get; init; }
     public ReservationStatus? Status { get; init; }

@@ -3,11 +3,11 @@ using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReserva
 using BarberReservation.Application.Reservation.Queries.Admin.GetAdminReservation;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Rezervation.Admin;
+using BarberReservation.Shared.Models.Reservation.Admin;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BarberReservation.Shared.Models.Rezervation.Common;
+using BarberReservation.Shared.Models.Reservation.Common;
 
 namespace BarberReservation.API.Controllers
 {

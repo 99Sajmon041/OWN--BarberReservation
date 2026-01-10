@@ -1,6 +1,6 @@
-﻿using BarberReservation.Shared.Models.Rezervation.Common;
+﻿using BarberReservation.Shared.Models.Reservation.Common;
 
-namespace BarberReservation.Shared.Models.Rezervation.Admin;
+namespace BarberReservation.Shared.Models.Reservation.Admin;
 
 public sealed class CreateAdminReservationRequest : CreateReservationBaseRequest
 {

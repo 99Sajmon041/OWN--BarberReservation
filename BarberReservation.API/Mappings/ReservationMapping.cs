@@ -1,8 +1,8 @@
 ﻿using BarberReservation.Application.Reservation.Commands.Admin.CreateAdminReservation;
 using BarberReservation.Application.Reservation.Commands.Admin.UpdateAdminReservationStatuss;
 using BarberReservation.Application.Reservation.Commands.Hairdresser.UpdateHairDresserReservationStatus;
-using BarberReservation.Shared.Models.Rezervation.Admin;
-using BarberReservation.Shared.Models.Rezervation.Common;
+using BarberReservation.Shared.Models.Reservation.Admin;
+using BarberReservation.Shared.Models.Reservation.Common;
 
 namespace BarberReservation.API.Mappings
 {

@@ -1,11 +1,11 @@
 ﻿using BarberReservation.API.Mappings;
 using BarberReservation.Application.Reservation.Mapping;
-using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservation;
+using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairDresserReservation;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Rezervation.Common;
-using BarberReservation.Shared.Models.Rezervation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation.Hairdresser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +18,7 @@ namespace BarberReservation.API.Controllers
     public class HairdresserReservationController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<HairdresserReservationDto>>> GetAll([FromQuery] GetAllHairdresserReservationQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<HairdresserReservationDto>>> GetAll([FromQuery] GetAllHairdresserReservationsQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);

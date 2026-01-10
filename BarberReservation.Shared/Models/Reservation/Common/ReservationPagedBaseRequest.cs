@@ -1,7 +1,7 @@
 ﻿using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 
-namespace BarberReservation.Shared.Models.Rezervation.Common;
+namespace BarberReservation.Shared.Models.Reservation.Common;
 
 public class ReservationPagedBaseRequest : PagedRequest
 {

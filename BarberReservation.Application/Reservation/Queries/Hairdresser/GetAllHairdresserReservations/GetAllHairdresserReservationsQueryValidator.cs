@@ -1,0 +1,5 @@
+﻿using BarberReservation.Application.Reservation.Validation;
+
+namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
+
+public sealed class GetAllHairdresserReservationsQueryValidator : ReservationListQueryValidatorBase<GetAllHairdresserReservationsQuery> { }

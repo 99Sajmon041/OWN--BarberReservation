@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Shared.Enums;
 
-namespace BarberReservation.Shared.Models.Rezervation.Hairdresser;
+namespace BarberReservation.Shared.Models.Reservation.Hairdresser;
 
 public sealed class HairdresserReservationDto
 {

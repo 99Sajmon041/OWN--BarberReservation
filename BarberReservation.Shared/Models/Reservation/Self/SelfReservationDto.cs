@@ -1,16 +1,16 @@
 ﻿using BarberReservation.Shared.Enums;
 
-namespace BarberReservation.Shared.Models.Rezervation.Self;
+namespace BarberReservation.Shared.Models.Reservation.Self;
 
-public sealed class UserReservationDto
+public sealed class SelfReservationDto
 {
     public int Id { get; set; }
     public string HairdresserId { get; set; } = default!;
     public string HairdresserFullName { get; set; } = default!;
     public int HairdresserServiceId { get; set; } = default!;
     public string ServiceName { get; set; } = default!;
-    public int? DurationMinutes { get; set; }
-    public decimal? Price { get; set; }
+    public int DurationMinutes { get; set; }
+    public decimal Price { get; set; }
     public DateTime StartAt { get; set; }
     public DateTime EndAt { get; set; }
     public ReservationStatus Status { get; set; }

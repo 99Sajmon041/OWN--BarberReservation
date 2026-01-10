@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.Exceptions;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.Rezervation.Admin;
+using BarberReservation.Shared.Models.Reservation.Admin;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
