@@ -1,10 +1,10 @@
 ﻿using FluentValidation;
 
-namespace BarberReservation.Application.User.Commands.Admin.CreateUser;
+namespace BarberReservation.Application.User.Commands.Admin.CreateHairdresser;
 
-public sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+public sealed class CreateHairdresserCommandValidator : AbstractValidator<CreateHairdresserCommand>
 {
-    public CreateUserCommandValidator()
+    public CreateHairdresserCommandValidator()
     {
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("Jméno je povinné.")

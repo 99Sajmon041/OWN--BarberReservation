@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.User.Queries.Self.GetLookUpProfile;
+﻿using BarberReservation.Application.User.Queries.Self.GetLookUpCustomer;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.LookUpModels;
 using MediatR;
@@ -13,9 +13,9 @@ namespace BarberReservation.API.Controllers
     public class MeController(IMediator mediator) : ControllerBase
     {
         [HttpGet("profile")]
-        public async Task<ActionResult<ReservationClientLookupDto>> GetProfile(CancellationToken ct)
+        public async Task<ActionResult<ReservationClientLookUpDto>> GetProfile(CancellationToken ct)
         {
-            var result = await mediator.Send(new GetLookUpProfileQuery(), ct);
+            var result = await mediator.Send(new GetLookUpCustomerQuery(), ct);
             return Ok(result);
         }
     }

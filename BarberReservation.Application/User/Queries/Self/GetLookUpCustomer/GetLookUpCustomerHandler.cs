@@ -3,19 +3,19 @@ using BarberReservation.Shared.Models.LookUpModels;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace BarberReservation.Application.User.Queries.Self.GetLookUpProfile;
+namespace BarberReservation.Application.User.Queries.Self.GetLookUpCustomer;
 
-public sealed class GetLookUpProfileHandler(
-    ILogger<GetLookUpProfileHandler> logger,
-    ICurrentAppUser currentAppUser) : IRequestHandler<GetLookUpProfileQuery, ReservationClientLookupDto>
+public sealed class GetLookUpCustomerHandler(
+    ILogger<GetLookUpCustomerHandler> logger,
+    ICurrentAppUser currentAppUser) : IRequestHandler<GetLookUpCustomerQuery, ReservationClientLookUpDto>
 {
-    public Task<ReservationClientLookupDto> Handle(GetLookUpProfileQuery request, CancellationToken ct)
+    public Task<ReservationClientLookUpDto> Handle(GetLookUpCustomerQuery request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
         var user = currentAppUser.User;
 
-        var dto = new ReservationClientLookupDto
+        var dto = new ReservationClientLookUpDto
         {
             CustomerId = user.Id,
             CustomerName = user.FullName,

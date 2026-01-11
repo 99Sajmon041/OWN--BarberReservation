@@ -18,6 +18,7 @@ public static class ReservationRequestMappingExtensions
             Page = query.Page,
             PageSize = query.PageSize,
             HairdresserId = query.HairdresserId,
+            ServiceId = query.ServiceId,
             Status = query.Status,
             CanceledBy = query.CanceledBy,
             CanceledReason = query.CanceledReason,
@@ -39,6 +40,7 @@ public static class ReservationRequestMappingExtensions
         {
             Page = query.Page,
             PageSize = query.PageSize,
+            ServiceId = query.ServiceId,
             Status = query.Status,
             CanceledBy = query.CanceledBy,
             CanceledReason = query.CanceledReason,
@@ -74,6 +76,7 @@ public static class ReservationRequestMappingExtensions
             Page = query.Page,
             PageSize = query.PageSize,
             HairdresserId = query.HairdresserId,
+            ServiceId = query.ServiceId,
             Status = query.Status,
             CanceledBy = query.CanceledBy,
             CanceledReason = query.CanceledReason,

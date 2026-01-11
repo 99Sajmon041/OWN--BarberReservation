@@ -10,6 +10,7 @@ namespace BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReser
 
 public sealed class GetAllSelfReservationsQuery : PagedApiRequest, IReservationListFilter, IRequireActiveUser, IRequest<PagedResult<SelfReservationDto>>
 {
+    public int? ServiceId { get; init; }
     public string? HairdresserId { get; init; }
     public ReservationStatus? Status { get; init; }
     public ReservationCanceledBy? CanceledBy { get; init; }

@@ -1,8 +1,8 @@
 ﻿using MediatR;
 
-namespace BarberReservation.Application.User.Commands.Admin.CreateUser;
+namespace BarberReservation.Application.User.Commands.Admin.CreateHairdresser;
 
-public sealed class CreateUserCommand : IRequest
+public sealed class CreateHairdresserCommand : IRequest
 {
     public string FirstName { get; set; } = default!;
     public string LastName { get; set; } = default!;

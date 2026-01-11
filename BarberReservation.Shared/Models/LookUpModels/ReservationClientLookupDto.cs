@@ -1,6 +1,6 @@
 ﻿namespace BarberReservation.Shared.Models.LookUpModels;
 
-public sealed class ReservationClientLookupDto
+public sealed class ReservationClientLookUpDto
 {
     public string CustomerId { get; set; } = default!;
     public string CustomerName { get; set; } = default!;

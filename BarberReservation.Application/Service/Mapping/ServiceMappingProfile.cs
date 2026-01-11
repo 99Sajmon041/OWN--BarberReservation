@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.Service.Commands.CreateService;
 using BarberReservation.Application.Service.Commands.PartlyUpdateService;
+using BarberReservation.Shared.Models.LookUpModels;
 using BarberReservation.Shared.Models.Service;
 
 namespace BarberReservation.Application.Service.Mapping;
@@ -17,5 +18,7 @@ public sealed class ServiceMappingProfile : Profile
 
         CreateMap<CreateServiceCommand, BarberReservation.Domain.Entities.Service>()
             .ForMember(x => x.Id, opt => opt.Ignore());
+
+        CreateMap<BarberReservation.Domain.Entities.Service, ServiceLookUpDto>();
     }
 }

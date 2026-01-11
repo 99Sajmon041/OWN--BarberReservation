@@ -77,6 +77,9 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         if (!string.IsNullOrWhiteSpace(request.HairdresserId))
             query = query.Where(x => x.HairdresserId == request.HairdresserId);
 
+        if(request.ServiceId.HasValue)
+            query = query.Where(x => x.HairdresserService.ServiceId == request.ServiceId.Value);
+
         if (request.Status.HasValue)
             query = query.Where(x => x.Status == request.Status.Value);
 
@@ -164,6 +167,9 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
                 x.CustomerName != null && x.CustomerName.Contains(term));
         }
 
+        if (request.ServiceId.HasValue)
+            query = query.Where(x => x.HairdresserService.ServiceId == request.ServiceId.Value);
+
         if (request.Status.HasValue)
             query = query.Where(x => x.Status == request.Status.Value);
 
@@ -247,6 +253,9 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
 
         if (!string.IsNullOrWhiteSpace(request.HairdresserId))
             query = query.Where(x => x.HairdresserId == request.HairdresserId);
+
+        if (request.ServiceId.HasValue)
+            query = query.Where(x => x.HairdresserService.ServiceId == request.ServiceId.Value);
 
         if (request.Status.HasValue)
             query = query.Where(x => x.Status == request.Status.Value);

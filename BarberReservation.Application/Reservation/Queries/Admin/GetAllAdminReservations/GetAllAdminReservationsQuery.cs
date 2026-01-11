@@ -9,6 +9,7 @@ namespace BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminRes
 
 public sealed class GetAllAdminReservationsQuery : PagedApiRequest, IReservationListFilter, IRequest<PagedResult<AdminReservationDto>>
 {
+    public int? ServiceId { get; init; }
     public string? HairdresserId { get; init; }
     public ReservationStatus? Status { get; init; }
     public ReservationCanceledBy? CanceledBy { get; init; }

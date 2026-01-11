@@ -9,8 +9,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 
-public sealed class GetAllHairdresserReservationQueryHandler(
-    ILogger<GetAllHairdresserReservationQueryHandler> logger,
+public sealed class GetAllHairdresserReservationsQueryHandler(
+    ILogger<GetAllHairdresserReservationsQueryHandler> logger,
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser,
     IMapper mapper) : IRequestHandler<GetAllHairdresserReservationsQuery, PagedResult<HairdresserReservationDto>>

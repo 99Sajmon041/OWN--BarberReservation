@@ -4,6 +4,7 @@ namespace BarberReservation.Application.Reservation.Common;
 
 public interface IReservationListFilter
 {
+    int? ServiceId { get; }
     ReservationStatus? Status { get; }
     ReservationCanceledBy? CanceledBy { get; }
     CanceledReason? CanceledReason { get; }
