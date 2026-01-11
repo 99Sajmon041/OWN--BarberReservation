@@ -1,4 +1,5 @@
 ﻿using BarberReservation.Application.Reservation.Commands.Hairdresser.CreateHairDresserReservation;
+using BarberReservation.Application.Reservation.Commands.Self.CreateSelfReservation;
 using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
@@ -57,7 +58,7 @@ public static class ReservationRequestMappingExtensions
     {
         return new CreateHairDresserReservationCommand
         {
-            HairDresserServiceId = request.HairdresserServiceId,
+            HairdresserServiceId = request.HairdresserServiceId,
             StartAt = request.StartAt,
             CustomerId = request.CustomerId,
             CustomerName = request.CustomerName,
@@ -85,6 +86,19 @@ public static class ReservationRequestMappingExtensions
             Search = query.Search,
             SortBy = query.SortBy,
             Desc = query.Desc
+        };
+    }
+
+    public static CreateSelfReservationCommand ToCreateSelfReservationCommand(this CreateSelfReservationRequest request)
+    {
+        return new CreateSelfReservationCommand
+        {
+            HairdresserId = request.HairdresserId,
+            HairdresserServiceId = request.HairdresserServiceId,
+            StartAt = request.StartAt,
+            CustomerName = request.CustomerName,
+            CustomerEmail = request.CustomerEmail,
+            CustomerPhone = request.CustomerPhone
         };
     }
 }

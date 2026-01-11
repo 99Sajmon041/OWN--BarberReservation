@@ -2,4 +2,4 @@
 
 namespace BarberReservation.Application.Reservation.Commands.Self.SelfCancelReservation;
 
-public sealed class SelfCancelReservationCommandValidator : IdValidator<SelfCancelReservationStatusCommand> { }
+public sealed class SelfCancelReservationCommandValidator : IdValidator<SelfCancelReservationCommand> { }

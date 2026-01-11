@@ -40,6 +40,15 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
             .SingleOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
     }
 
+    public async Task<HairdresserService?> GetByIdForClientAsync(int id, string hairdresserId, CancellationToken ct)
+    {
+        return await _context
+            .HairdresserServices
+            .Include(x => x.Service)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
+    }
+
     public bool Deactivate(HairdresserService hairdresserService)
     {
         return TryDeactivate(hairdresserService);

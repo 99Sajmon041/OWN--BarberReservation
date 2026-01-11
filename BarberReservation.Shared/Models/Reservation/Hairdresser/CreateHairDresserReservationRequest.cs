@@ -2,4 +2,7 @@
 
 namespace BarberReservation.Shared.Models.Reservation.Hairdresser;
 
-public sealed class CreateHairDresserReservationRequest : CreateReservationBaseRequest { }
+public sealed class CreateHairDresserReservationRequest : CreateReservationBaseRequest 
+{
+    public string? CustomerId { get; set; }
+}

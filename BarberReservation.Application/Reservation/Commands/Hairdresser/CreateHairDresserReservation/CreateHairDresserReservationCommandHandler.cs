@@ -19,17 +19,17 @@ public sealed class CreateHairDresserReservationCommandHandler(
     {
         var hairDresserid = currentAppUser.User.Id;
 
-        var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForCurrentUserAsync(request.HairDresserServiceId, hairDresserid, ct);
+        var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForCurrentUserAsync(request.HairdresserServiceId, hairDresserid, ct);
         if (hairdresserService is null || !hairdresserService.IsActive)
         {
-            logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} not found or inactive.", request.HairDresserServiceId);
+            logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} not found or inactive.", request.HairdresserServiceId);
             throw new NotFoundException("Služba kadeřníka nenalezena.");
         }
 
         if (hairdresserService.HairdresserId != hairDresserid)
         {
             logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} does not belong to hairdresser with ID {HairdresserId}.",
-                request.HairDresserServiceId,
+                request.HairdresserServiceId,
                 hairDresserid);
 
             throw new DomainException("Služba nepatří tomuto kadeřníkovi.");
@@ -109,7 +109,7 @@ public sealed class CreateHairDresserReservationCommandHandler(
         var reservation = new BarberReservation.Domain.Entities.Reservation
         {
             HairdresserId = hairDresserid,
-            HairdresserServiceId = request.HairDresserServiceId,
+            HairdresserServiceId = request.HairdresserServiceId,
             StartAt = request.StartAt,
             EndAt = endAt,
             Status = ReservationStatus.Booked,

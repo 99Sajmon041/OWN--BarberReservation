@@ -1,4 +1,5 @@
 ﻿using BarberReservation.Application.Reservation.Commands.Self.SelfCancelReservation;
+using BarberReservation.Application.Reservation.Mapping;
 using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
 using BarberReservation.Application.Reservation.Queries.Self.GetSelfReservation;
 using BarberReservation.Shared.Enums;
@@ -35,7 +36,16 @@ namespace BarberReservation.API.Controllers
         [Authorize(Roles = nameof(UserRoles.Customer))]
         public async Task<IActionResult> Cancel(int id, CancellationToken ct)
         {
-            await mediator.Send(new SelfCancelReservationStatusCommand(id), ct);
+            await mediator.Send(new SelfCancelReservationCommand(id), ct);
+            return NoContent();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Create([FromBody] CreateSelfReservationRequest request, CancellationToken ct)
+        {
+            var command = request.ToCreateSelfReservationCommand();
+            await mediator.Send(command, ct);
             return NoContent();
         }
     }

@@ -6,7 +6,6 @@ public class CreateReservationBaseRequest
 {
     public int HairdresserServiceId { get; set; }
     public DateTime StartAt { get; set; }
-    public string? CustomerId { get; set; }
 
     [Required(ErrorMessage = "Celé jméno je povinné.")]
     [StringLength(41, MinimumLength = 4, ErrorMessage = "Délka celého jména musí být v rozmezí 4 - 41 znaků.")]

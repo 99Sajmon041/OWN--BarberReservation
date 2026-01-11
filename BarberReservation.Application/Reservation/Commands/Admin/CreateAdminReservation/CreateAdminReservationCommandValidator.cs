@@ -9,5 +9,9 @@ public sealed class CreateAdminReservationCommandValidator : ReservationCreateVa
     {
         RuleFor(x => x.HairdresserId)
             .NotEmpty().WithMessage("ID kadeřníka je povinné.");
+
+        RuleFor(x => x.CustomerId)
+            .NotEmpty().WithMessage("ID zákazníka nesmí být prázdné.")
+            .When(x => x.CustomerId is not null);
     }
 }

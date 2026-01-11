@@ -23,7 +23,7 @@ namespace BarberReservation.API.Mappings
             return new CreateAdminReservationCommand
             {
                 HairdresserId = request.HairdresserId,
-                HairDresserServiceId = request.HairdresserServiceId,
+                HairdresserServiceId = request.HairdresserServiceId,
                 StartAt = request.StartAt,
                 CustomerId = request.CustomerId,
                 CustomerName = request.CustomerName,

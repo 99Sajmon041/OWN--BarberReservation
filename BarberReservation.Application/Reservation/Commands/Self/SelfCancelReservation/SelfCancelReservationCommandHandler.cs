@@ -10,9 +10,9 @@ namespace BarberReservation.Application.Reservation.Commands.Self.SelfCancelRese
 public sealed class SelfCancelReservationCommandHandler(
     ILogger<SelfCancelReservationCommandHandler> logger,
     ICurrentAppUser currentAppUser,
-    IUnitOfWork unitOfWork) : IRequestHandler<SelfCancelReservationStatusCommand>
+    IUnitOfWork unitOfWork) : IRequestHandler<SelfCancelReservationCommand>
 {
-    public async Task<Unit> Handle(SelfCancelReservationStatusCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(SelfCancelReservationCommand request, CancellationToken ct)
     {
         var reservation = await unitOfWork.ReservationRepository.GetForClientAsync(request.Id, currentAppUser.User.Id, ct);
         if(reservation is null)

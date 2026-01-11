@@ -4,7 +4,7 @@ using MediatR;
 
 namespace BarberReservation.Application.Reservation.Commands.Self.SelfCancelReservation;
 
-public sealed class SelfCancelReservationStatusCommand(int id) : IHasId, IRequireActiveUser, IRequest
+public sealed class SelfCancelReservationCommand(int id) : IHasId, IRequireActiveUser, IRequest
 {
     public int Id { get; init; } = id;
 }

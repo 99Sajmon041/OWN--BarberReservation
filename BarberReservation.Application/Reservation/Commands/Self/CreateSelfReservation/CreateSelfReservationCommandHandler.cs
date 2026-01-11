@@ -1,4 +1,5 @@
 ﻿using BarberReservation.Application.Exceptions;
+using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Enums;
@@ -6,14 +7,16 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
-namespace BarberReservation.Application.Reservation.Commands.Admin.CreateAdminReservation;
+namespace BarberReservation.Application.Reservation.Commands.Self.CreateSelfReservation;
 
-public sealed class CreateAdminReservationCommandHandler(
-    ILogger<CreateAdminReservationCommandHandler> logger,
+public sealed class CreateSelfReservationCommandHandler(
+    ILogger<CreateSelfReservationCommandHandler> logger,
+    IUnitOfWork unitOfWork,
+    ICurrentAppUser currentAppUser,
     UserManager<ApplicationUser> userManager,
-    IUnitOfWork unitOfWork) : IRequestHandler<CreateAdminReservationCommand, int>
+    IEmailService emailService) : IRequestHandler<CreateSelfReservationCommand>
 {
-    public async Task<int> Handle(CreateAdminReservationCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(CreateSelfReservationCommand request, CancellationToken ct)
     {
         var user = await userManager.FindByIdAsync(request.HairdresserId);
         if (user is null)
@@ -29,26 +32,17 @@ public sealed class CreateAdminReservationCommandHandler(
             throw new NotFoundException("Kadeřník nenalezen.");
         }
 
-        var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForAdminAsync(request.HairdresserServiceId, ct);
+        var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForClientAsync(request.HairdresserServiceId, request.HairdresserId, ct);
         if (hairdresserService is null || !hairdresserService.IsActive)
         {
             logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} not found or inactive.", request.HairdresserServiceId);
             throw new NotFoundException("Služba kadeřníka nenalezena.");
         }
 
-        if(hairdresserService.HairdresserId != user.Id)
-        {
-            logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} does not belong to hairdresser with ID {HairdresserId}.",
-                request.HairdresserServiceId,
-                request.HairdresserId);
-
-            throw new DomainException("Služba nepatří tomuto kadeřníkovi.");
-        }
-
         var startAt = request.StartAt;
         var endAt = startAt.AddMinutes(hairdresserService.DurationMinutes);
 
-        if(endAt.Date != startAt.Date)
+        if (endAt.Date != startAt.Date)
         {
             logger.LogWarning("Reservation crosses midnight. HairdresserId: {HairdresserId}, StartAt: {StartAt}, EndAt: {EndAt}", request.HairdresserId, startAt, endAt);
             throw new DomainException("Rezervace musí být v rámci jednoho dne.");
@@ -66,7 +60,7 @@ public sealed class CreateAdminReservationCommandHandler(
         var startTime = TimeOnly.FromDateTime(startAt);
         var endTime = TimeOnly.FromDateTime(endAt);
 
-        if(startTime < workingHours.WorkFrom || endTime > workingHours.WorkTo)
+        if (startTime < workingHours.WorkFrom || endTime > workingHours.WorkTo)
         {
             logger.LogWarning(
                 "Reservation is outside working hours. HairdresserId: {HairdresserId}, DayOfWeek: {DayOfWeek}, Requested: {StartTime}-{EndTime}, WorkingHours: {WorkFrom}-{WorkTo}",
@@ -77,7 +71,7 @@ public sealed class CreateAdminReservationCommandHandler(
 
         var hasTimeOff = await unitOfWork.HairdresserTimeOffRepository.ExistsOverlapAsync(request.HairdresserId, startAt, endAt, ct);
 
-        if(hasTimeOff)
+        if (hasTimeOff)
         {
             logger.LogWarning("Reservation overlaps hairdresser time off. HairdresserId: {HairdresserId}, StartAt: {StartAt}, EndAt: {EndAt}",
                 request.HairdresserId, startAt, endAt);
@@ -92,36 +86,31 @@ public sealed class CreateAdminReservationCommandHandler(
             throw new ConflictException("V tomto čase již existuje rezervace.");
         }
 
+        string? customerId;
+        string? customerName;
+        string? customerEmail;
+        string? customerPhone;
 
-        var customerId = request.CustomerId;
-        var customerName = request.CustomerName;
-        var customerEmail = request.CustomerEmail;
-        var customerPhone = request.CustomerPhone;
-
-        if (!string.IsNullOrWhiteSpace(request.CustomerId))
+        if (currentAppUser.User is not null)
         {
-            var clientById = await userManager.FindByIdAsync(request.CustomerId);
-            if (clientById is null)
-            {
-                logger.LogInformation(
-                    "CustomerId {CustomerId} not found. Using snapshot data from request. CustomerEmail: {CustomerEmail}.",
-                    request.CustomerId,
-                    request.CustomerEmail);
-            }
-            else
-            {
-                customerId = clientById.Id;
-                customerName = clientById.FullName ?? customerName;
-                customerEmail = clientById.Email ?? customerEmail;
-                customerPhone = clientById.PhoneNumber ?? customerPhone;
-            }
+            customerId = currentAppUser.User.Id;
+            customerName = currentAppUser.User.FullName;
+            customerEmail = currentAppUser.User.Email ?? request.CustomerEmail;
+            customerPhone = currentAppUser.User.PhoneNumber ?? request.CustomerPhone;
+        }
+        else
+        {
+            customerId = null;
+            customerName = request.CustomerName;
+            customerEmail = request.CustomerEmail;
+            customerPhone = request.CustomerPhone;
         }
 
         var reservation = new BarberReservation.Domain.Entities.Reservation
         {
             HairdresserId = request.HairdresserId,
             HairdresserServiceId = request.HairdresserServiceId,
-            StartAt = request.StartAt,
+            StartAt = startAt,
             EndAt = endAt,
             Status = ReservationStatus.Booked,
             CreatedAt = DateTime.UtcNow,
@@ -134,13 +123,21 @@ public sealed class CreateAdminReservationCommandHandler(
         await unitOfWork.ReservationRepository.CreateAsync(reservation, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
+        await emailService.SendReservationConfirmationEmailAsync(customerEmail,
+            startAt,
+            user.FullName,
+            hairdresserService.Service.Name,
+            hairdresserService.Price,
+            hairdresserService.DurationMinutes,
+            ct);
+
         logger.LogInformation(
-            "Reservation with ID {ReservationId} created by admin. HairdresserId: {HairdresserId}, CustomerName: {CustomerName}, StartAt: {StartAt}.",
+            "Reservation with ID {ReservationId} created by client. HairdresserId: {HairdresserId}, CustomerName: {CustomerName}, StartAt: {StartAt}.",
             reservation.Id,
             request.HairdresserId,
             reservation.CustomerName,
             reservation.StartAt);
 
-        return reservation.Id;
+        return Unit.Value;
     }
 }
