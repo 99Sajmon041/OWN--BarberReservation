@@ -15,5 +15,9 @@ public interface IHairdresserServiceRepository
     bool Deactivate(HairdresserService hairdresserService);
     void Delete(HairdresserService hairdresserService);
     Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(HairdresserAdminServicePagedRequest request, CancellationToken ct);
-    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(HairdresserSelfServicePagedRequest request, string userId, CancellationToken ct);
+    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(
+        HairdresserSelfServicePagedRequest request, 
+        string userId, 
+        CancellationToken ct);
+    Task<IReadOnlyList<string>> GetActiveHairdresserIdsByServiceIdAsync(int id, CancellationToken ct);
 }

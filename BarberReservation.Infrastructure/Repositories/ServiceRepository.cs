@@ -1,7 +1,6 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
-using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Service;
 using Microsoft.EntityFrameworkCore;
 

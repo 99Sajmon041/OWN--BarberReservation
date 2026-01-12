@@ -1,4 +1,5 @@
-﻿using BarberReservation.Application.Exceptions;
+﻿using BarberReservation.Application.Common.DateHelpers;
+using BarberReservation.Application.Exceptions;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
@@ -17,6 +18,17 @@ public sealed class CreateHairDresserReservationCommandHandler(
 {
     public async Task<int> Handle(CreateHairDresserReservationCommand request, CancellationToken ct)
     {
+        var maxReservationDate = ReservationDateHelper.GetMaxReservationDate();
+
+        if (DateOnly.FromDateTime(request.StartAt) > maxReservationDate)
+        {
+            logger.LogWarning("Requested reservation date {RequestedDate} by Customer name {CustomerName} exceeds maximum allowed date.",
+                request.StartAt,
+                request.CustomerName);
+
+            throw new ConflictException($"Rezervaci lze vytvořit nejpozději do data: {maxReservationDate:dd.MM.yyyy}.");
+        }
+
         var hairDresserid = currentAppUser.User.Id;
 
         var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForCurrentUserAsync(request.HairdresserServiceId, hairDresserid, ct);

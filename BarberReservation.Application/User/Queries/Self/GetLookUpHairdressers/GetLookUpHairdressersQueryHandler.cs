@@ -11,9 +11,9 @@ namespace BarberReservation.Application.User.Queries.Self.GetLookUpHairdressers;
 public sealed class GetLookUpHairdressersQueryHandler(
     ILogger<GetLookUpHairdressersQueryHandler> logger,
     UserManager<ApplicationUser> userManager,
-    IMapper mapper) : IRequestHandler<GetLookUpHairdressersQuery, IEnumerable<HairdresserLookUpDto>>
+    IMapper mapper) : IRequestHandler<GetLookUpHairdressersQuery, IEnumerable<Shared.Models.LookUpModels.GetLookUpHairdressersByService>>
 {
-    public async Task<IEnumerable<HairdresserLookUpDto>> Handle(GetLookUpHairdressersQuery request, CancellationToken ct)
+    public async Task<IEnumerable<Shared.Models.LookUpModels.GetLookUpHairdressersByService>> Handle(GetLookUpHairdressersQuery request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -24,7 +24,7 @@ public sealed class GetLookUpHairdressersQueryHandler(
             .OrderBy(x => x.LastName)
             .ThenBy(x => x.FirstName);
 
-        var hairdresserLookUpDtos = mapper.Map<IEnumerable<HairdresserLookUpDto>>(filteredHairdressers);
+        var hairdresserLookUpDtos = mapper.Map<IEnumerable<Shared.Models.LookUpModels.GetLookUpHairdressersByService>>(filteredHairdressers);
 
         logger.LogInformation("Retrieved {Count} active hairdressers for lookup.", hairdresserLookUpDtos.Count());
 

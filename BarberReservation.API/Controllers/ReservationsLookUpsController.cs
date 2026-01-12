@@ -2,6 +2,7 @@
 using BarberReservation.Application.Service.Queries.GetLookUpServices;
 using BarberReservation.Application.User.Queries.Admin.GetLookUpCustomers;
 using BarberReservation.Application.User.Queries.Self.GetLookUpHairdressers;
+using BarberReservation.Application.User.Queries.Self.GetLookUpHairdressersByService;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.LookUpModels;
 using MediatR;
@@ -24,9 +25,17 @@ namespace BarberReservation.API.Controllers
 
         [HttpGet("hairdressers")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<HairdresserLookUpDto>>> GetLookUpHairdressers(CancellationToken ct)
+        public async Task<ActionResult<IEnumerable<GetLookUpHairdressersByService>>> GetLookUpHairdressers(CancellationToken ct)
         {
             var result = await mediator.Send(new GetLookUpHairdressersQuery(), ct);
+            return Ok(result);
+        }
+
+        [HttpGet("service/{serviceId:int}/hairdressers")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IReadOnlyList<GetLookUpHairdressersByService>>> GetLookUpHaidressersByService(int serviceId, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetLookUpHairdressersByServiceQuery(serviceId), ct);
             return Ok(result);
         }
 
@@ -57,4 +66,3 @@ namespace BarberReservation.API.Controllers
         }
     }
 }
-

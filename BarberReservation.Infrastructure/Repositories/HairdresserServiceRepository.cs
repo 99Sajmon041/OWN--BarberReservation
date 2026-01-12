@@ -30,6 +30,15 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
             .Include(x => x.Service)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+    public async Task<IReadOnlyList<string>> GetActiveHairdresserIdsByServiceIdAsync(int serviceId, CancellationToken ct)
+    {
+        return await _context.HairdresserServices
+            .AsNoTracking()
+            .Where(x => x.ServiceId == serviceId && x.IsActive)
+            .Select(x => x.HairdresserId)
+            .Distinct()
+            .ToListAsync(ct);
+    }
 
     public async Task<HairdresserService?> GetByIdForCurrentUserAsync(int id, string hairdresserId, CancellationToken ct)
     {
