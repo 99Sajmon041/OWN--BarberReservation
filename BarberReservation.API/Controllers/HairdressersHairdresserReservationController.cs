@@ -15,7 +15,7 @@ namespace BarberReservation.API.Controllers
     [Route("api/hairdresser/reservations")]
     [Authorize(Roles = nameof(UserRoles.Hairdresser))]
     [ApiController]
-    public class HairdresserReservationController(IMediator mediator) : ControllerBase
+    public class HairdressersHairdresserReservationController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<PagedResult<HairdresserReservationDto>>> GetAll([FromQuery] GetAllHairdresserReservationsQuery query, CancellationToken ct)

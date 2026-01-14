@@ -12,9 +12,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace BarberReservation.API.Controllers
 {
     [Authorize(Roles = nameof(UserRoles.Hairdresser))]
-    [Route("api/hairdresser-services")]
+    [Route("api/me/hairdresser-services")]
     [ApiController]
-    public class SelfHairdresserServicesController(IMediator mediator) : ControllerBase
+    public class HairdressersHairdresserServicesController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] GetAllSelfHairdressersServicesQuery query, CancellationToken ct)

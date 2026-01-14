@@ -1,5 +1,4 @@
-﻿using BarberReservation.Shared.Models.LookUpModels;
-using MediatR;
+﻿using MediatR;
 
 namespace BarberReservation.Application.User.Queries.Self.GetLookUpHairdressersByService;
 

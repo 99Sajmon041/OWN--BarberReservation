@@ -13,7 +13,7 @@ namespace BarberReservation.API.Controllers
 {
     [Route("api/services")]
     [ApiController]
-    public class ServiceController(IMediator mediator) : ControllerBase
+    public class AdminServiceController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
         [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Hairdresser))]

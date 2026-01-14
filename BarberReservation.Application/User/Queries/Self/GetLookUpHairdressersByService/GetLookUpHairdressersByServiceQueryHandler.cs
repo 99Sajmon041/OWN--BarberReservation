@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.LookUpModels;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

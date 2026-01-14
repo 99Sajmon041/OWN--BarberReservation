@@ -69,6 +69,10 @@ public sealed class BarberDbContext(DbContextOptions options) : IdentityDbContex
             .HasIndex(x => new { x.HairdresserId, x.ServiceId })
             .IsUnique()
             .HasFilter("[IsActive] = 1");
+
+        builder.Entity<HairdresserWorkingHours>()
+            .HasIndex(x => new { x.HairdresserId, x.DayOfWeek })
+            .IsUnique();
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
