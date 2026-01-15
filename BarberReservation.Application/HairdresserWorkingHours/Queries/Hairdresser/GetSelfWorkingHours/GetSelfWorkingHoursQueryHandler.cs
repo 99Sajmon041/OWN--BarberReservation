@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using BarberReservation.Application.UserIdentity;
+﻿using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
+using BarberReservation.Shared.Models.HairdresserWorkingHours.Common;
 using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -10,21 +10,42 @@ namespace BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdres
 public sealed class GetSelfWorkingHoursQueryHandler(
     ILogger<GetSelfWorkingHoursQueryHandler> logger,
     ICurrentAppUser currentAppUser,
-    IUnitOfWork unitOfWork,
-    IMapper mapper) : IRequestHandler<GetSelfWorkingHoursQuery, IReadOnlyList<HairdresserWorkingHoursDto>>
+    IUnitOfWork unitOfWork) : IRequestHandler<GetSelfWorkingHoursQuery, HairdresserWorkingHoursDto>
 {
-    public async Task<IReadOnlyList<HairdresserWorkingHoursDto>> Handle(GetSelfWorkingHoursQuery request, CancellationToken ct)
+    public async Task<HairdresserWorkingHoursDto> Handle(GetSelfWorkingHoursQuery request, CancellationToken ct)
     {
-        var hairdresserWorkingHours = await unitOfWork.HairdresserWorkingHoursRepository.GetAllDaysInWeekForHairdresser(
+        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var response = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
             currentAppUser.User.Id,
+            currentDate,
             false,
-            true,
+            false,
             ct);
 
-        var hairdressersWorkingHoursDto = mapper.Map<List<HairdresserWorkingHoursDto>>(hairdresserWorkingHours);
+        if (response.Count == 0)
+        {
+            return new HairdresserWorkingHoursDto
+            {
+                EffectiveFrom = default,
+                WorkingHours = []
+            };
+        }
 
-        logger.LogInformation("Hairdresser fetched own working hours per week. Hairdresser ID: {hairdresserId}", currentAppUser.User.Id);
+        var dto = new HairdresserWorkingHoursDto
+        {
+            EffectiveFrom = response[0].EffectiveFrom,
+            WorkingHours = response.Select(x => new WorkingHoursDto
+            {
+                DayOfWeek = x.DayOfWeek,
+                IsWorkingDay = x.IsWorkingDay,
+                WorkFrom = x.WorkFrom,
+                WorkTo = x.WorkTo
+            }).ToList()
+        };
 
-        return hairdressersWorkingHoursDto;
+        logger.LogInformation("Hairdresser fetched own working hours per week. Hairdresser ID: {HairdresserId}", currentAppUser.User.Id);
+
+        return dto;
     }
 }

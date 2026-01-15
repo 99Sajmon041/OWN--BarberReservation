@@ -1,6 +1,6 @@
 ﻿namespace BarberReservation.Shared.Models.HairdresserWorkingHours.Common;
 
-public class WorkingHoursDto
+public sealed class WorkingHoursDto
 {
     public DayOfWeek DayOfWeek { get; set; }
     public bool IsWorkingDay { get; set; }

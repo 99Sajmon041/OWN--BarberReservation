@@ -5,5 +5,5 @@ namespace BarberReservation.Application.HairdresserWorkingHours.Commands.Hairdre
 
 public sealed class UpsertSelfWorkingHoursCommand : IRequireActiveUser, IRequest
 {
-    public IEnumerable<UpsertHairdresserWorkingHoursDto> DaysOfWorkingWeek { get; init; } = [];
+    public IReadOnlyList<UpsertHairdresserWorkingHoursDto> DaysOfWorkingWeek { get; init; } = [];
 }

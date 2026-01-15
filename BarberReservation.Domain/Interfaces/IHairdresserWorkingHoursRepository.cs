@@ -5,9 +5,12 @@ namespace BarberReservation.Domain.Interfaces;
 public interface IHairdresserWorkingHoursRepository
 {
     Task<HairdresserWorkingHours?> GetForDayAsync(string hairdresserId, DayOfWeek dayOfWeek, CancellationToken ct);
-    Task<IReadOnlyList<HairdresserWorkingHours>> GetAllDaysInWeekForHairdresser(
+    Task<IReadOnlyList<HairdresserWorkingHours>> GetWeekAsync(
         string hairdresserId,
-        bool tracked, bool includeHairdresser,
+        DateOnly onDate,
+        bool includeHairdresser,
+        bool tracked,
         CancellationToken ct);
-    void AddDayToWorkingWeek(HairdresserWorkingHours day);
+    void AddDaysToWorkingWeek(IEnumerable<HairdresserWorkingHours> days);
+    Task<List<HairdresserWorkingHours>> GetWeekByEffectiveFromAsync(string hairdresserId, DateOnly validFromDate, CancellationToken ct);
 }

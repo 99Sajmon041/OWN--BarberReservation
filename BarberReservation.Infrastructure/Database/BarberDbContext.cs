@@ -71,7 +71,7 @@ public sealed class BarberDbContext(DbContextOptions options) : IdentityDbContex
             .HasFilter("[IsActive] = 1");
 
         builder.Entity<HairdresserWorkingHours>()
-            .HasIndex(x => new { x.HairdresserId, x.DayOfWeek })
+            .HasIndex(x => new { x.HairdresserId, x.DayOfWeek, x.EffectiveFrom })
             .IsUnique();
     }
 

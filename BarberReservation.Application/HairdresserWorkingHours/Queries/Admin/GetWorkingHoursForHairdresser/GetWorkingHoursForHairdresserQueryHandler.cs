@@ -1,7 +1,9 @@
-﻿using AutoMapper;
+﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.HairdresserWorkingHours.Admin;
+using BarberReservation.Shared.Models.HairdresserWorkingHours.Common;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.Application.HairdresserWorkingHours.Queries.Admin.GetWorkingHoursForHairdresser;
@@ -9,20 +11,48 @@ namespace BarberReservation.Application.HairdresserWorkingHours.Queries.Admin.Ge
 public sealed class GetWorkingHoursForHairdresserQueryHandler(
     ILogger<GetWorkingHoursForHairdresserQueryHandler> logger,
     IUnitOfWork unitOfWork,
-    IMapper mapper) : IRequestHandler<GetWorkingHoursForHairdresserQuery, IReadOnlyList<AdminHairdresserWorkingHoursDto>>
+    UserManager<ApplicationUser> userManager) : IRequestHandler<GetWorkingHoursForHairdresserQuery, AdminHairdresserWorkingHoursDto>
 {
-    public async Task<IReadOnlyList<AdminHairdresserWorkingHoursDto>> Handle(GetWorkingHoursForHairdresserQuery request, CancellationToken ct)
+    public async Task<AdminHairdresserWorkingHoursDto> Handle(GetWorkingHoursForHairdresserQuery request, CancellationToken ct)
     {
-        var hairdresserWorkingHours = await unitOfWork.HairdresserWorkingHoursRepository.GetAllDaysInWeekForHairdresser(
+        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var response = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
             request.HairdresserId,
-            false,
+            currentDate,
             true,
+            false,
             ct);
 
-        var hairdresserWorkingHoursDto = mapper.Map<List<AdminHairdresserWorkingHoursDto>>(hairdresserWorkingHours);
+        if (response.Count == 0)
+        {
+            var hairdresser = await userManager.FindByIdAsync(request.HairdresserId);
 
-        logger.LogInformation("Admin fetched hairdressers working hours per week. Hairdresser ID: {hairdresserId}", request.HairdresserId);
+            return new AdminHairdresserWorkingHoursDto
+            {
+                HairdresserName = hairdresser?.FullName ?? string.Empty,
+                EffectiveFrom = default,
+                WorkingHours = []
+            };
+        }
 
-        return hairdresserWorkingHoursDto;
+        var first = response[0];
+
+        var dto = new AdminHairdresserWorkingHoursDto
+        {
+            EffectiveFrom = first.EffectiveFrom,
+            HairdresserName = $"{first.Hairdresser.FirstName} {first.Hairdresser.LastName}",
+            WorkingHours = response.Select(x => new WorkingHoursDto
+            {
+                DayOfWeek = x.DayOfWeek,
+                IsWorkingDay = x.IsWorkingDay,
+                WorkFrom = x.WorkFrom,
+                WorkTo = x.WorkTo
+            }).ToList()
+        };
+
+        logger.LogInformation("Admin fetched hairdresser working hours per week. Hairdresser ID: {hairdresserId}", request.HairdresserId);
+
+        return dto;
     }
 }

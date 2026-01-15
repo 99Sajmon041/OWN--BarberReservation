@@ -16,27 +16,44 @@ public sealed class HairdresserWorkingHoursRepository(BarberDbContext context) :
             .FirstOrDefaultAsync(x => x.HairdresserId == hairdresserId && x.DayOfWeek == dayOfWeek && x.IsWorkingDay, ct);
     }
 
-    public async Task<IReadOnlyList<HairdresserWorkingHours>> GetAllDaysInWeekForHairdresser(
-        string hairdresserId, 
-        bool tracked, bool includeHairdresser, 
-        CancellationToken ct)
+    public async Task<IReadOnlyList<HairdresserWorkingHours>> GetWeekAsync(
+    string hairdresserId,
+    DateOnly onDate,
+    bool includeHairdresser,
+    bool tracked,
+    CancellationToken ct)
     {
-        IQueryable<HairdresserWorkingHours> query = _context.HairdresserWorkingHours;
+        IQueryable<HairdresserWorkingHours> baseQuery = _context.HairdresserWorkingHours;
 
         if (!tracked)
-            query = query.AsNoTracking();
+            baseQuery = baseQuery.AsNoTracking();
 
         if (includeHairdresser)
-            query = query.Include(x => x.Hairdresser);
+            baseQuery = baseQuery.Include(x => x.Hairdresser);
 
-        return await query
-            .Where(x => x.HairdresserId == hairdresserId)
+        var effectiveFrom = await baseQuery
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom <= onDate)
+            .MaxAsync(x => (DateOnly?)x.EffectiveFrom, ct);
+
+        if (effectiveFrom is null)
+            return [];
+
+        return await baseQuery
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom == effectiveFrom.Value)
             .OrderBy(x => x.DayOfWeek)
             .ToListAsync(ct);
     }
 
-    public void AddDayToWorkingWeek(HairdresserWorkingHours day)
+    public void AddDaysToWorkingWeek(IEnumerable<HairdresserWorkingHours> days)
     {
-        _context.HairdresserWorkingHours.Add(day);
+        _context.HairdresserWorkingHours.AddRange(days);
+    }
+
+    public async Task<List<HairdresserWorkingHours>> GetWeekByEffectiveFromAsync(string hairdresserId, DateOnly validFromDate, CancellationToken ct)
+    {
+        return await _context.HairdresserWorkingHours
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom == validFromDate)
+            .OrderBy(x => x.DayOfWeek)
+            .ToListAsync(ct);
     }
 }

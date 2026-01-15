@@ -4,4 +4,4 @@ using MediatR;
 
 namespace BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfWorkingHours;
 
-public sealed class GetSelfWorkingHoursQuery : IRequireActiveUser, IRequest<IReadOnlyList<HairdresserWorkingHoursDto>> { }
+public sealed class GetSelfWorkingHoursQuery : IRequireActiveUser, IRequest<HairdresserWorkingHoursDto> { }
