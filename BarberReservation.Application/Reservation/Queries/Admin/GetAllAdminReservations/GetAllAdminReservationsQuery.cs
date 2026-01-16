@@ -1,4 +1,5 @@
-﻿using BarberReservation.Application.Common.PagedSettings;
+﻿
+using BarberReservation.Application.Common.PagedSettings;
 using BarberReservation.Application.Reservation.Common;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;

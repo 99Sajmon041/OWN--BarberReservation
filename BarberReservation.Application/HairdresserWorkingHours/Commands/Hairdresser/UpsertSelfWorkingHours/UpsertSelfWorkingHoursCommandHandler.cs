@@ -48,11 +48,55 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
                 throw new DomainException("Problém při úpravě dnů, některé dny chybí. Kontaktujte administrátora webu.");
             }
 
-            if(existingUpatedWeek.Count == 5)
-            {
-                var newDaysToUpdate = request.DaysOfWorkingWeek.ToDictionary(x => x.DayOfWeek);
+            var timeOff = await unitOfWork.HairdresserTimeOffRepository.GetTimeOffFromDateAsync(hairdresser.Id, upcomingChangeDate, ct);
+            var newDaysToUpdate = request.DaysOfWorkingWeek.ToDictionary(x => x.DayOfWeek);
 
-                foreach(var day in existingUpatedWeek)
+            foreach (var freeDay in timeOff)
+            {
+                if (!newDaysToUpdate.TryGetValue(freeDay.StartAt.DayOfWeek, out var existingDay))
+                    continue;
+
+                var freeStart = TimeOnly.FromDateTime(freeDay.StartAt);
+                var freeEnd = TimeOnly.FromDateTime(freeDay.EndAt);
+
+                if (!existingDay.IsWorkingDay)
+                {
+                    logger.LogWarning(
+                        "Working hours update blocked: attempting to set non-working day while time off exists. " +
+                        "HairdresserId: {HairdresserId}, Day: {DayOfWeek}, TimeOff: {StartAt} - {EndAt}, EffectiveFrom: {EffectiveFrom}",
+                        hairdresser.Id,
+                        freeDay.StartAt.DayOfWeek,
+                        freeDay.StartAt,
+                        freeDay.EndAt,
+                        upcomingChangeDate);
+
+                    throw new ConflictException(
+                        $"Nelze nastavit den na nepracovní, máte naplánované volno: {freeDay.StartAt:dd.MM. HH:mm} - {freeDay.EndAt:HH:mm}. Nejdřív ho odstraňte.");
+                }
+
+                var overlaps = existingDay.WorkFrom < freeEnd && freeStart < existingDay.WorkTo;
+
+                if (overlaps)
+                {
+                    logger.LogWarning(
+                        "Working hours update blocked due to overlap with time off. " +
+                        "HairdresserId: {HairdresserId}, Day: {DayOfWeek}, TimeOff: {StartAt} - {EndAt}, NewWork: {WorkFrom} - {WorkTo}, EffectiveFrom: {EffectiveFrom}",
+                        hairdresser.Id,
+                        freeDay.StartAt.DayOfWeek,
+                        freeDay.StartAt,
+                        freeDay.EndAt,
+                        existingDay.WorkFrom,
+                        existingDay.WorkTo,
+                        upcomingChangeDate);
+
+                    throw new ConflictException(
+                        $"Nelze upravit pracovní dobu. {freeDay.StartAt:dd.MM. HH:mm} - {freeDay.EndAt:HH:mm} máte naplánované volno, které se s pracovní dobou překrývá.");
+                }
+            }
+
+            if (existingUpatedWeek.Count == 5)
+            {
+                foreach (var day in existingUpatedWeek)
                 {
                     if(newDaysToUpdate.TryGetValue(day.DayOfWeek, out var newDay))
                     {
