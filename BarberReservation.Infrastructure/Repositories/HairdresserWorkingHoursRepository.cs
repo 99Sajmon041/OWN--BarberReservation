@@ -56,4 +56,17 @@ public sealed class HairdresserWorkingHoursRepository(BarberDbContext context) :
             .OrderBy(x => x.DayOfWeek)
             .ToListAsync(ct);
     }
+
+    public async Task<HairdresserWorkingHours?> GetEffectiveFromDayByTimeOffAsync(string hairdresserId, DateOnly TimeOffDay, CancellationToken ct)
+    {
+        return await _context
+            .HairdresserWorkingHours
+            .AsNoTracking()
+            .OrderByDescending(x =>  x.EffectiveFrom)
+            .FirstOrDefaultAsync(
+            x => x.DayOfWeek == TimeOffDay.DayOfWeek
+            && x.IsWorkingDay
+            && x.HairdresserId == hairdresserId
+            && x.EffectiveFrom <= TimeOffDay, ct);
+    }
 }

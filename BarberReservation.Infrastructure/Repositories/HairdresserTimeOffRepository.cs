@@ -25,6 +25,16 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
             .ToListAsync(ct);
     }
 
+    public void Add(HairdresserTimeOff timeOff)
+    {
+        _context.Add(timeOff);
+    }
+
+    public async Task<HairdresserTimeOff?> GetByIdAsync(int id, string hairdresserId, CancellationToken ct)
+    {
+        return await _context.HairdresserTimeOffs.FirstOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
+    }
+
     public async Task<(IReadOnlyList<HairdresserTimeOff>, int)> GetAllPagedForAdminAsync(AdminHairdresserPagedRequest request, int? year, int? month, CancellationToken ct)
     {
         var query = _context.HairdresserTimeOffs
@@ -114,5 +124,18 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
             .ToListAsync(ct);
 
         return (items, total);
+    }
+
+    public async Task<IReadOnlyList<HairdresserTimeOff>> GetAllByDayForHairdresserAsync(string hairdresserId, DateTime today, CancellationToken ct)
+    {
+        return await _context
+            .HairdresserTimeOffs
+            .Where(x => x.HairdresserId == hairdresserId && x.StartAt.Date == today.Date)
+            .ToListAsync(ct);
+    }
+
+    public void Delete(HairdresserTimeOff hairdresserTimeOff)
+    {
+        _context.HairdresserTimeOffs.Remove(hairdresserTimeOff);
     }
 }

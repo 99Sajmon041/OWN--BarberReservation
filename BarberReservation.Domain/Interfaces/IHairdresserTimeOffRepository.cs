@@ -15,4 +15,8 @@ public interface IHairdresserTimeOffRepository
         int? year,
         int? month,
         CancellationToken ct);
+    void Add(HairdresserTimeOff timeOff);
+    Task<HairdresserTimeOff?> GetByIdAsync(int id, string hairdresserId, CancellationToken ct);
+    Task<IReadOnlyList<HairdresserTimeOff>> GetAllByDayForHairdresserAsync(string hairdresserId, DateTime today, CancellationToken ct);
+    void Delete(HairdresserTimeOff hairdresserTimeOff);
 }

@@ -13,4 +13,5 @@ public interface IHairdresserWorkingHoursRepository
         CancellationToken ct);
     void AddDaysToWorkingWeek(IEnumerable<HairdresserWorkingHours> days);
     Task<List<HairdresserWorkingHours>> GetWeekByEffectiveFromAsync(string hairdresserId, DateOnly validFromDate, CancellationToken ct);
+    Task<HairdresserWorkingHours?> GetEffectiveFromDayByTimeOffAsync(string hairdresserId, DateOnly TimeOffDay, CancellationToken ct);
 }
