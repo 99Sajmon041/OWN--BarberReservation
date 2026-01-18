@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarberReservation.Applicati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarberReservation.Shared", "BarberReservation.Shared\BarberReservation.Shared.csproj", "{4190C3DF-3A5F-4C6E-967A-B01F53DB6FB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarberReservation.Blazor", "BarberReservation.Blazor\BarberReservation.Blazor.csproj", "{B31796F7-BABD-4B15-853F-BC72B48B148F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{4190C3DF-3A5F-4C6E-967A-B01F53DB6FB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4190C3DF-3A5F-4C6E-967A-B01F53DB6FB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4190C3DF-3A5F-4C6E-967A-B01F53DB6FB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B31796F7-BABD-4B15-853F-BC72B48B148F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B31796F7-BABD-4B15-853F-BC72B48B148F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B31796F7-BABD-4B15-853F-BC72B48B148F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B31796F7-BABD-4B15-853F-BC72B48B148F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

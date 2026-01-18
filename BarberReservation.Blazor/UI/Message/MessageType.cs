@@ -1,0 +1,9 @@
+﻿namespace BarberReservation.Blazor.UI.Message;
+
+public enum MessageType
+{
+    Info,
+    Success,
+    Warning,
+    Error
+}

@@ -1,0 +1,114 @@
+﻿@page "/login"
+
+@using BarberReservation.Shared.Models.Authorization
+@using BarberReservation.Blazor.Common
+
+@inject IAuthService AuthService
+@inject AuthState AuthState
+@inject NavigationManager Nav
+@inject MessageService MessageService
+
+<div class="page-head page-head-center">
+    <h1 class="page-title">Přihlášení</h1>
+    <p class="page-subtitle muted">Přihlašte se do svého účtu.</p>
+</div>
+
+<div class="stack-top">
+    <div class="card card-md">
+        <EditForm Model="_model" OnValidSubmit="HandleLoginAsync">
+            <DataAnnotationsValidator />
+
+            <div class="field">
+                <label class="label" for="email">E-mail</label>
+                <InputText id="email"
+                           class="input"
+                           @bind-Value="_model.Email"
+                           autocomplete="username"
+                           placeholder="name@domain.com" />
+                <ValidationMessage For="@(() => _model.Email)" class="field-error" />
+            </div>
+
+            <div class="field">
+                <label class="label" for="password">Heslo</label>
+
+                <div class="input-row">
+                    <InputText id="password"
+                               class="input"
+                               type="@(_showPassword ? "text" : "password")"
+                               @bind-Value="_model.Password"
+                               autocomplete="current-password"
+                               placeholder="••••••••" />
+
+                    <button type="button"
+                            class="btn btn-outline btn-compact"
+                            @onclick="TogglePassword">
+                        @(_showPassword ? "Hide" : "Show")
+                    </button>
+                </div>
+
+                <ValidationMessage For="@(() => _model.Password)" class="field-error" />
+            </div>
+
+            <div class="row-between">
+                <label class="check">
+                    <InputCheckbox class="checkbox" @bind-Value="_model.RememberMe" />
+                    <span>Remember me</span>
+                </label>
+
+                <a class="link" href="/forgot-password">Zapomenuté heslo?</a>
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit" disabled="@_isSubmitting">
+                @(_isSubmitting ? "Přihlašuji..." : "Přihlásit")
+            </button>
+
+            <div class="divider"></div>
+
+            <div class="center muted">
+                Nemáš účet? <a class="link" href="/register">Registrovat</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly LoginRequest _model = new();
+    private bool _isSubmitting;
+    private bool _showPassword;
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    protected override void OnInitialized()
+    {
+        if (AuthState.IsAuthenticated)
+        {
+            if (AuthState.MustChangePassword)
+                Nav.NavigateTo("/change-password", replace: true);
+            else
+                Nav.NavigateTo("/", replace: true);
+        }
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        _isSubmitting = true;
+
+        try
+        {
+            var response = await AuthService.LoginAsync(_model, CancellationToken.None);
+            if (response.MustChangePassword)
+            {
+                Nav.NavigateTo("/change-password", replace: true);
+                return;
+            }
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

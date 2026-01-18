@@ -31,6 +31,12 @@ public sealed class ChangePasswordCommandHandler(
             throw new ValidationException("Změna hesla se nezdařila.", errors);
         }
 
+        if(current.MustChangePassword)
+        {
+            current.MustChangePassword = false;
+            await userManager.UpdateAsync(current);
+        }
+
         return Unit.Value;
     }
 }

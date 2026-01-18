@@ -1,0 +1,105 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject MessageService MessageService
+
+<div class="app-shell">
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <button class="hamburger" @onclick="() => _mobileMenuOpen = !_mobileMenuOpen" aria-label="Menu">☰</button>
+
+            <a class="brand" href="/">
+                <span class="brand-dot"></span>
+                Barber rezervace
+            </a>
+
+            <nav class="nav-links">
+                <a class="nav-link" href="/">Domů</a>
+                <a class="nav-link" href="/reservations">Rezervace</a>
+                <a class="nav-link" href="/services">Služby</a>
+            </nav>
+
+            <div class="topbar-right">
+                <span class="user-pill muted">Guest</span>
+                <a class="btn btn-link" href="/login">Přihlásit se</a>
+                <a class="btn btn-primary" href="/register">Registrovat</a>
+            </div>
+        </div>
+
+        @if (_mobileMenuOpen)
+        {
+            <div class="menu-backdrop" @onclick="CloseMobileMenu"></div>
+
+            <div class="mobile-menu container">
+                <a class="mobile-link" href="/" @onclick="CloseMobileMenu">Domů</a>
+                <a class="mobile-link" href="/reservations" @onclick="CloseMobileMenu">Rezervace</a>
+                <a class="mobile-link" href="/services" @onclick="CloseMobileMenu">Služby</a>
+            </div>
+        }
+    </header>
+
+    <main class="content">
+        <div class="container">
+
+            <div class="ui-msg-slot">
+                @if (MessageService.Current is not null)
+                {
+                    var css = MessageService.Current.Type switch
+                    {
+                        MessageType.Success => "ui-msg-success",
+                        MessageType.Warning => "ui-msg-warning",
+                        MessageType.Error => "ui-msg-error",
+                        _ => "ui-msg-info"
+                    };
+
+                    <div class="ui-msg @css" role="alert">
+                        <span class="ui-msg-text">@MessageService.Current.Text</span>
+                        <button type="button" class="ui-msg-close" @onclick="ClearMessage" aria-label="Zavřít">✕</button>
+                    </div>
+                }
+            </div>
+
+            <div class="page">
+                @Body
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <span>© @DateTime.Now.Year Barber rezervace</span>
+        </div>
+    </footer>
+</div>
+
+@code {
+    private bool _disposed;
+    private bool _mobileMenuOpen;
+
+    protected override void OnInitialized()
+    {
+        MessageService.OnChange += OnMessageChanged;
+    }
+
+    private void OnMessageChanged()
+    {
+        if (_disposed) return;
+
+        try { 
+            _ = InvokeAsync(StateHasChanged);
+        } 
+        catch
+        {
+            
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        MessageService.OnChange -= OnMessageChanged;
+    }
+
+    private void CloseMobileMenu() => _mobileMenuOpen = false;
+    private void ClearMessage() => MessageService.Clear();
+}

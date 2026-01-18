@@ -1,0 +1,15 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <MustChangePasswordGuard>
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+            </MustChangePasswordGuard>
+        </Found>
+
+        <NotFound>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <p class="muted">Stránka nenalezena.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
