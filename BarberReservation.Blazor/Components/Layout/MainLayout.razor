@@ -1,6 +1,10 @@
 ﻿@inherits LayoutComponentBase
 @implements IDisposable
 @inject MessageService MessageService
+@inject AuthState AuthState
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="app-shell">
     <header class="topbar">
@@ -18,21 +22,33 @@
                 <a class="nav-link" href="/services">Služby</a>
             </nav>
 
-            <div class="topbar-right">
-                <span class="user-pill muted">Guest</span>
-                <a class="btn btn-link" href="/login">Přihlásit se</a>
-                <a class="btn btn-primary" href="/register">Registrovat</a>
-            </div>
+            @if (!AuthState.IsAuthenticated)
+            {
+                <div class="topbar-right">
+                    <span class="user-pill muted">Guest</span>
+                    <a class="btn btn-link" href="/login">Přihlásit se</a>
+                    <a class="btn btn-primary" href="/register">Registrovat</a>
+                </div>
+            }
+            else
+            {
+                <div class="topbar-right">
+                    <span class="user-pill">
+                        @AuthState.FullName · @AuthState.Role ·
+                    </span>
+                    <button type="button" class="btn btn-link" @onclick="LogoutAsync">Odhlásit</button>
+                </div>
+            }
         </div>
 
         @if (_mobileMenuOpen)
         {
-            <div class="menu-backdrop" @onclick="CloseMobileMenu"></div>
-
-            <div class="mobile-menu container">
-                <a class="mobile-link" href="/" @onclick="CloseMobileMenu">Domů</a>
-                <a class="mobile-link" href="/reservations" @onclick="CloseMobileMenu">Rezervace</a>
-                <a class="mobile-link" href="/services" @onclick="CloseMobileMenu">Služby</a>
+            <div class="mobile-overlay" @onclick="CloseMobileMenu">
+                <div class="mobile-menu container" @onclick:stopPropagation="true">
+                    <a class="mobile-link" href="/" @onclick="CloseMobileMenu">Domů</a>
+                    <a class="mobile-link" href="/reservations" @onclick="CloseMobileMenu">Rezervace</a>
+                    <a class="mobile-link" href="/services" @onclick="CloseMobileMenu">Služby</a>
+                </div>
             </div>
         }
     </header>
@@ -75,29 +91,84 @@
 @code {
     private bool _disposed;
     private bool _mobileMenuOpen;
+    private bool _authLoaded;   
 
     protected override void OnInitialized()
     {
         MessageService.OnChange += OnMessageChanged;
+        AuthState.OnChange += OnAuthChanged;
+        Nav.LocationChanged += (_, __) => _mobileMenuOpen = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _authLoaded)
+            return;
+
+        _authLoaded = true;
+
+        await AuthState.LoadAsync();
+        (AuthenticationStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
+
+        EnforcePasswordChange();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnAuthChanged()
+    {
+        if (_disposed) return;
+
+        try
+        {
+            EnforcePasswordChange();
+            _ = InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+        }
+    }
+
+    private void EnforcePasswordChange()
+    {
+        if (!AuthState.IsAuthenticated)
+            return;
+
+        if (!AuthState.MustChangePassword)
+            return;
+
+        var currentPath = Nav.ToBaseRelativePath(Nav.Uri);
+
+        if (currentPath.StartsWith("change-password"))
+            return;
+
+        Nav.NavigateTo("/change-password", replace: true);
     }
 
     private void OnMessageChanged()
     {
-        if (_disposed) return;
-
-        try { 
-            _ = InvokeAsync(StateHasChanged);
-        } 
-        catch
-        {
-            
+        if (_disposed)
+            return;
+        try 
+        { 
+            _ = InvokeAsync(StateHasChanged); 
         }
+        catch
+        {            
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/", replace: true);
     }
 
     public void Dispose()
     {
         _disposed = true;
         MessageService.OnChange -= OnMessageChanged;
+        AuthState.OnChange -= OnAuthChanged;
+        Nav.LocationChanged -= (_, __) => _mobileMenuOpen = false;
     }
 
     private void CloseMobileMenu() => _mobileMenuOpen = false;

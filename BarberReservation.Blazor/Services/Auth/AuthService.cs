@@ -29,7 +29,7 @@ public sealed class AuthService(
         if (string.IsNullOrWhiteSpace(result.Token))
             throw new ApiRequestException("Server nevrátil token.", (int)response.StatusCode);
 
-        authState.SetSession(result.Token, result.ExpiresAt, result.MustChangePassword);
+        await authState.SetSessionAsync(result.Token, result.ExpiresAt, result.MustChangePassword, request.RememberMe);
         (authStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
 
         return result;
@@ -55,14 +55,13 @@ public sealed class AuthService(
             throw new ApiRequestException(text, (int)response.StatusCode);
         }
 
-        authState.MarkPasswordChanged();
+        await authState.MarkPasswordChangedAsync();
         (authStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
     }
 
-    public Task LogoutAsync()
+    public async Task LogoutAsync()
     {
-        authState.Clear();
+        await authState.ClearAsync();
         (authStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
-        return Task.CompletedTask;
     }
 }

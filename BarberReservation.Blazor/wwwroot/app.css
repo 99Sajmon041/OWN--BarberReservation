@@ -374,7 +374,14 @@ img {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,.5);
-    z-index: 60;
+    z-index: 999;
+}
+
+.mobile-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,.25);
 }
 
 .mobile-menu {
@@ -382,7 +389,7 @@ img {
     left: 50%;
     transform: translateX(-50%);
     top: 74px;
-    z-index: 70;
+    z-index: 1000;
     background: rgba(17,21,27,.96);
     border: 1px solid var(--line);
     border-radius: 16px;
@@ -504,8 +511,9 @@ img {
 }
 
 .ui-msg-slot {
-    min-height: 56px;
-    padding-top: 14px;
+    height: 56px;
+    display: flex;
+    align-items: center;
 }
 
 .ui-msg {

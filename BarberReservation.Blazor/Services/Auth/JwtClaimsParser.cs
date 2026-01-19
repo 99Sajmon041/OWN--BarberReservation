@@ -17,10 +17,21 @@ public static class JwtClaimsParser
         {
             if (kvp.Key is "role" or "roles")
             {
-                if (kvp.Value is JsonElement el && el.ValueKind == JsonValueKind.Array)
+                if (kvp.Value is JsonElement el)
                 {
-                    foreach (var r in el.EnumerateArray())
-                        claims.Add(new Claim(ClaimTypes.Role, r.GetString() ?? ""));
+                    if (el.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var r in el.EnumerateArray())
+                            claims.Add(new Claim(ClaimTypes.Role, r.GetString() ?? ""));
+                    }
+                    else if (el.ValueKind == JsonValueKind.String)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, el.GetString() ?? ""));
+                    }
+                    else
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, el.ToString() ?? ""));
+                    }
                 }
                 else
                 {

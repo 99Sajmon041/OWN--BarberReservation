@@ -1,7 +1,5 @@
 ﻿@page "/login"
-
-@using BarberReservation.Shared.Models.Authorization
-@using BarberReservation.Blazor.Common
+@using Microsoft.AspNetCore.WebUtilities
 
 @inject IAuthService AuthService
 @inject AuthState AuthState
@@ -76,10 +74,24 @@
     private bool _isSubmitting;
     private bool _showPassword;
 
+    private bool _loaded;
+    private string? _returnUrl;
+
     private void TogglePassword() => _showPassword = !_showPassword;
 
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender || _loaded)
+            return;
+
+        _loaded = true;
+
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        _returnUrl = query.TryGetValue("returnUrl", out var v) ? v.ToString() : null;
+
+        await AuthState.LoadAsync();
+
         if (AuthState.IsAuthenticated)
         {
             if (AuthState.MustChangePassword)
@@ -96,11 +108,14 @@
         try
         {
             var response = await AuthService.LoginAsync(_model, CancellationToken.None);
+
             if (response.MustChangePassword)
             {
                 Nav.NavigateTo("/change-password", replace: true);
                 return;
             }
+
+            Nav.NavigateTo(SafeReturnUrl(_returnUrl), replace: true);
         }
         catch (ApiRequestException ex)
         {
@@ -110,5 +125,16 @@
         {
             _isSubmitting = false;
         }
+    }
+
+    private static string SafeReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl))
+            return "/";
+
+        if (returnUrl.StartsWith("/") && !returnUrl.StartsWith("//"))
+            return returnUrl;
+
+        return "/";
     }
 }

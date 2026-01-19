@@ -24,7 +24,8 @@ public sealed class JwtTokenService(IConfiguration configuration, UserManager<Ap
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Email, user.Email ?? string.Empty)
+            new(ClaimTypes.Email, user.Email ?? string.Empty),
+            new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
         };
 
         foreach (var role in roles)

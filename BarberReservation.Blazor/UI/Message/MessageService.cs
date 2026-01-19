@@ -10,6 +10,7 @@ public sealed class MessageService
     public void ShowSuccess(string text) => Show(MessageType.Success, text);
     public void ShowError(string text) => Show(MessageType.Error, text);
     public void ShowInfo(string text) => Show(MessageType.Info, text);
+    public void ShowWarning(string text) => Show(MessageType.Warning, text);
 
     private void Show(MessageType type, string text)
     {

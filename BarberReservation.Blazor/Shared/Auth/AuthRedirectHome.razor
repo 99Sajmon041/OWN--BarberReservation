@@ -1,0 +1,28 @@
+﻿@using BarberReservation.Blazor.UI.Message
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+@inject MessageService MessageService
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        var isAuth = state.User.Identity?.IsAuthenticated == true;
+
+        if (!isAuth)
+        {
+            MessageService.ShowWarning("Nejste přihlášen.");
+
+            var current = Nav.ToBaseRelativePath(Nav.Uri);
+            var loginUrl = "/login?returnUrl=" + Uri.EscapeDataString("/" + current);
+
+            Nav.NavigateTo(loginUrl, replace: true);
+            return;
+        }
+
+        MessageService.ShowError("Nemáte oprávnění.");
+        Nav.NavigateTo("/", replace: true);
+    }
+}
