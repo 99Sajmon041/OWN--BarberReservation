@@ -32,13 +32,10 @@ public sealed class DeactivateUserCommandHandler(
         var updateResult = await userManager.UpdateAsync(user);
         if(!updateResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = updateResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = updateResult.Errors.Select(e => e.Description);
 
-            logger.LogError("Deactivation of the user failed. Error: {Errors}", string.Join(", ", errors["error"]));
-            throw new BarberReservation.Application.Exceptions.ValidationException("Deaktivace uživatele selhala.", errors);
+            logger.LogError("Deactivation of the user failed. Error: {Errors}", error);
+            throw new BarberReservation.Application.Exceptions.ValidationException("Chyba: " + error);
         }
 
         await userManager.UpdateSecurityStampAsync(user);

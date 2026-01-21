@@ -1,5 +1,4 @@
 ﻿@page "/login"
-@using Microsoft.AspNetCore.WebUtilities
 
 @inject IAuthService AuthService
 @inject AuthState AuthState
@@ -13,17 +12,17 @@
 
 <div class="stack-top">
     <div class="card card-md">
-        <EditForm Model="_model" OnValidSubmit="HandleLoginAsync">
+        <EditForm Model="request" OnValidSubmit="HandleLoginAsync">
             <DataAnnotationsValidator />
 
             <div class="field">
                 <label class="label" for="email">E-mail</label>
                 <InputText id="email"
                            class="input"
-                           @bind-Value="_model.Email"
+                           @bind-Value="request.Email"
                            autocomplete="username"
                            placeholder="name@domain.com" />
-                <ValidationMessage For="@(() => _model.Email)" class="field-error" />
+                <ValidationMessage For="@(() => request.Email)" class="field-error" />
             </div>
 
             <div class="field">
@@ -32,32 +31,32 @@
                 <div class="input-row">
                     <InputText id="password"
                                class="input"
-                               type="@(_showPassword ? "text" : "password")"
-                               @bind-Value="_model.Password"
+                               type="@(showPassword ? "text" : "password")"
+                               @bind-Value="request.Password"
                                autocomplete="current-password"
                                placeholder="••••••••" />
 
                     <button type="button"
                             class="btn btn-outline btn-compact"
                             @onclick="TogglePassword">
-                        @(_showPassword ? "Hide" : "Show")
+                        @(showPassword ? "Hide" : "Show")
                     </button>
                 </div>
 
-                <ValidationMessage For="@(() => _model.Password)" class="field-error" />
+                <ValidationMessage For="@(() => request.Password)" class="field-error" />
             </div>
 
             <div class="row-between">
                 <label class="check">
-                    <InputCheckbox class="checkbox" @bind-Value="_model.RememberMe" />
+                    <InputCheckbox class="checkbox" @bind-Value="request.RememberMe" />
                     <span>Remember me</span>
                 </label>
 
                 <a class="link" href="/forgot-password">Zapomenuté heslo?</a>
             </div>
 
-            <button class="btn btn-primary btn-block" type="submit" disabled="@_isSubmitting">
-                @(_isSubmitting ? "Přihlašuji..." : "Přihlásit")
+            <button class="btn btn-primary btn-block" type="submit" disabled="@isSubmitting">
+                @(isSubmitting ? "Přihlašuji..." : "Přihlásit")
             </button>
 
             <div class="divider"></div>
@@ -70,25 +69,25 @@
 </div>
 
 @code {
-    private readonly LoginRequest _model = new();
-    private bool _isSubmitting;
-    private bool _showPassword;
+    private readonly LoginRequest request = new();
+    private bool isSubmitting;
+    private bool showPassword;
 
-    private bool _loaded;
-    private string? _returnUrl;
+    private bool loaded;
+    private string? returnUrl;
 
-    private void TogglePassword() => _showPassword = !_showPassword;
+    private void TogglePassword() => showPassword = !showPassword;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender || _loaded)
+        if (!firstRender || loaded)
             return;
 
-        _loaded = true;
+        loaded = true;
 
         var uri = Nav.ToAbsoluteUri(Nav.Uri);
         var query = QueryHelpers.ParseQuery(uri.Query);
-        _returnUrl = query.TryGetValue("returnUrl", out var v) ? v.ToString() : null;
+        returnUrl = query.TryGetValue("returnUrl", out var v) ? v.ToString() : null;
 
         await AuthState.LoadAsync();
 
@@ -103,11 +102,11 @@
 
     private async Task HandleLoginAsync()
     {
-        _isSubmitting = true;
+        isSubmitting = true;
 
         try
         {
-            var response = await AuthService.LoginAsync(_model, CancellationToken.None);
+            var response = await AuthService.LoginAsync(request, CancellationToken.None);
 
             if (response.MustChangePassword)
             {
@@ -115,7 +114,7 @@
                 return;
             }
 
-            Nav.NavigateTo(SafeReturnUrl(_returnUrl), replace: true);
+            Nav.NavigateTo(SafeReturnUrl(returnUrl), replace: true);
         }
         catch (ApiRequestException ex)
         {
@@ -123,7 +122,7 @@
         }
         finally
         {
-            _isSubmitting = false;
+            isSubmitting = false;
         }
     }
 

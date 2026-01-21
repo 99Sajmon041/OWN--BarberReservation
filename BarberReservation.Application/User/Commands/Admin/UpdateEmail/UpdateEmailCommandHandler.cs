@@ -39,37 +39,28 @@ public sealed class UpdateEmailCommandHandler(
         var setEmailResult = await userManager.SetEmailAsync(user, newEmail);
         if (!setEmailResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = setEmailResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = string.Join(", ", setEmailResult.Errors.Select(e => e.Description));
 
-            logger.LogWarning("SetEmail failed for user {UserId}. Error: {Errors}", user.Id, string.Join(", ", errors["error"]));
-            throw new ValidationException("Změna e-mailu se nezdařila.", errors);
+            logger.LogWarning("SetEmail failed for user {UserId}. Error: {Errors}", user.Id, error);
+            throw new ValidationException("Chyba: " + error);
         }
 
         var setUserNameResult = await userManager.SetUserNameAsync(user, newEmail);
         if (!setUserNameResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = setUserNameResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = string.Join(", ", setUserNameResult.Errors.Select(e => e.Description));
 
-            logger.LogWarning("SetUserName failed for user {UserId}. Error: {Errors}",user.Id, string.Join(", ", errors["error"]));
-            throw new ValidationException("Změna e-mailu se nezdařila.", errors);
+            logger.LogWarning("SetUserName failed for user {UserId}. Error: {Errors}",user.Id, error);
+            throw new ValidationException("Chyba: " + error);
         }
 
         var updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = updateResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = string.Join(", ", updateResult.Errors.Select(e => e.Description));
 
-            logger.LogWarning("Update user failed after email change for user {UserId}. Error: {Errors}", user.Id, string.Join(", ", errors["error"]));
-            throw new ValidationException("Změna e-mailu se nezdařila.", errors);
+            logger.LogWarning("Update user failed after email change for user {UserId}. Error: {Errors}", user.Id, error);
+            throw new ValidationException("Chyba: " + error);
         }
 
         await userManager.UpdateSecurityStampAsync(user);

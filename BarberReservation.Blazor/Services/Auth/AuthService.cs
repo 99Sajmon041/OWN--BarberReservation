@@ -11,11 +11,11 @@ public sealed class AuthService(
     AuthenticationStateProvider authStateProvider,
     AuthState authState) : IAuthService
 {
-    private readonly HttpClient _http = factory.CreateClient("Api");
+    private readonly HttpClient http = factory.CreateClient("Api");
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken ct)
     {
-        var response = await _http.PostAsJsonAsync("api/auth/login", request, ct);
+        var response = await http.PostAsJsonAsync("api/auth/login", request, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -45,9 +45,10 @@ public sealed class AuthService(
         {
             Content = JsonContent.Create(request)
         };
+
         msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await _http.SendAsync(msg, ct);
+        var response = await http.SendAsync(msg, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -63,5 +64,35 @@ public sealed class AuthService(
     {
         await authState.ClearAsync();
         (authStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
+    }
+
+    public async Task RegisterAsync(RegisterRequest register, CancellationToken ct)
+    {
+        var response = await http.PostAsJsonAsync("api/auth/register", register, ct);
+        if(!response.IsSuccessStatusCode)
+        {
+            var message = await response.ReadProblemMessageAsync("Nepodařilo se dokončit registraci, opakujte akci později.");
+            throw new ApiRequestException(message, (int)response.StatusCode);
+        }
+    }
+
+    public async Task ForgottenPasswordAsync(ForgotPasswordRequest request, CancellationToken ct)
+    {
+        var response = await http.PostAsJsonAsync("api/auth/forgot-password", request, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.ReadProblemMessageAsync("Nepodařilo se odeslat e-mail, opakujte akci později.");
+            throw new ApiRequestException(message, (int)response.StatusCode);
+        }
+    }
+
+    public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct)
+    {
+        var response = await http.PostAsJsonAsync("api/auth/reset-password", request, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.ReadProblemMessageAsync("Heslo se nepodařilo obnovit, opakujte akci později.");
+            throw new ApiRequestException(message, (int)response.StatusCode);
+        }
     }
 }

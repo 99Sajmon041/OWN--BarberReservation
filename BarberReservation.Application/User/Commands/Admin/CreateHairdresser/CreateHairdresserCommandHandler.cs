@@ -31,26 +31,21 @@ public sealed class CreateHairdresserCommandHandler(
         var createResult = await userManager.CreateAsync(hairdresser, tempPassword);
         if (!createResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = createResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = createResult.Errors.Select(e => e.Description);
 
-            logger.LogError("Vytvoření kadeřníka selhalo. Errors: {Errors}",  string.Join(", ", errors["error"]));
-            throw new BarberReservation.Application.Exceptions.ValidationException("Vytvoření kadeřníka selhalo.", errors);
+            logger.LogError("Vytvoření kadeřníka selhalo. Errors: {Errors}", error);
+            throw new BarberReservation.Application.Exceptions.ValidationException("Chyba: " + error);
         }
 
         var roleResult = await userManager.AddToRoleAsync(hairdresser, nameof(UserRoles.Hairdresser));
         if (!roleResult.Succeeded)
         {
             await userManager.DeleteAsync(hairdresser);
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = roleResult.Errors.Select(e => e.Description).ToArray()
-            };
 
-            logger.LogError("Vytvoření role kadeřníkovi selhalo. Errors: {Errors}", string.Join(", ", errors["error"]));
-            throw new BarberReservation.Application.Exceptions.ValidationException("Vytvoření role kadeřníkovi selhalo.", errors);
+            var error = createResult.Errors.Select(e => e.Description);
+            
+            logger.LogError("Vytvoření role kadeřníkovi selhalo. Errors: {Errors}", error);
+            throw new BarberReservation.Application.Exceptions.ValidationException("Chyba: " + error);
         }
 
         var token = await userManager.GeneratePasswordResetTokenAsync(hairdresser);

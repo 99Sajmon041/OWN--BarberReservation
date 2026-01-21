@@ -28,13 +28,10 @@ public sealed class PartlyUpdateUserCommandHandler(
         var updateResult = await userManager.UpdateAsync(user);
         if(!updateResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = updateResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = updateResult.Errors.Select(e => e.Description);
 
-            logger.LogError("Failed to update user. Error: {Errors}", string.Join(", ", errors["error"]));
-            throw new ValidationException("Úprava profilu se nezdařila.", errors);
+            logger.LogError("Failed to update user. Error: {Errors}", error);
+            throw new ValidationException("Chyba: " + error);
         }
 
         logger.LogInformation("User with ID: {UserId} was updated successfuly.", user.Id);

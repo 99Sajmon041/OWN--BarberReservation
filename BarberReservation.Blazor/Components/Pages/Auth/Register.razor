@@ -1,0 +1,153 @@
+﻿@page "/register"
+
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+@inject AuthState AuthState
+@inject MessageService MessageService
+
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else if (!redirecting)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Registrace</h1>
+        <p class="page-subtitle muted">Vytvořte si nový účet.</p>
+    </div>
+
+    <div class="stack-top">
+        <div class="card card-md">
+            <EditForm Model="request" OnValidSubmit="HandleRegisterAsync">
+                <DataAnnotationsValidator />
+
+                <div class="field">
+                    <label class="label" for="firstName">Jméno</label>
+                    <InputText id="firstName"
+                               class="input"
+                               @bind-Value="request.FirstName"
+                               autocomplete="given-name"
+                               placeholder="Jan" />
+                    <ValidationMessage For="@(() => request.FirstName)" class="field-error" />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="lastName">Příjmení</label>
+                    <InputText id="lastName"
+                               class="input"
+                               @bind-Value="request.LastName"
+                               autocomplete="family-name"
+                               placeholder="Novák" />
+                    <ValidationMessage For="@(() => request.LastName)" class="field-error" />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="email">E-mail</label>
+                    <InputText id="email"
+                               class="input"
+                               @bind-Value="request.Email"
+                               autocomplete="username"
+                               inputmode="email"
+                               placeholder="name@domain.com" />
+                    <ValidationMessage For="@(() => request.Email)" class="field-error" />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="phone">Telefon</label>
+                    <InputText id="phone"
+                               class="input"
+                               @bind-Value="request.PhoneNumber"
+                               autocomplete="tel"
+                               inputmode="tel"
+                               placeholder="+420123456789" />
+                    <ValidationMessage For="@(() => request.PhoneNumber)" class="field-error" />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="password">Heslo</label>
+
+                    <div class="input-row">
+                        <InputText id="password"
+                                   class="input"
+                                   type="@(showPassword ? "text" : "password")"
+                                   @bind-Value="request.Password"
+                                   autocomplete="new-password"
+                                   placeholder="••••••••" />
+
+                        <button type="button"
+                                class="btn btn-outline btn-compact"
+                                @onclick="TogglePassword">
+                            @(showPassword ? "Skrýt" : "Zobrazit")
+                        </button>
+                    </div>
+
+                    <ValidationMessage For="@(() => request.Password)" class="field-error" />
+                </div>
+
+                <button class="btn btn-primary btn-block" type="submit" disabled="@isSubmitting">
+                    @(isSubmitting ? "Registruji..." : "Registrovat")
+                </button>
+
+                <div class="divider"></div>
+
+                <div class="center muted">
+                    Už máš účet? <a class="link" href="/login">Přihlásit</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+
+@code {
+    RegisterRequest request = new();
+    private bool isSubmitting;
+    private bool showPassword;
+
+    private bool _checked;
+    private bool redirecting;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) 
+            return;
+
+        await AuthState.LoadAsync();
+
+        if (AuthState.IsAuthenticated)
+        {
+            redirecting = true;
+            StateHasChanged();
+            Nav.NavigateTo("/", replace: true);
+            return;
+        }
+
+        _checked = true;
+        StateHasChanged();
+    }
+
+    private void TogglePassword() => showPassword = !showPassword;
+
+    private async Task HandleRegisterAsync()
+    {
+        isSubmitting = true;
+
+        try
+        {
+            await AuthService.RegisterAsync(request, CancellationToken.None);
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

@@ -40,24 +40,6 @@ public sealed class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> log
 
     private static ProblemDetails CreateProblemDetails(HttpContext context, Exception ex, out int statusCode)
     {
-        if (ex is BarberReservation.Application.Exceptions.ValidationException vex)
-        {
-            statusCode = StatusCodes.Status400BadRequest;
-
-            var vpd = new ValidationProblemDetails(vex.Errors)
-            {
-                Status = statusCode,
-                Title = "Neplatný vstup",
-                Detail = vex.Message,
-                Type = $"https://httpstatuses.io/{statusCode}",
-                Instance = context.Request.Path
-            };
-
-            vpd.Extensions["traceId"] = context.TraceIdentifier;
-
-            return vpd;
-        }
-
         (statusCode, string title, string detail) = ex switch
         {
             NotFoundException nf => (StatusCodes.Status404NotFound, "Nenalezeno", nf.Message),
@@ -66,6 +48,7 @@ public sealed class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> log
             UnauthorizedException un => (StatusCodes.Status401Unauthorized, "Neautorizováno", un.Message),
             DomainException de => (StatusCodes.Status400BadRequest, "Chyba domény", de.Message),
             ArgumentException ae => (StatusCodes.Status400BadRequest, "Neplatný vstup", ae.Message),
+            ValidationException ve => (StatusCodes.Status400BadRequest, "Neplatný vstup", ve.Message),
 
             _ => (StatusCodes.Status500InternalServerError, "Chyba serveru", "Došlo k neočekávané chybě na serveru.")
         };

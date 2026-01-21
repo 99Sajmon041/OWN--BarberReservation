@@ -26,7 +26,7 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
                 .GroupBy(f => f.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.ErrorMessage).Distinct().ToArray());
 
-            throw new BarberReservation.Application.Exceptions.ValidationException("Neplatný vstup", errors);
+            throw new BarberReservation.Application.Exceptions.ValidationException("Neplatný vstup: " + errors);
         }
 
         return await next();

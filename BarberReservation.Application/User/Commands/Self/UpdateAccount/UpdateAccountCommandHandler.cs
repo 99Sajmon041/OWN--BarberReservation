@@ -25,13 +25,10 @@ public sealed class UpdateAccountCommandHandler(
         var updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = updateResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = updateResult.Errors.Select(e => e.Description);
 
-            logger.LogWarning("Profile update failed. Errors: {Errors}", string.Join(", ", errors["error"]));
-            throw new ValidationException("Aktualizace profilu se nezdařila.", errors);
+            logger.LogWarning("Profile update failed. Errors: {Errors}", error);
+            throw new ValidationException("Chyba: " + error);
         }
 
         logger.LogInformation("User with ID: {UserId} updated profile successfully.", user.Id);

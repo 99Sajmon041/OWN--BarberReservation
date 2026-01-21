@@ -23,11 +23,10 @@ public sealed class DeactivateAccountHandler(
         var updateResult = await userManager.UpdateAsync(appUser);
         if(!updateResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>();
-            errors["error"] = updateResult.Errors.Select(e => e.Description).ToArray();
+            var error = updateResult.Errors.Select(e => e.Description);
 
-            logger.LogError("Deactivation of the user failed, error: {Errors}", string.Join(", ", errors["error"]));
-            throw new ValidationException("Deaktivace účtu se nezdařila.", errors);
+            logger.LogError("Deactivation of the user failed, error: {Errors}", error);
+            throw new ValidationException("Chyba: " + error);
         }
 
         logger.LogInformation("User with ID: {UserId} was deactivated successfully.", appUser.Id);

@@ -18,17 +18,14 @@ public sealed class ChangePasswordCommandHandler(
 
         var current = currentAppUser.User;
 
-        var result = await userManager.ChangePasswordAsync(current, request.OldPassword, request.NewPassword);
-        if (!result.Succeeded)
+        var changePwdResult = await userManager.ChangePasswordAsync(current, request.OldPassword, request.NewPassword);
+        if (!changePwdResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = result.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = changePwdResult.Errors.Select(e => e.Description);
 
-            logger.LogWarning("Attempt to change password failed for user {UserId}. Errors: {Errors}", current.Id, string.Join(", ", errors["error"]));
+            logger.LogWarning("Attempt to change password failed for user with ID: {UserId}. Errors: {Errors}", current.Id, error);
 
-            throw new ValidationException("Změna hesla se nezdařila.", errors);
+            throw new ValidationException("Chyba: " + error);
         }
 
         if(current.MustChangePassword)

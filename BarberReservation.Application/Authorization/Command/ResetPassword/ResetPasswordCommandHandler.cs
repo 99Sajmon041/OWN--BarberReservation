@@ -23,18 +23,15 @@ public sealed class ResetPasswordCommandHandler(
             return Unit.Value;
         }
 
-        var token = WebUtility.UrlDecode(request.Token);
+        var token = request.Token;
 
-        var result = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
-        if (!result.Succeeded)
+        var resetPwdResult = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
+        if (!resetPwdResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = result.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = string.Join(", ", resetPwdResult.Errors.Select(e => e.Description));
 
-            logger.LogWarning("Password reset failed for user {UserId} ({Email}).", user.Id, user.Email);
-            throw new ValidationException("Reset hesla se nezdařil.", errors);
+            logger.LogWarning("Password reset failed for user {UserId} ({Email}). Error: {Error}", user.Id, user.Email, error);
+            throw new ValidationException("Chyba :" + error);
         }
 
         user.MustChangePassword = false;
@@ -42,13 +39,10 @@ public sealed class ResetPasswordCommandHandler(
         var updateResult = await userManager.UpdateAsync(user);
         if(!updateResult.Succeeded)
         {
-            var errors = new Dictionary<string, string[]>
-            {
-                ["error"] = updateResult.Errors.Select(e => e.Description).ToArray()
-            };
+            var error = string.Join(", ", updateResult.Errors.Select(e => e.Description));
 
-            logger.LogError("Update user after password reset failed. Error: {Errors}", string.Join(", ", errors["error"]));
-            throw new BarberReservation.Application.Exceptions.ValidationException("Operace selhala.", errors);
+            logger.LogError("Update user after password reset failed. Error: {Errors}", error);
+            throw new ValidationException("Chyba :" + error);
         }
 
         logger.LogInformation("Password reset succeeded for user {UserId} ({Email}).", user.Id, user.Email);

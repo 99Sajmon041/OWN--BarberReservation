@@ -54,16 +54,16 @@
     </header>
 
     <main class="content">
-        <div class="container">
 
-            <div class="ui-msg-slot">
+        <div class="ui-msg-slot">
+            <div class="container">
                 @if (MessageService.Current is not null)
                 {
                     var css = MessageService.Current.Type switch
                     {
                         MessageType.Success => "ui-msg-success",
                         MessageType.Warning => "ui-msg-warning",
-                        MessageType.Error => "ui-msg-error",
+                        MessageType.Error => "ui-msg-danger",
                         _ => "ui-msg-info"
                     };
 
@@ -73,12 +73,14 @@
                     </div>
                 }
             </div>
+        </div>
 
+        <div class="container">
             <div class="page">
                 @Body
             </div>
-
         </div>
+
     </main>
 
     <footer class="footer">
