@@ -1,9 +1,11 @@
 ﻿@page "/profile"
 
 @inject AuthState AuthState
+@inject AuthService AuthService
 @inject MessageService MessageService
 @inject IMeService MeService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 @if (!_checked)
 {
@@ -57,7 +59,18 @@ else
 
                 <div class="divider"></div>
 
-                <a class="btn btn-primary" href="/profile/edit">Upravit profil</a>
+                <div class="row-between">
+                    <a class="btn btn-primary" href="/profile/edit">
+                        Upravit profil
+                    </a>
+
+                    @if(AuthState.Roles.Contains(nameof(UserRoles.Customer)))
+                    {
+                        <button type="button" class="btn btn-outline" @onclick="DeactivateAsync">
+                            Deaktivovat účet
+                        </button>
+                    }
+                </div>
             }
         </div>
     </div>
@@ -100,6 +113,25 @@ else
             isLoading = false;
             _checked = true;
             await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task DeactivateAsync()
+    {
+        var ok = await JS.ConfirmAction("Opravdu si přejete deaktivovat svůj účet ?");
+        if (!ok)
+            return;
+
+        try
+        {
+            await MeService.DeactivateAccount(CancellationToken.None);
+            await AuthService.LogoutAsync();
+            MessageService.ShowWarning("Váš účet byl deaktivován. Pro jeho obnovení kontaktujte podporu.");
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
         }
     }
 }

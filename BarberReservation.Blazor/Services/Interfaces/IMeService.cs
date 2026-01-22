@@ -5,4 +5,5 @@ namespace BarberReservation.Blazor.Services.Interfaces;
 public interface IMeService
 {
     Task<UserDto> GetProfile(CancellationToken ct);
+    Task DeactivateAccount(CancellationToken ct);
 }

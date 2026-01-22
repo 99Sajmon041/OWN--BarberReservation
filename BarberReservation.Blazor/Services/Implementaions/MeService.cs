@@ -10,4 +10,8 @@ public sealed class MeService(IApiClient api) : IMeService
     {
         return await api.GetAsync<UserDto>("api/users/me", ct);
     }
+    public async Task DeactivateAccount(CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Patch, "api/users/me/deactivate", null, ct);
+    }
 }

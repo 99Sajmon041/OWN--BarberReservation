@@ -57,6 +57,11 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             .AnyAsync(x => x.HairdresserId == hairdresserId && x.Status != ReservationStatus.Canceled && (x.StartAt < endAt && x.EndAt > startAt), ct);
     }
 
+    public async Task<bool> ExistAnyUpComingReservationAsync(string userId, CancellationToken ct)
+    {
+        return await _context.Reservations.AnyAsync(x => x.CustomerId == userId && x.StartAt >= DateTime.UtcNow, ct);
+    }
+
     public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(AdminReservationPagedRequest request, CancellationToken ct)
     {
         var query = GetBaseQuery();

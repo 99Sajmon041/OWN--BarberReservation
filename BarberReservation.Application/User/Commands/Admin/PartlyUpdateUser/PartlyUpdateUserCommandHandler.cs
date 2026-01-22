@@ -28,7 +28,7 @@ public sealed class PartlyUpdateUserCommandHandler(
         var updateResult = await userManager.UpdateAsync(user);
         if(!updateResult.Succeeded)
         {
-            var error = updateResult.Errors.Select(e => e.Description);
+            var error = string.Join(", ", updateResult.Errors.Select(e => e.Description));
 
             logger.LogError("Failed to update user. Error: {Errors}", error);
             throw new ValidationException("Chyba: " + error);

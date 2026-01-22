@@ -25,7 +25,7 @@ public sealed class UpdateAccountCommandHandler(
         var updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
         {
-            var error = updateResult.Errors.Select(e => e.Description);
+            var error = string.Join(", ", updateResult.Errors.Select(e => e.Description));
 
             logger.LogWarning("Profile update failed. Errors: {Errors}", error);
             throw new ValidationException("Chyba: " + error);
