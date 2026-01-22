@@ -1,9 +1,12 @@
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.AspNetCore.Components.Authorization;
-using BarberReservation.Blazor.Services.Auth;
-using BarberReservation.Blazor.Components;
-using BarberReservation.Blazor.UI.Message;
 using BarberReservation.Blazor.Auth;
+using BarberReservation.Blazor.Common;
+using BarberReservation.Blazor.Components;
+using BarberReservation.Blazor.Services.Auth;
+using BarberReservation.Blazor.Services.Implementaions;
+using BarberReservation.Blazor.Services.Interfaces;
+using BarberReservation.Blazor.UI.Message;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,9 @@ builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<ProtectedLocalStorage>();
+builder.Services.AddScoped<IApiClient, ApiClient>();
+
+builder.Services.AddScoped<IMeService, MeService>();
 
 builder.Services.AddHttpClient("Api", client =>
 {

@@ -11,7 +11,7 @@
         <div class="container topbar-inner">
             <button class="hamburger" @onclick="() => _mobileMenuOpen = !_mobileMenuOpen" aria-label="Menu">☰</button>
 
-            <a class="brand" href="/">
+            <a class="brand">
                 <span class="brand-dot"></span>
                 Barber rezervace
             </a>
@@ -33,6 +33,7 @@
             else
             {
                 <div class="topbar-right">
+                    <a class="btn btn-link" href="/profile">Profil</a>
                     <span class="user-pill">
                         @AuthState.FullName · @AuthState.Role ·
                     </span>
@@ -48,6 +49,11 @@
                     <a class="mobile-link" href="/" @onclick="CloseMobileMenu">Domů</a>
                     <a class="mobile-link" href="/reservations" @onclick="CloseMobileMenu">Rezervace</a>
                     <a class="mobile-link" href="/services" @onclick="CloseMobileMenu">Služby</a>
+
+                    @if(AuthState.IsAuthenticated)
+                    {
+                        <a class="mobile-link" href="/profile" @onclick="CloseMobileMenu">Profil</a>
+                    }
                 </div>
             </div>
         }

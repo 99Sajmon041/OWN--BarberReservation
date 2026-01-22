@@ -1,0 +1,105 @@
+﻿@page "/profile"
+
+@inject AuthState AuthState
+@inject MessageService MessageService
+@inject IMeService MeService
+@inject NavigationManager Nav
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="profile-wrap">
+        <div class="page-head page-head-center">
+            <h1 class="page-title">Profil</h1>
+            <p class="page-subtitle muted">Tvé osobní údaje</p>
+        </div>
+
+        <div class="card card-md">
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám profil...</div>
+            }
+            else
+            {
+                <div class="field">
+                    <label class="label">Jméno</label>
+                    <div class="input input-readonly">
+                        @model.FirstName @model.LastName
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">E-mail</label>
+                    <div class="input input-readonly">
+                        @model.Email
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Telefon</label>
+                    <div class="input input-readonly">
+                        @(string.IsNullOrWhiteSpace(model.PhoneNumber) ? "—" : model.PhoneNumber)
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Stav účtu</label>
+                    <div class="input input-readonly">
+                        @(model.IsActive ? "Aktivní" : "Deaktivovaný")
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <a class="btn btn-primary" href="/profile/edit">Upravit profil</a>
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    private UserDto model = new();
+
+    private bool isLoading = true;
+    private bool loaded;
+    private bool _checked;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.IsAuthenticated)
+            {
+                StateHasChanged();
+                Nav.NavigateTo("/login", replace: true);
+                return;
+            }
+
+            model = await MeService.GetProfile(CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
