@@ -6,12 +6,17 @@ namespace BarberReservation.Blazor.Services.Implementaions;
 
 public sealed class MeService(IApiClient api) : IMeService
 {
-    public async Task<UserDto> GetProfile(CancellationToken ct)
+    public async Task<UserDto> GetProfileAsync(CancellationToken ct)
     {
         return await api.GetAsync<UserDto>("api/users/me", ct);
     }
-    public async Task DeactivateAccount(CancellationToken ct)
+    public async Task DeactivateAccountAsync(CancellationToken ct)
     {
         await api.SendAsync(HttpMethod.Patch, "api/users/me/deactivate", null, ct);
+    }
+
+    public async Task UpdateAccountAsync(UpdateUserRequest request, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Put, "api/users/me", request, ct);
     }
 }

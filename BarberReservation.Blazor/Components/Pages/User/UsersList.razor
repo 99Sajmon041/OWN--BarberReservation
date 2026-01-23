@@ -1,0 +1,332 @@
+﻿@page "/users/list"
+
+@inject AuthState AuthState
+@inject MessageService MessageService
+@inject IUserService UserService
+@inject NavigationManager Nav
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-head">
+            <div class="row-between" style="margin:0;">
+                <div>
+                    <h1 class="page-title">Uživatelé</h1>
+                    <p class="page-subtitle muted">Správa uživatelů</p>
+                </div>
+
+                <a class="btn btn-primary" href="">
+                    + Vytvořit uživatele
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="field">
+                <label class="label" for="search">Hledat</label>
+
+                <div class="input-row">
+                    <div class="input-wrap">
+                        <input id="search"
+                               class="input input-has-clear"
+                               value="@search"
+                               @oninput="OnSearchInput"
+                               placeholder="Jméno, příjmení, e-mail, telefon..." />
+
+
+                        @if (!string.IsNullOrWhiteSpace(search))
+                        {
+                            <button type="button" class="input-clear" @onclick="ClearSearchAsync" aria-label="Vyčistit hledání">
+                                ×
+                            </button>
+                        }
+                    </div>
+
+                    <button class="btn btn-outline" type="button" @onclick="ApplyFiltersAsync" disabled="@isLoading">
+                        Filtrovat
+                    </button>
+                </div>
+            </div>
+
+            <div class="row-between">
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="isActive">Stav</label>
+                    <select class="input" @bind="isActiveFilter" @bind:after="OnFiltersChangedAsync">
+                        <option value="">Všichni</option>
+                        <option value="true">Aktivní</option>
+                        <option value="false">Neaktivní</option>
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="sortBy">Řazení</label>
+                    <select id="sortBy" class="input" @bind="sortBy" @bind:after="OnFiltersChangedAsync">
+                        <option value="lastname">Příjmení</option>
+                        <option value="firstname">Jméno</option>
+                        <option value="email">E-mail</option>
+                        <option value="phonenumber">Telefon</option>
+                        <option value="isactive">Aktivní</option>
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 160px;">
+                    <label class="label" for="pageSize">Na stránku</label>
+                    <select id="pageSize" class="input" @bind="pageSize" @bind:after="OnFiltersChangedAsync">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0;">
+                    <label class="label">&nbsp;</label>
+                    <button class="btn btn-link" type="button" @onclick="ToggleSortAsync" disabled="@isLoading">
+                        @((desc ? "↓ Sestupně" : "↑ Vzestupně"))
+                    </button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám uživatele...</div>
+            }
+            else if (model is null || model.Items is null || !model.Items.Any())
+            {
+                <div class="muted center">Žádní uživatelé nenalezeni.</div>
+            }
+            else
+            {
+                <div style="overflow:auto;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align:left; border-bottom: 1px solid var(--line);">
+                                <th style="padding: 10px 6px;">Jméno</th>
+                                <th style="padding: 10px 6px;">E-mail</th>
+                                <th style="padding: 10px 6px;">Telefon</th>
+                                <th style="padding: 10px 6px;">Aktivní</th>
+                                <th style="padding: 10px 6px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in model.Items)
+                            {
+                                <tr style="border-bottom: 1px solid var(--line);">
+                                    <td style="padding: 10px 6px;">
+                                        @u.LastName @u.FirstName
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span class="muted">@u.Email</span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span class="muted">@u.PhoneNumber</span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        @if (u.IsActive)
+                                        {
+                                            <span class="muted">Ano</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="muted">Ne</span>
+                                        }
+                                    </td>
+                                    <td style="padding: 10px 6px; text-align:right;">
+                                        <a class="btn btn-link" href="@($"/users/{u.Id}")">Detail</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="row-between" style="margin:0;">
+                    <div class="muted">
+                        Celkem: @model.TotalItemsCount
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || page <= 1)">
+                            Předchozí
+                        </button>
+
+                        <span class="muted">@($"Strana: {page} / {TotalPages}")</span>
+
+                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || page >= TotalPages)">
+                            Další
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private bool _checked;
+    private bool isLoading;
+    private CancellationTokenSource? searchCts;
+
+    private PagedResult<UserDto>? model;
+
+    private int page = 1;
+    private int pageSize = 20;
+
+    private string? search;
+    private string sortBy = "lastname";
+    private bool desc;
+
+
+    private string isActiveFilter = "";
+
+    private int TotalPages => model is null || model.TotalItemsCount <= 0 ? 1 : (int)Math.Ceiling(model.TotalItemsCount / (double)pageSize);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) 
+            return;
+
+        try
+        {
+            await AuthState.LoadAsync();
+            _checked = true; 
+            await InvokeAsync(StateHasChanged);
+
+            if (!AuthState.IsAuthenticated)
+            {
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch (Exception ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            var req = new UserPageRequest
+            {
+                Page = page,
+                PageSize = pageSize,
+                Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                SortBy = sortBy,
+                Desc = desc,
+                IsActive = ParseNullableBool(isActiveFilter)
+            };
+
+            model = await UserService.GetAllAsync(req, CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task ToggleSortAsync()
+    {
+        desc = !desc;
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task PrevPageAsync()
+    {
+        if (page <= 1)
+            return;
+
+        page--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (page >= TotalPages)
+            return;
+
+        page++;
+        await LoadAsync();
+    }
+
+    private static bool? ParseNullableBool(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) 
+            return null;
+
+        if (bool.TryParse(value, out var b)) 
+            return b;
+
+        return null;
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        search = null;
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        search = e.Value?.ToString() ?? "";
+        page = 1;
+
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(350, searchCts.Token);
+            await LoadAsync();
+        }
+        catch (TaskCanceledException)
+        {  
+        }
+    }
+
+    private async Task OnFiltersChangedAsync()
+    {
+        page = 1;
+        await LoadAsync();
+    }
+}

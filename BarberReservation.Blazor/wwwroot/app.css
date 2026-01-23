@@ -121,6 +121,13 @@ img {
     display: flex;
     align-items: center;
     gap: 10px;
+    white-space: nowrap;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .user-pill {
@@ -593,4 +600,83 @@ img {
 .input.input-readonly {
     display: flex;
     align-items: center;
+}
+
+@media (max-width: 420px) {
+    .topbar-right {
+        gap: 8px;
+    }
+    .topbar-right .btn {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+}
+
+.input-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.input-has-clear {
+    padding-right: 42px; /* místo pro køížek */
+}
+
+.input-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.04); 
+    color: rgba(231,237,245,.9);
+    cursor: pointer;
+    line-height: 1;
+    font-size: 18px;
+}
+
+.input-clear:hover {
+    background: rgba(255,255,255,.08);
+}
+select.input {
+    color: var(--text);
+    background: rgba(255,255,255,.03);
+}
+
+select.input option {
+    background: var(--panel);
+    color: var(--text);
+}
+
+.btn-warning {
+    background: rgba(255, 193, 7, .14);
+    border-color: rgba(255, 193, 7, .40);
+    color: rgba(255,255,255,.92);
+    box-shadow: 0 10px 26px rgba(255, 193, 7, .10);
+}
+
+.btn-warning:hover {
+    background: rgba(255, 193, 7, .20);
+    border-color: rgba(255, 193, 7, .55);
+}
+
+.btn-danger {
+    background: rgba(220, 53, 69, .16);
+    border-color: rgba(220, 53, 69, .46);
+    color: rgba(255,255,255,.92);
+    box-shadow: 0 10px 26px rgba(220, 53, 69, .14);
+}
+
+.btn-danger:hover {
+    background: rgba(220, 53, 69, .24);
+    border-color: rgba(220, 53, 69, .62);
+}
+
+.btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    filter: none;
 }

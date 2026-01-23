@@ -17,26 +17,17 @@ namespace BarberReservation.API.Controllers
     [ApiController]
     public class AdminUserController(IMediator mediator) : ControllerBase
     {
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] GetAllUsersQuery query, CancellationToken ct)
+        {
+            var result = await mediator.Send(query, ct);
+            return Ok(result);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUserbyId([FromRoute] string id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetUserByIdQuery(id), ct);
-            return Ok(result);
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] UserPageRequest request, CancellationToken ct)
-        {
-            var result = await mediator.Send(new GetAllUsersQuery
-            {
-                Page = request.Page,
-                PageSize = request.PageSize,
-                IsActive = request.IsActive,
-                Search = request.Search,
-                SortBy = request.SortBy,
-                Desc = request.Desc
-            }, ct);
-
             return Ok(result);
         }
 

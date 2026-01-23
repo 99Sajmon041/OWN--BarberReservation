@@ -1,0 +1,130 @@
+﻿@page "/profile/update"
+
+@inject AuthState AuthState
+@inject MessageService MessageService
+@inject IMeService MeService
+@inject NavigationManager Nav
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="profile-wrap">
+        <div class="page-head page-head-center">
+            <h1 class="page-title">Úprava profilu</h1>
+            <p class="page-subtitle muted">Tvé osobní údaje</p>
+        </div>
+
+        <div class="card card-md">
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám profil...</div>
+            }
+            else
+            {
+                <EditForm Model="request" OnValidSubmit="HandleUpdateAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="field">
+                        <label class="label" for="firstName">Jméno</label>
+                        <InputText id="firstName" class="input" @bind-Value="request.FirstName" />
+                        <ValidationMessage For="@(() => request.FirstName)" class="field-error" />
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="lastName">Příjmení</label>
+                        <InputText id="lastName" class="input" @bind-Value="request.LastName" />
+                        <ValidationMessage For="@(() => request.LastName)" class="field-error" />
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="phone">Telefon</label>
+                        <InputText id="phone" class="input" @bind-Value="request.PhoneNumber" />
+                        <ValidationMessage For="@(() => request.PhoneNumber)" class="field-error" />
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="row-between">
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            Upravit
+                        </button>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private UpdateUserRequest request = new();
+    private UserDto model = new();
+
+    private bool isLoading;
+    private bool loaded;
+    private bool isSubmitting;
+    private bool _checked;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+        isLoading = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if(!AuthState.IsAuthenticated)
+            {
+                _checked = true;
+                await InvokeAsync(StateHasChanged);
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            model = await MeService.GetProfileAsync(CancellationToken.None);
+
+            request.FirstName = model.FirstName;
+            request.LastName = model.LastName;
+            request.PhoneNumber = model.PhoneNumber;
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task HandleUpdateAsync()
+    {
+        isSubmitting = true;
+
+        try
+        {
+            await MeService.UpdateAccountAsync(request, CancellationToken.None);
+            MessageService.ShowSuccess("Profil úspěšně upraven.");
+            Nav.NavigateTo("/profile", replace: true);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

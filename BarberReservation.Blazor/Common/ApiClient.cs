@@ -17,7 +17,10 @@ public sealed class ApiClient(IHttpClientFactory factory, AuthState authState) :
         if (!res.IsSuccessStatusCode)
             throw new ApiRequestException(await res.ReadProblemMessageAsync("Chyba API."), (int)res.StatusCode);
 
-        return (await res.Content.ReadFromJsonAsync<T>(ct))!;
+        var result = await res.Content.ReadFromJsonAsync<T>(ct)
+            ?? throw new ApiRequestException("API returned no data.", (int)res.StatusCode);
+
+        return result;
     }
 
     public async Task<TRes> PostAsyncWithResponse<TReq, TRes>(HttpMethod method, string url, TReq body, CancellationToken ct)

@@ -18,8 +18,11 @@
 
             <nav class="nav-links">
                 <a class="nav-link" href="/">Domů</a>
-                <a class="nav-link" href="/reservations">Rezervace</a>
-                <a class="nav-link" href="/services">Služby</a>
+
+                @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                {
+                    <a class="nav-link" href="/users/list">Uživatelé</a>
+                }
             </nav>
 
             @if (!AuthState.IsAuthenticated)
@@ -33,11 +36,14 @@
             else
             {
                 <div class="topbar-right">
-                    <a class="btn btn-link" href="/profile">Profil</a>
+                    <div class="topbar-actions">
+                        <a class="btn btn-link" href="/profile">Profil</a>
+                        <button type="button" class="btn btn-link" @onclick="LogoutAsync">Odhlásit</button>
+                    </div>
+
                     <span class="user-pill">
-                        @AuthState.FullName · @AuthState.Role ·
+                        @AuthState.FullName · @AuthState.Role
                     </span>
-                    <button type="button" class="btn btn-link" @onclick="LogoutAsync">Odhlásit</button>
                 </div>
             }
         </div>
@@ -47,8 +53,11 @@
             <div class="mobile-overlay" @onclick="CloseMobileMenu">
                 <div class="mobile-menu container" @onclick:stopPropagation="true">
                     <a class="mobile-link" href="/" @onclick="CloseMobileMenu">Domů</a>
-                    <a class="mobile-link" href="/reservations" @onclick="CloseMobileMenu">Rezervace</a>
-                    <a class="mobile-link" href="/services" @onclick="CloseMobileMenu">Služby</a>
+
+                    @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                    {
+                        <a class="mobile-link" href="/users/list" @onclick="CloseMobileMenu">Uživatelé</a>
+                    }
 
                     @if(AuthState.IsAuthenticated)
                     {

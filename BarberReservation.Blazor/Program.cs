@@ -25,6 +25,7 @@ builder.Services.AddScoped<ProtectedLocalStorage>();
 builder.Services.AddScoped<IApiClient, ApiClient>();
 
 builder.Services.AddScoped<IMeService, MeService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddHttpClient("Api", client =>
 {

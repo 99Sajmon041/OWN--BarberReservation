@@ -1,11 +1,10 @@
-﻿@page "/profile"
+﻿@page "/users/{Id}"
 
 @inject AuthState AuthState
-@inject IAuthService AuthService
+@inject IUserService UserService
 @inject MessageService MessageService
 @inject IMeService MeService
 @inject NavigationManager Nav
-@inject IJSRuntime JS
 
 @if (!_checked)
 {
@@ -18,14 +17,14 @@ else
 {
     <div class="profile-wrap">
         <div class="page-head page-head-center">
-            <h1 class="page-title">Profil</h1>
-            <p class="page-subtitle muted">Tvé osobní údaje</p>
+            <h1 class="page-title">Detail uživatele - @model.FirstName @model.LastName</h1>
+            <p class="page-subtitle muted">Osobní údaje</p>
         </div>
 
         <div class="card card-md">
             @if (isLoading)
             {
-                <div class="muted center">Načítám profil...</div>
+                <div class="muted center">Načítám uživatele...</div>
             }
             else
             {
@@ -60,16 +59,21 @@ else
                 <div class="divider"></div>
 
                 <div class="row-between">
-                    <a class="btn btn-primary" href="/profile/update">
-                        Upravit profil
+                    <a class="btn btn-outline">
+                        Zobrazit rezervace
                     </a>
 
-                    @if(AuthState.Roles.Contains(nameof(UserRoles.Customer)))
-                    {
-                        <button type="button" class="btn btn-outline" @onclick="DeactivateAsync">
-                            Deaktivovat účet
-                        </button>
-                    }
+                    <a class="btn btn-primary">
+                        Upravit účet
+                    </a>
+
+                    <a class="btn btn-warning">
+                        Upravit e-mail
+                    </a>
+
+                    <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@isLoading">
+                        Deaktivovat účet
+                    </button>
                 </div>
             }
         </div>
@@ -78,15 +82,18 @@ else
 
 
 @code {
+    [Parameter] 
+    public string Id { get; set; } = default!;
+
     private UserDto model = new();
 
     private bool isLoading;
     private bool loaded;
     private bool _checked;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstrender)
     {
-        if (!firstRender || loaded)
+        if (!firstrender || loaded)
             return;
 
         loaded = true;
@@ -99,13 +106,13 @@ else
             if (!AuthState.IsAuthenticated)
             {
                 StateHasChanged();
-                Nav.NavigateTo("/login", replace: true);
+                Nav.NavigateTo("/", replace: true);
                 return;
             }
 
-            model = await MeService.GetProfileAsync(CancellationToken.None);
+            model = await UserService.GetByIdAsync(Id, CancellationToken.None);
         }
-        catch (ApiRequestException ex)
+        catch(ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
         }
@@ -117,22 +124,9 @@ else
         }
     }
 
-    private async Task DeactivateAsync()
+    private Task DeactivateAsync()
     {
-        var ok = await JS.ConfirmAction("Opravdu si přejete deaktivovat svůj účet ?");
-        if (!ok)
-            return;
-
-        try
-        {
-            await MeService.DeactivateAccountAsync(CancellationToken.None);
-            await AuthService.LogoutAsync();
-            MessageService.ShowWarning("Váš účet byl deaktivován. Pro jeho obnovení kontaktujte podporu.");
-            Nav.NavigateTo("/", replace: true);
-        }
-        catch(ApiRequestException ex)
-        {
-            MessageService.ShowError(ex.Message);
-        }
+        MessageService.ShowInfo("Deaktivace zatím není implementovaná.");
+        return Task.CompletedTask;
     }
 }
