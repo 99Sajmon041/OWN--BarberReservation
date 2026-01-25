@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.User.Commands.Admin.CreateHairdresser;
+﻿using BarberReservation.Application.User.Commands.Admin.CreateUser;
 using BarberReservation.Application.User.Commands.Admin.PartlyUpdateUser;
 using BarberReservation.Application.User.Commands.Admin.UpdateEmail;
 using BarberReservation.Application.User.Commands.Self.UpdateAccount;
@@ -19,14 +19,15 @@ public static class UserMapping
         };
     }
 
-    public static CreateHairdresserCommand ToCreateAccountCommand(this CreateUserRequest request)
+    public static CreateUserCommand ToCreateUserCommand(this CreateUserRequest request)
     {
-        return new CreateHairdresserCommand
+        return new CreateUserCommand
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
-            PhoneNumber = request.PhoneNumber
+            PhoneNumber = request.PhoneNumber,
+            Role = request.Role
         };
     }
 

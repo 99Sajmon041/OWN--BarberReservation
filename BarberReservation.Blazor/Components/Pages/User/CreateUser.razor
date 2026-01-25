@@ -1,10 +1,9 @@
-﻿@page "/register"
+﻿@page "/users/create"
 
-@inject IAuthService AuthService
+@inject IUserService UserService
 @inject NavigationManager Nav
 @inject AuthState AuthState
 @inject MessageService MessageService
-
 
 @if (!_checked)
 {
@@ -16,13 +15,13 @@
 else if (!redirecting)
 {
     <div class="page-head page-head-center">
-        <h1 class="page-title">Registrace</h1>
-        <p class="page-subtitle muted">Vytvořte si nový účet.</p>
+        <h1 class="page-title">Vytvoření uživatele</h1>
+        <p class="page-subtitle muted">Založení účtu zákazníka / kadeřníka.</p>
     </div>
 
     <div class="stack-top">
         <div class="card card-md">
-            <EditForm Model="request" OnValidSubmit="HandleRegisterAsync">
+            <EditForm Model="request" OnValidSubmit="HandleCreateUserAsync">
                 <DataAnnotationsValidator />
 
                 <div class="field">
@@ -68,52 +67,37 @@ else if (!redirecting)
                 </div>
 
                 <div class="field">
-                    <label class="label" for="password">Heslo</label>
-
-                    <div class="input-row">
-                        <InputText id="password"
-                                   class="input"
-                                   type="@(showPassword ? "text" : "password")"
-                                   @bind-Value="request.Password"
-                                   autocomplete="new-password"
-                                   placeholder="••••••••" />
-
-                        <button type="button"
-                                class="btn btn-outline btn-compact"
-                                @onclick="TogglePassword">
-                            @(showPassword ? "Skrýt" : "Zobrazit")
-                        </button>
-                    </div>
-
-                    <ValidationMessage For="@(() => request.Password)" class="field-error" />
+                    <label class="label" for="role">Role</label>
+                    <InputSelect id="role" class="input" @bind-Value="request.Role">
+                        <option value="">— vyberte roli —</option>
+                        @foreach (var opt in EnumHelper.RoleOptions)
+                        {
+                            if (opt.Value != nameof(UserRoles.Admin))
+                            {
+                                <option value="@opt.Value">@opt.Text</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => request.Role)" class="field-error" />
                 </div>
 
                 <div class="row-between" style="margin:0;">
-                    <a class="btn btn-outline" href="/">
-                        Domů
+                    <a class="btn btn-outline" href="/users/list">
+                        Zpět na seznam
                     </a>
 
                     <button class="btn btn-primary" type="submit" disabled="@isSubmitting">
-                        @(isSubmitting ? "Registruji..." : "Registrovat")
+                        @(isSubmitting ? "Vytvářím..." : "Vytvořit")
                     </button>
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="center muted">
-                    Už máš účet? <a class="link" href="/login">Přihlásit</a>
                 </div>
             </EditForm>
         </div>
     </div>
 }
 
-
 @code {
-    private RegisterRequest request = new();
+    private CreateUserRequest request = new();
     private bool isSubmitting;
-    private bool showPassword;
-
     private bool _checked;
     private bool loaded;
     private bool redirecting;
@@ -125,9 +109,7 @@ else if (!redirecting)
 
         loaded = true;
 
-        await AuthState.LoadAsync();
-
-        if (AuthState.IsAuthenticated)
+        if (!AuthState.IsAuthenticated || !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
         {
             redirecting = true;
             _checked = true;
@@ -140,9 +122,7 @@ else if (!redirecting)
         await InvokeAsync(StateHasChanged);
     }
 
-    private void TogglePassword() => showPassword = !showPassword;
-
-    private async Task HandleRegisterAsync()
+    private async Task HandleCreateUserAsync()
     {
         if (isSubmitting)
             return;
@@ -151,8 +131,9 @@ else if (!redirecting)
 
         try
         {
-            await AuthService.RegisterAsync(request, CancellationToken.None);
-            Nav.NavigateTo("/", replace: true);
+            await UserService.CreateUserAsync(request, CancellationToken.None);
+            MessageService.ShowSuccess("Uživatel byl vytvořen. Byl mu odeslán e-mail pro nastavení hesla.");
+            Nav.NavigateTo("/users/list", replace: true);
         }
         catch (ApiRequestException ex)
         {

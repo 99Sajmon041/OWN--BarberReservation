@@ -20,13 +20,11 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
             .Where(f => f is not null)
             .ToList();
 
-        if(failtures.Count > 0)
+        if (failtures.Count > 0)
         {
-            var errors = failtures
-                .GroupBy(f => f.PropertyName)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.ErrorMessage).Distinct().ToArray());
+            var errors = string.Join(" | ", failtures.Select(f => $"{f.PropertyName}: {f.ErrorMessage}"));
 
-            throw new BarberReservation.Application.Exceptions.ValidationException("Neplatný vstup: " + errors);
+            throw new BarberReservation.Application.Exceptions.ValidationException(errors);
         }
 
         return await next();

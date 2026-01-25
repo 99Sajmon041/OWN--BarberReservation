@@ -1,4 +1,5 @@
 ﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.User.Commands.Admin.ActivateUser;
 using BarberReservation.Application.User.Commands.Admin.DeactivateUser;
 using BarberReservation.Application.User.Queries.Admin.GetAllUsers;
 using BarberReservation.Application.User.Queries.Admin.GetUserById;
@@ -34,15 +35,22 @@ namespace BarberReservation.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request, CancellationToken ct)
         {
-            var command = request.ToCreateAccountCommand();
+            var command = request.ToCreateUserCommand();
             await mediator.Send(command, ct);                  
             return NoContent();
         }
 
         [HttpPatch("{id}/deactivate")]
-        public async Task<IActionResult> DeactivateAccount([FromRoute] string id, CancellationToken ct)
+        public async Task<IActionResult> DeactivateUser([FromRoute] string id, CancellationToken ct)
         {
             await mediator.Send(new DeactivateUserCommand(id), ct);
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/activate")]
+        public async Task<IActionResult> ActivateUser([FromRoute] string id, CancellationToken ct)
+        {
+            await mediator.Send(new ActivateUserCommand(id), ct);
             return NoContent();
         }
 

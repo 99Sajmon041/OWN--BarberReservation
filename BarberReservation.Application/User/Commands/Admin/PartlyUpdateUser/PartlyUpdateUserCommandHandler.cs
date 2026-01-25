@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.Exceptions;
+using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -10,7 +11,8 @@ namespace BarberReservation.Application.User.Commands.Admin.PartlyUpdateUser;
 public sealed class PartlyUpdateUserCommandHandler(
     ILogger<PartlyUpdateUserCommandHandler> logger,
     UserManager<ApplicationUser> userManager,
-    IMapper mapper) : IRequestHandler<PartlyUpdateUserCommand>
+    IMapper mapper,
+    ICurrentAppUser currentAppUser) : IRequestHandler<PartlyUpdateUserCommand>
 {
     public async Task<Unit> Handle(PartlyUpdateUserCommand request, CancellationToken ct)
     {
@@ -23,6 +25,12 @@ public sealed class PartlyUpdateUserCommandHandler(
             throw new NotFoundException("Uživatel nebyl nalezen.");
         }
 
+        if(currentAppUser.User.Id == user.Id)
+        {
+            logger.LogWarning("Admin tries update own profile. Not allowed.");
+            throw new ForbiddenException("Nelze upravit svůj administrátorský účet.");
+        }
+
         mapper.Map(request, user);
 
         var updateResult = await userManager.UpdateAsync(user);
@@ -33,6 +41,8 @@ public sealed class PartlyUpdateUserCommandHandler(
             logger.LogError("Failed to update user. Error: {Errors}", error);
             throw new ValidationException("Chyba: " + error);
         }
+
+        await userManager.UpdateSecurityStampAsync(user);
 
         logger.LogInformation("User with ID: {UserId} was updated successfuly.", user.Id);
 

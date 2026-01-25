@@ -3,7 +3,7 @@
 @inject AuthState AuthState
 @inject IUserService UserService
 @inject MessageService MessageService
-@inject IMeService MeService
+@inject IJSRuntime JS
 @inject NavigationManager Nav
 
 @if (!_checked)
@@ -50,6 +50,13 @@ else
                 </div>
 
                 <div class="field">
+                    <label class="label">Role</label>
+                    <div class="input input-readonly text-muted">
+                        @Roles
+                    </div>
+                </div>
+
+                <div class="field">
                     <label class="label">Stav účtu</label>
                     <div class="input input-readonly">
                         @(model.IsActive ? "Aktivní" : "Deaktivovaný")
@@ -58,27 +65,90 @@ else
 
                 <div class="divider"></div>
 
-                <div class="row-between">
-                    <a class="btn btn-outline">
-                        Zobrazit rezervace
+                <div class="detail-actions">
+                    <a class="btn btn-outline" href="/users/list">
+                        Zpět na seznam
                     </a>
 
-                    <a class="btn btn-primary">
+                    <a class="btn btn-outline" href="@($"/users/{model.Id}/update")">
                         Upravit účet
                     </a>
 
-                    <a class="btn btn-warning">
+                    <button type="button" class="btn btn-outline" @onclick="OpenEmailModal">
                         Upravit e-mail
-                    </a>
-
-                    <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@isLoading">
-                        Deaktivovat účet
                     </button>
+
+                    @if (model.Roles.Contains(nameof(UserRoles.Admin)))
+                    {
+                        <a class="btn btn-outline" href="@($"/reservations/list?hairdresserId={model.Id}")">
+                            Zobrazit rezervace
+                        </a>
+                    }
+                    else if (model.Roles.Contains(nameof(UserRoles.Customer)))
+                    {
+                        <a class="btn btn-outline" href="@($"/reservations/list?customerId={model.Id}")">
+                            Zobrazit rezervace
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline" href="@($"/reservations/list?hairdresserId={model.Id}")">
+                            Zobrazit rezervace
+                        </a>
+                    }
+
+                    @if (model.IsActive)
+                    {
+                        <button class="btn btn-danger" @onclick="() => DeactivateAsync(model.Id)" disabled="@isLoading">
+                            Deaktivovat účet
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success" @onclick="() => ActivateAsync(model.Id)" disabled="@isLoading">
+                            Aktivovat účet
+                        </button>
+                    }
                 </div>
             }
         </div>
     </div>
 }
+
+
+<UiModal @bind-Open="showEmailModal"
+         Title="Upravit e-mail"
+         Subtitle="@($"Uživatel: {model.FirstName} {model.LastName}")">
+
+    <EditForm Model="emailRequest" OnValidSubmit="SubmitEmailAsync">
+        <DataAnnotationsValidator />
+
+        @if (!string.IsNullOrWhiteSpace(emailError))
+        {
+            <div class="ui-msg ui-msg-danger" style="margin-bottom:12px;">
+                <div class="ui-msg-text">@emailError</div>
+                <button type="button" class="ui-msg-close" @onclick="() => emailError = null" aria-label="Zavřít">×</button>
+            </div>
+        }
+
+        <div class="field">
+            <label class="label" for="newEmail">Nový e-mail</label>
+            <InputText id="newEmail" class="input" @bind-Value="emailRequest.Email" />
+            <ValidationMessage For="@(() => emailRequest.Email)" class="field-error" />
+        </div>
+
+        <div class="row-between" style="margin:0;">
+            <button type="button" class="btn btn-outline" @onclick="() => showEmailModal = false" disabled="@emailSubmitting">
+                Zrušit
+            </button>
+
+            <button type="submit" class="btn btn-primary" disabled="@emailSubmitting">
+                @(emailSubmitting ? "Ukládám..." : "Uložit")
+            </button>
+        </div>
+    </EditForm>
+
+</UiModal>
 
 
 @code {
@@ -90,6 +160,11 @@ else
     private bool isLoading;
     private bool loaded;
     private bool _checked;
+
+    private bool showEmailModal;
+    private bool emailSubmitting;
+    private string? emailError;
+    private UpdateUserEmailRequest emailRequest = new();
 
     protected override async Task OnAfterRenderAsync(bool firstrender)
     {
@@ -124,9 +199,97 @@ else
         }
     }
 
-    private Task DeactivateAsync()
+    private async Task DeactivateAsync(string id)
     {
-        MessageService.ShowInfo("Deaktivace zatím není implementovaná.");
-        return Task.CompletedTask;
+        var ok = await JS.ConfirmAction($"Opravdu chcete uživatele s ID: {id} deaktivovat ?");
+        if (!ok)
+            return;
+
+        try
+        {
+            await UserService.DeactivateByIdAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Uživatel byl úspěšně deaktivován.");
+            Nav.NavigateTo("/users/list", replace: true);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
     }
+
+    private async Task ActivateAsync(string id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu chcete uživatele s ID: {id} aktivovat ?");
+        if (!ok)
+            return;
+
+        try
+        {
+            await UserService.ActivateByIdAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Uživatel byl úspěšně aktivován.");
+            Nav.NavigateTo("/users/list", replace: true);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+    }
+
+    private void OpenEmailModal()
+    {
+        emailError = null;
+        emailRequest = new UpdateUserEmailRequest { Email = model.Email };
+        showEmailModal = true;
+    }
+
+    private void CloseEmailModal()
+    {
+        showEmailModal = false;
+        emailSubmitting = false;
+    }
+
+    private async Task SubmitEmailAsync()
+    {
+        emailSubmitting = true;
+        emailError = null;
+
+        try
+        {
+            await UserService.UpdateUserEmailAsync(model.Id, emailRequest, CancellationToken.None);
+            model.Email = emailRequest.Email.Trim();
+            MessageService.ShowSuccess("E-mail byl úspěšně upraven.");
+            showEmailModal = false;
+        }
+        catch (ApiRequestException ex)
+        {
+            emailError = ex.Message;
+        }
+        finally
+        {
+            emailSubmitting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string Roles => string.Join(", ", model.Roles.Select(x => EnumHelper.GetCzechNameOfRole(x)));
+
+
+    //Two different ways how to do that: -----------------------------------------------------------------------
+
+    // private string Roles => string.Join(", ", model.Roles.Select(EnumHelper.GetCzechNameOfRole));
+
+    // private string Roles
+    // {
+    //     get
+    //     {
+    //         var RolesList = new List<string>();
+
+    //         foreach (var role in model.Roles)
+    //         {
+    //             RolesList.Add(EnumHelper.GetCzechNameOfRole(role));
+    //         }
+
+    //         return string.Join(", ", RolesList);
+    //     }
+    // }
 }

@@ -1,0 +1,170 @@
+﻿@page "/service/{id:int}"
+
+@inject AuthState AuthState
+@inject IService Service
+@inject MessageService MessageService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="profile-wrap">
+        <div class="page-head page-head-center">
+            <h1 class="page-title">Detail služby - @model.Name</h1>
+            <p class="page-subtitle muted">Detailní specifikace</p>
+        </div>
+
+        <div class="card card-md">
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám službu...</div>
+            }
+            else
+            {
+                <div class="field">
+                    <label class="label">ID</label>
+                    <div class="input input-readonly">
+                        @model.Id
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Název</label>
+                    <div class="input input-readonly">
+                        @model.Name
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Popis</label>
+                    <div class="input input-readonly">
+                        @model.Description
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Stav služby</label>
+                    <div class="input input-readonly">
+                        @(model.IsActive ? "Aktivní" : "Deaktivovaný")
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="detail-actions">
+                    <a class="btn btn-outline" href="/services/list">
+                        Zpět na seznam
+                    </a>
+
+                    <a class="btn btn-outline" href="@($"/services/{model.Id}/update")">
+                        Upravit službu
+                    </a>
+
+                    <a class="btn btn-outline" href="@($"/hairdresser-services/list?serviceId={model.Id}")">
+                        Podřadné služby
+                    </a>
+
+                    @if (model.IsActive)
+                    {
+                        <button class="btn btn-danger" @onclick="() => DeactivateAsync(model.Id)" disabled="@isLoading">
+                            Deaktivovat službu
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success" @onclick="() => ActivateAsync(model.Id)" disabled="@isLoading">
+                            Aktivovat službu
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ServiceDto model = new();
+
+    private bool isLoading;
+    private bool loaded;
+    private bool _checked;
+
+    protected override async Task OnAfterRenderAsync(bool firstrender)
+    {
+        if (!firstrender || loaded)
+            return;
+
+        loaded = true;
+        isLoading = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.IsAuthenticated)
+            {
+                StateHasChanged();
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            model = await Service.GetByIdAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task DeactivateAsync(int id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu chcete službu {model.Name} deaktivovat ?");
+        if (!ok)
+            return;
+
+        try
+        {
+            await Service.DeactivateByIdAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Služba úspěšně deaktivována.");
+            Nav.NavigateTo("/services/list", replace: true);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+    }
+
+    private async Task ActivateAsync(int id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu chcete službu {model.Name} aktivovat ?");
+        if (!ok)
+            return;
+
+        try
+        {
+            await Service.ActivateByIdAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Služba byla úspěšně aktivována.");
+            Nav.NavigateTo("/services/list", replace: true);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+    }
+}

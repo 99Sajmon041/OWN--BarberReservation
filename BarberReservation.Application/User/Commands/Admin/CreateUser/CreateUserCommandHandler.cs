@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BarberReservation.Application.Exceptions;
 using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Enums;
@@ -7,51 +8,57 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 
-namespace BarberReservation.Application.User.Commands.Admin.CreateHairdresser;
+namespace BarberReservation.Application.User.Commands.Admin.CreateUser;
 
-public sealed class CreateHairdresserCommandHandler(
-    ILogger<CreateHairdresserCommandHandler> logger,
+public sealed class CreateUserCommandHandler(
+    ILogger<CreateUserCommandHandler> logger,
     UserManager<ApplicationUser> userManager,
     IEmailService emailService,
-    IMapper mapper) : IRequestHandler<CreateHairdresserCommand>
+    IMapper mapper) : IRequestHandler<CreateUserCommand>
 {
-    public async Task<Unit> Handle(CreateHairdresserCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(CreateUserCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
-        var hairdresser = mapper.Map<ApplicationUser>(request);
+        if(request.Role == nameof(UserRoles.Admin))
+        {
+            logger.LogWarning("Admin tries create user with role Admin. Not allowed - admin is system role.");
+            throw new ConflictException("Nelze vytvořit roli Admina - ta je systémově daná.");
+        }
 
-        hairdresser.IsActive = true;
-        hairdresser.MustChangePassword = true;
-        hairdresser.EmailConfirmed = true;
-        hairdresser.UserName = hairdresser.Email;
+        var user = mapper.Map<ApplicationUser>(request);
+
+        user.IsActive = true;
+        user.MustChangePassword = true;
+        user.EmailConfirmed = true;
+        user.UserName = user.Email;
 
         var tempPassword = GenerateTemporaryPassword();
 
-        var createResult = await userManager.CreateAsync(hairdresser, tempPassword);
+        var createResult = await userManager.CreateAsync(user, tempPassword);
         if (!createResult.Succeeded)
         {
-            var error = createResult.Errors.Select(e => e.Description);
+            var error = string.Join(", ", createResult.Errors.Select(e => e.Description));
 
             logger.LogError("Vytvoření kadeřníka selhalo. Errors: {Errors}", error);
-            throw new BarberReservation.Application.Exceptions.ValidationException("Chyba: " + error);
+            throw new ValidationException("Chyba: " + error);
         }
 
-        var roleResult = await userManager.AddToRoleAsync(hairdresser, nameof(UserRoles.Hairdresser));
+        var roleResult = await userManager.AddToRoleAsync(user, request.Role);
         if (!roleResult.Succeeded)
         {
-            await userManager.DeleteAsync(hairdresser);
+            await userManager.DeleteAsync(user);
 
-            var error = createResult.Errors.Select(e => e.Description);
-            
-            logger.LogError("Vytvoření role kadeřníkovi selhalo. Errors: {Errors}", error);
-            throw new BarberReservation.Application.Exceptions.ValidationException("Chyba: " + error);
+            var error = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+
+            logger.LogError("Role create for user failed. Errors: {Errors}", error);
+            throw new ValidationException("Chyba: " + error);
         }
 
-        var token = await userManager.GeneratePasswordResetTokenAsync(hairdresser);
-        await emailService.SendPasswordResetEmailAsync(hairdresser.Email!, token, ct);
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        await emailService.SendPasswordResetEmailAsync(user.Email!, token, ct);
 
-        logger.LogInformation("Hairdresser {HairdresserId} ({Email}) created. Reset email sent.", hairdresser.Id, hairdresser.Email);
+        logger.LogInformation("User {UserId} ({Email}) created. Reset email sent.", user.Id, user.Email);
 
         return Unit.Value;
     }

@@ -1,5 +1,7 @@
 ﻿using BarberReservation.Application.Exceptions;
+using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Entities;
+using BarberReservation.Shared.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -8,7 +10,8 @@ namespace BarberReservation.Application.User.Commands.Admin.UpdateEmail;
 
 public sealed class UpdateEmailCommandHandler(
     ILogger<UpdateEmailCommandHandler> logger,
-    UserManager<ApplicationUser> userManager) : IRequestHandler<UpdateEmailCommand>
+    UserManager<ApplicationUser> userManager,
+    ICurrentAppUser currentAppUser) : IRequestHandler<UpdateEmailCommand>
 {
     public async Task<Unit> Handle(UpdateEmailCommand request, CancellationToken ct)
     {
@@ -19,6 +22,12 @@ public sealed class UpdateEmailCommandHandler(
         {
             logger.LogWarning("Update e-mail failed. User with ID {UserId} was not found.", request.Id);
             throw new NotFoundException("Uživatel nebyl nalezen.");
+        }
+
+        if (currentAppUser.User.Id == user.Id || await userManager.IsInRoleAsync(user, nameof(UserRoles.Admin)))
+        {
+            logger.LogWarning("Admin tries update own e-mail. Not allowed.");
+            throw new ForbiddenException("Nelze upravit e-mail v administrátorským účtu.");
         }
 
         var newEmail = request.Email.Trim();

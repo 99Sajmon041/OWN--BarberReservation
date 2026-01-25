@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.Authorization.Command.Register;
-using BarberReservation.Application.User.Commands.Admin.CreateHairdresser;
+using BarberReservation.Application.User.Commands.Admin.CreateUser;
 using BarberReservation.Application.User.Commands.Admin.PartlyUpdateUser;
 using BarberReservation.Application.User.Commands.Self.UpdateAccount;
 using BarberReservation.Domain.Entities;
@@ -21,7 +21,7 @@ public sealed class UserMappingProfile : Profile
         CreateMap<UpdateAccountCommand, ApplicationUser>()
             .ForMember(x => x.Id, opt => opt.Ignore());
 
-        CreateMap<CreateHairdresserCommand, ApplicationUser>();
+        CreateMap<CreateUserCommand, ApplicationUser>();
 
         CreateMap<PartlyUpdateUserCommand, ApplicationUser>()
             .ForMember(x => x.Id, opt => opt.Ignore());

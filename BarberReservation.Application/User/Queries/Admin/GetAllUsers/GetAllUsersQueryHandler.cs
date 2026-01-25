@@ -18,6 +18,14 @@ public sealed class GetAllUsersQueryHandler(
     {
         var query = userManager.Users.AsNoTracking();
 
+        if (!string.IsNullOrWhiteSpace(request.Role))
+        {
+            var usersInRole = await userManager.GetUsersInRoleAsync(request.Role);
+
+            var idSet = usersInRole.Select(x => x.Id).ToHashSet();
+            query = query.Where(x => idSet.Contains(x.Id));
+        }
+
         if (request.IsActive is true)
             query = query.Where(x => x.IsActive);
         else if (request.IsActive is false)

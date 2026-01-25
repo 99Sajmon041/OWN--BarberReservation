@@ -1,4 +1,5 @@
 ﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.Service.Commands.ActivateService;
 using BarberReservation.Application.Service.Commands.DeactivateService;
 using BarberReservation.Application.Service.Queries.GetAllServices;
 using BarberReservation.Application.Service.Queries.GetServiceById;
@@ -13,10 +14,10 @@ namespace BarberReservation.API.Controllers
 {
     [Route("api/services")]
     [ApiController]
+    [Authorize(Roles = nameof(UserRoles.Admin))]
     public class AdminServiceController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Hairdresser))]
         public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll([FromQuery] GetAllServicesQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
@@ -24,7 +25,6 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Hairdresser))]
         public async Task<ActionResult<ServiceDto>> GetById([FromRoute] int id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetServiceByIdQuery(id), ct);
@@ -32,7 +32,6 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = nameof(UserRoles.Admin))]
         public async Task<IActionResult> Update([FromBody] UpsertServiceRequest request, [FromRoute] int id, CancellationToken ct)
         {
             var command = request.ToUpdateServiceCommand(id);
@@ -41,7 +40,6 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = nameof(UserRoles.Admin))]
         public async Task<ActionResult<object>> Create([FromBody] UpsertServiceRequest request, CancellationToken ct)
         {
             var command = request.ToCreateServiceCommand();
@@ -50,10 +48,16 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPatch("{id:int}/deactivate")]
-        [Authorize(Roles = nameof(UserRoles.Admin))]
         public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
         {
             await mediator.Send(new DeactivateServiceCommand(id), ct);
+            return NoContent();
+        }
+
+        [HttpPatch("{id:int}/activate")]
+        public async Task<IActionResult> Activate(int id, CancellationToken ct)
+        {
+            await mediator.Send(new ActivateServiceCommand(id), ct);
             return NoContent();
         }
     }

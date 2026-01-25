@@ -19,7 +19,7 @@ public sealed class LoginCommandHandler(
         cancellationToken.ThrowIfCancellationRequested();
 
         var user = await userManager.FindByEmailAsync(request.Email);
-        if (user is null)
+        if (user is null || !user.IsActive)
         {
             logger.LogWarning("Login failed - user not found. Email: {Email}.", request.Email);
             throw new UnauthorizedException("Neplatné přihlašovací údaje.");

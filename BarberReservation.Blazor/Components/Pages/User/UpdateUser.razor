@@ -1,8 +1,8 @@
-﻿@page "/profile/update"
+﻿@page "/users/{Id}/update"
 
 @inject AuthState AuthState
 @inject MessageService MessageService
-@inject IMeService MeService
+@inject IUserService UserService
 @inject NavigationManager Nav
 
 @if (!_checked)
@@ -16,14 +16,14 @@ else
 {
     <div class="profile-wrap">
         <div class="page-head page-head-center">
-            <h1 class="page-title">Úprava profilu</h1>
-            <p class="page-subtitle muted">Tvé osobní údaje</p>
+            <h1 class="page-title">Úprava účtu</h1>
+            <p class="page-subtitle muted">Osobní údaje uživatele</p>
         </div>
 
         <div class="card card-md">
             @if (isLoading)
             {
-                <div class="muted center">Načítám profil...</div>
+                <div class="muted center">Načítám účet...</div>
             }
             else
             {
@@ -51,9 +51,10 @@ else
                     <div class="divider"></div>
 
                     <div class="row-between" style="margin:0;">
-                        <a class="btn btn-outline" href="/profile">
-                            Zpět na profil
-                        </a>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <a class="btn btn-outline" href="@($"/users/{Id}")">Zpět na detail</a>
+                            <a class="btn btn-link" href="/users/list">Zpět na seznam</a>
+                        </div>
 
                         <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
                             @(isSubmitting ? "Ukládám..." : "Upravit")
@@ -64,8 +65,10 @@ else
         </div>
     </div>
 }
-
 @code {
+    [Parameter]
+    public string Id { get; set; } = default!;
+
     private UpdateUserRequest request = new();
     private UserDto model = new();
 
@@ -86,22 +89,22 @@ else
         {
             await AuthState.LoadAsync();
 
-            if (!AuthState.IsAuthenticated)
+            if (!AuthState.IsAuthenticated || !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
             {
-                _checked = true;
                 isLoading = false;
+                _checked = true;
                 await InvokeAsync(StateHasChanged);
-                Nav.NavigateTo("/login", replace: true);
+                Nav.NavigateTo("/", replace: true);
                 return;
             }
 
-            model = await MeService.GetProfileAsync(CancellationToken.None);
+            model = await UserService.GetByIdAsync(Id, CancellationToken.None);
 
             request.FirstName = model.FirstName;
             request.LastName = model.LastName;
             request.PhoneNumber = model.PhoneNumber;
         }
-        catch(ApiRequestException ex)
+        catch (ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
         }
@@ -122,9 +125,9 @@ else
 
         try
         {
-            await MeService.UpdateAccountAsync(request, CancellationToken.None);
-            MessageService.ShowSuccess("Profil úspěšně upraven.");
-            Nav.NavigateTo("/profile", replace: true);
+            await UserService.UpdateUserAsync(Id, request, CancellationToken.None);
+            MessageService.ShowSuccess("Účet úspěšně upraven.");
+            Nav.NavigateTo("/users/list", replace: true);
         }
         catch (ApiRequestException ex)
         {

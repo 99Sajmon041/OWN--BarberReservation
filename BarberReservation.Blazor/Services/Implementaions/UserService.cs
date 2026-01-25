@@ -16,6 +16,9 @@ public class UserService(IApiClient api) : IUserService
             $"pageSize={request.PageSize}"
         };
 
+        if (!string.IsNullOrWhiteSpace(request.Role))
+            parts.Add($"role={Uri.EscapeDataString(request.Role.Trim())}");
+
         if (!string.IsNullOrWhiteSpace(request.Search))
             parts.Add($"search={Uri.EscapeDataString(request.Search.Trim())}");
 
@@ -37,5 +40,30 @@ public class UserService(IApiClient api) : IUserService
     public async Task<UserDto> GetByIdAsync(string id, CancellationToken ct)
     {
         return await api.GetAsync<UserDto>($"api/users/{id}", ct);
+    }
+
+    public async Task DeactivateByIdAsync(string id, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/deactivate", null, ct);
+    }
+
+    public async Task ActivateByIdAsync(string id, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/activate", null, ct);
+    }
+
+    public async Task CreateUserAsync(CreateUserRequest request, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Post, "api/users", request, ct);
+    }
+
+    public async Task UpdateUserAsync(string id, UpdateUserRequest request, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/update", request, ct);
+    }
+
+    public async Task UpdateUserEmailAsync(string id, UpdateUserEmailRequest request, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/update-email", request, ct);
     }
 }

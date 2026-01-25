@@ -59,15 +59,16 @@ else
 
                 <div class="divider"></div>
 
-                <div class="row-between">
-                    <a class="btn btn-primary" href="/profile/update">
-                        Upravit profil
-                    </a>
+                <div class="row-between" style="margin:0;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <a class="btn btn-outline" href="/">Domů</a>
+                        <a class="btn btn-primary" href="/profile/update">Upravit profil</a>
+                    </div>
 
-                    @if(AuthState.Roles.Contains(nameof(UserRoles.Customer)))
+                    @if (AuthState.Roles.Contains(nameof(UserRoles.Customer)))
                     {
-                        <button type="button" class="btn btn-outline" @onclick="DeactivateAsync">
-                            Deaktivovat účet
+                        <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@isSubmitting">
+                            @(isSubmitting ? "Provádím..." : "Deaktivovat účet")
                         </button>
                     }
                 </div>
@@ -80,6 +81,7 @@ else
 @code {
     private UserDto model = new();
 
+    private bool isSubmitting;
     private bool isLoading;
     private bool loaded;
     private bool _checked;
@@ -119,9 +121,14 @@ else
 
     private async Task DeactivateAsync()
     {
+        if (isSubmitting)
+            return;
+
         var ok = await JS.ConfirmAction("Opravdu si přejete deaktivovat svůj účet ?");
         if (!ok)
             return;
+
+        isSubmitting = true;
 
         try
         {
@@ -130,9 +137,14 @@ else
             MessageService.ShowWarning("Váš účet byl deaktivován. Pro jeho obnovení kontaktujte podporu.");
             Nav.NavigateTo("/", replace: true);
         }
-        catch(ApiRequestException ex)
+        catch (ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

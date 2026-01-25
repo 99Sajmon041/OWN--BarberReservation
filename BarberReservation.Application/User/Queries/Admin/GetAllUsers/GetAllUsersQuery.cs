@@ -8,4 +8,5 @@ namespace BarberReservation.Application.User.Queries.Admin.GetAllUsers;
 public sealed class GetAllUsersQuery : PagedApiRequest, IRequest<PagedResult<UserDto>>
 {
     public bool? IsActive { get; init; }
+    public string? Role { get; init; }
 }

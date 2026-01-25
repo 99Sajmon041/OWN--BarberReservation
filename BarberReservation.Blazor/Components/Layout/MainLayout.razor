@@ -22,6 +22,7 @@
                 @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                 {
                     <a class="nav-link" href="/users/list">Uživatelé</a>
+                    <a class="nav-link" href="/services/list">Služby</a>
                 }
             </nav>
 
@@ -57,11 +58,7 @@
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                     {
                         <a class="mobile-link" href="/users/list" @onclick="CloseMobileMenu">Uživatelé</a>
-                    }
-
-                    @if(AuthState.IsAuthenticated)
-                    {
-                        <a class="mobile-link" href="/profile" @onclick="CloseMobileMenu">Profil</a>
+                        <a class="mobile-link" href="/services/list" @onclick="CloseMobileMenu">Služby</a>
                     }
                 </div>
             </div>

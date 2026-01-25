@@ -680,3 +680,136 @@ select.input option {
     cursor: not-allowed;
     filter: none;
 }
+
+.filters-row {
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+@media (min-width: 992px) {
+    .filters-row {
+        flex-wrap: nowrap;
+    }
+}
+
+@media (max-width: 991px) {
+    .filters-row {
+        flex-wrap: wrap;
+    }
+
+    .filters-row .field {
+        width: 100%;
+        min-width: 0 !important;
+    }
+}
+
+.ui-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.70);
+    z-index: 9998;
+}
+
+.ui-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 9999;
+}
+
+.ui-modal-card {
+    width: min(560px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    padding: 18px;
+}
+
+.ui-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.ui-modal-title {
+    font-weight: 800;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.ui-modal-x {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.ui-modal-x:hover {
+    background: rgba(255,255,255,.08);
+}
+
+.ui-modal-body {
+    display: block;
+}
+
+/* User detail actions: equal-width buttons, clean layout */
+.detail-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* PC: 2 sloupce */
+    gap: 12px;
+    margin-top: 6px;
+}
+
+@media (max-width: 560px) {
+    .detail-actions {
+        grid-template-columns: 1fr; /* mobil: 1 sloupec */
+    }
+}
+
+.detail-actions .btn {
+    width: 100%;
+}
+
+
+.btn-secondary {
+    background: rgba(255,255,255,.04);
+    border-color: rgba(255,255,255,.18);
+    color: rgba(231,237,245,.92);
+    box-shadow: 0 10px 26px rgba(0,0,0,.24);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,.07);
+    border-color: rgba(255,255,255,.26);
+}
+
+.btn-success {
+    background: rgba(25, 135, 84, .14);
+    border-color: rgba(25, 135, 84, .38);
+    color: rgba(255,255,255,.92);
+    box-shadow: 0 10px 26px rgba(25, 135, 84, .12);
+}
+
+.btn-success:hover {
+    background: rgba(25, 135, 84, .20);
+    border-color: rgba(25, 135, 84, .55);
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}

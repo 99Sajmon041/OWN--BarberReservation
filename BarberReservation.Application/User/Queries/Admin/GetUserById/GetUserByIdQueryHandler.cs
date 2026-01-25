@@ -25,6 +25,7 @@ public sealed class GetUserByIdQueryHandler(
         }
 
         var userDto = mapper.Map<UserDto>(user);
+        userDto.Roles = (await userManager.GetRolesAsync(user)).ToList();
 
         logger.LogInformation("Admin fetched user detail. UserId: {UserId}", user.Id);
 

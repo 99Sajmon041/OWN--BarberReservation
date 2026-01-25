@@ -1,8 +1,8 @@
-﻿@page "/users/list"
+﻿@page "/services/list"
 
 @inject AuthState AuthState
 @inject MessageService MessageService
-@inject IUserService UserService
+@inject IService Service
 @inject NavigationManager Nav
 
 @if (!_checked)
@@ -18,16 +18,16 @@ else
         <div class="page-head">
             <div class="row-between" style="margin:0;">
                 <div>
-                    <h1 class="page-title">Uživatelé</h1>
-                    <p class="page-subtitle muted">Správa uživatelů</p>
+                    <h1 class="page-title">Služby</h1>
+                    <p class="page-subtitle muted">Správa služeb</p>
                 </div>
 
                 <div class="header-actions">
                     <a class="btn btn-outline" href="/">
                         Zpět
                     </a>
-                    <a class="btn btn-primary" href="/users/create">
-                        + Vytvořit uživatele
+                    <a class="btn btn-primary" href="/services/create">
+                        + Vytvořit službu
                     </a>
                 </div>
             </div>
@@ -43,7 +43,7 @@ else
                                class="input input-has-clear"
                                value="@search"
                                @oninput="OnSearchInput"
-                               placeholder="Jméno, příjmení, e-mail, telefon..." />
+                               placeholder="Název, popis..." />
 
 
                         @if (!string.IsNullOrWhiteSpace(search))
@@ -64,7 +64,7 @@ else
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label" for="isActive">Stav</label>
                     <select class="input" disabled="@isLoading" @bind="isActiveFilter" @bind:after="OnFiltersChangedAsync">
-                        <option value="">Všichni</option>
+                        <option value="">Všechny</option>
                         <option value="true">Aktivní</option>
                         <option value="false">Neaktivní</option>
                     </select>
@@ -73,22 +73,9 @@ else
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label" for="sortBy">Řazení</label>
                     <select id="sortBy" disabled="@isLoading" class="input" @bind="sortBy" @bind:after="OnFiltersChangedAsync">
-                        <option value="lastname">Příjmení</option>
-                        <option value="firstname">Jméno</option>
-                        <option value="email">E-mail</option>
-                        <option value="phonenumber">Telefon</option>
-                        <option value="isactive">Aktivní</option>
-                    </select>
-                </div>
-
-                <div class="field" style="margin:0; min-width: 220px;">
-                    <label class="label" for="role">Role</label>
-                    <select id="role" disabled="@isLoading" class="input" @bind="role" @bind:after="OnFiltersChangedAsync">
-                        <option value="">Všechny</option>
-                        @foreach (var opt in EnumHelper.RoleOptions)
-                        {
-                            <option value="@opt.Value">@opt.Text</option>
-                        }
+                        <option value="name">Název</option>
+                        <option value="description">Popis</option>
+                        <option value="isactive">Stav</option>
                     </select>
                 </div>
 
@@ -113,11 +100,11 @@ else
 
             @if (isLoading)
             {
-                <div class="muted center">Načítám uživatele...</div>
+                <div class="muted center">Načítám služby...</div>
             }
             else if (model is null || model.Items is null || !model.Items.Any())
             {
-                <div class="muted center">Žádní uživatelé nenalezeni.</div>
+                <div class="muted center">Žádné služby nenalezeny.</div>
             }
             else
             {
@@ -125,28 +112,28 @@ else
                     <table style="width:100%; border-collapse: collapse;">
                         <thead>
                             <tr style="text-align:left; border-bottom: 1px solid var(--line);">
-                                <th style="padding: 10px 6px;">Jméno</th>
-                                <th style="padding: 10px 6px;">E-mail</th>
-                                <th style="padding: 10px 6px;">Telefon</th>
-                                <th style="padding: 10px 6px;">Aktivní</th>
+                                <th style="padding: 10px 6px;">ID</th>
+                                <th style="padding: 10px 6px;">Název</th>
+                                <th style="padding: 10px 6px;">Popis</th>
+                                <th style="padding: 10px 6px;">Stav</th>
                                 <th style="padding: 10px 6px;"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var u in model.Items)
+                            @foreach (var s in model.Items)
                             {
                                 <tr style="border-bottom: 1px solid var(--line);">
                                     <td style="padding: 10px 6px;">
-                                        @u.LastName @u.FirstName
+                                        @s.Id
                                     </td>
                                     <td style="padding: 10px 6px;">
-                                        <span class="muted">@u.Email</span>
+                                        <span>@s.Name</span>
                                     </td>
                                     <td style="padding: 10px 6px;">
-                                        <span class="muted">@u.PhoneNumber</span>
+                                        <span class="muted">@s.Description</span>
                                     </td>
                                     <td style="padding: 10px 6px;">
-                                        @if (u.IsActive)
+                                        @if (s.IsActive)
                                         {
                                             <span class="muted">Ano</span>
                                         }
@@ -156,7 +143,7 @@ else
                                         }
                                     </td>
                                     <td style="padding: 10px 6px; text-align:right;">
-                                        <a class="btn btn-link" href="@($"/users/{u.Id}")">Detail</a>
+                                        <a class="btn btn-link" href="@($"/service/{s.Id}")">Detail</a>
                                     </td>
                                 </tr>
                             }
@@ -194,14 +181,13 @@ else
     private bool loaded;
     private CancellationTokenSource? searchCts;
 
-    private PagedResult<UserDto>? model;
+    private PagedResult<ServiceDto>? model;
 
     private int page = 1;
     private int pageSize = 20;
 
     private string? search;
-    private string? role;
-    private string sortBy = "lastname";
+    private string sortBy = "name";
     private bool desc;
 
 
@@ -253,18 +239,17 @@ else
 
         try
         {
-            var req = new UserPageRequest
+            var req = new ServicePageRequest
             {
                 Page = page,
                 PageSize = pageSize,
                 Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
-                Role = string.IsNullOrWhiteSpace(role) ? null : role.Trim(),
                 SortBy = sortBy,
                 Desc = desc,
                 IsActive = ParseNullableBool(isActiveFilter)
             };
 
-            model = await UserService.GetAllAsync(req, CancellationToken.None);
+            model = await Service.GetAllAsync(req, CancellationToken.None);
         }
         catch (ApiRequestException ex)
         {
@@ -310,10 +295,10 @@ else
 
     private static bool? ParseNullableBool(string value)
     {
-        if (string.IsNullOrWhiteSpace(value)) 
+        if (string.IsNullOrWhiteSpace(value))
             return null;
 
-        if (bool.TryParse(value, out var b)) 
+        if (bool.TryParse(value, out var b))
             return b;
 
         return null;
@@ -345,7 +330,7 @@ else
             await LoadAsync();
         }
         catch (TaskCanceledException)
-        {  
+        {
         }
     }
 

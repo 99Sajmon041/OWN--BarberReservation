@@ -1,10 +1,11 @@
-﻿using FluentValidation;
+﻿using BarberReservation.Shared.Helpers;
+using FluentValidation;
 
-namespace BarberReservation.Application.User.Commands.Admin.CreateHairdresser;
+namespace BarberReservation.Application.User.Commands.Admin.CreateUser;
 
-public sealed class CreateHairdresserCommandValidator : AbstractValidator<CreateHairdresserCommand>
+public sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
-    public CreateHairdresserCommandValidator()
+    public CreateUserCommandValidator()
     {
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("Jméno je povinné.")
@@ -16,11 +17,15 @@ public sealed class CreateHairdresserCommandValidator : AbstractValidator<Create
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("E-mail je povinný.")
-            .EmailAddress().WithMessage("Zajdete E-mail ve správném formátu.");
+            .EmailAddress().WithMessage("Zadejte E-mail ve správném formátu.");
 
         RuleFor(x => x.PhoneNumber)
             .NotEmpty().WithMessage("Telefonní číslo je povinné.")
             .Matches(@"^\+?[1-9]\d{7,14}$")
             .WithMessage("Telefonní číslo musí být ve formátu +420123456789 (8–15 číslic, volitelně s +).");
+
+        RuleFor(x => x.Role)
+            .NotEmpty().WithMessage("Role je povinná.")
+            .Must(x => EnumHelper.AllowedRoleValues.Contains(x)).WithMessage("Neplatná role.");
     }
 }

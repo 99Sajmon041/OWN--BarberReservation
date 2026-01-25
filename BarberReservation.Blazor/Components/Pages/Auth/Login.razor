@@ -39,7 +39,7 @@
                     <button type="button"
                             class="btn btn-outline btn-compact"
                             @onclick="TogglePassword">
-                        @(showPassword ? "Hide" : "Show")
+                        @(showPassword ? "Skrýt" : "Zobrazit")
                     </button>
                 </div>
 
@@ -49,10 +49,13 @@
             <div class="row-between">
                 <label class="check">
                     <InputCheckbox class="checkbox" @bind-Value="request.RememberMe" />
-                    <span>Remember me</span>
+                    <span>Zůstat přihlášen</span>
                 </label>
 
-                <a class="link" href="/forgot-password">Zapomenuté heslo?</a>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <a class="btn btn-link" href="/">Domů</a>
+                    <a class="link" href="/forgot-password">Zapomenuté heslo?</a>
+                </div>
             </div>
 
             <button class="btn btn-primary btn-block" type="submit" disabled="@isSubmitting">
@@ -97,11 +100,16 @@
                 Nav.NavigateTo("/change-password", replace: true);
             else
                 Nav.NavigateTo("/", replace: true);
+
+            return;
         }
     }
 
     private async Task HandleLoginAsync()
     {
+        if (isSubmitting)
+            return;
+
         isSubmitting = true;
 
         try
@@ -123,6 +131,7 @@
         finally
         {
             isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 

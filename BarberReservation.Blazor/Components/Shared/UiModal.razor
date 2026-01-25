@@ -1,0 +1,53 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+
+@if (Open)
+{
+    <div class="ui-modal-backdrop" @onclick="OnBackdropClick"></div>
+
+    <div class="ui-modal" @onkeydown="HandleKeyDown" tabindex="-1">
+        <div class="ui-modal-card" @onclick:stopPropagation="true">
+            <div class="ui-modal-head">
+                <div>
+                    @if (!string.IsNullOrWhiteSpace(Title))
+                    {
+                        <div class="ui-modal-title">@Title</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Subtitle))
+                    {
+                        <div class="muted">@Subtitle</div>
+                    }
+                </div>
+
+                <button type="button" class="ui-modal-x" @onclick="Close" aria-label="Zavřít">×</button>
+            </div>
+
+            <div class="ui-modal-body">
+                @ChildContent
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public bool CloseOnBackdrop { get; set; } = true;
+    [Parameter] public bool CloseOnEsc { get; set; } = true;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task Close() => await OpenChanged.InvokeAsync(false);
+
+    private async Task OnBackdropClick()
+    {
+        if (CloseOnBackdrop)
+            await Close();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (CloseOnEsc && e.Key == "Escape")
+            await Close();
+    }
+}
