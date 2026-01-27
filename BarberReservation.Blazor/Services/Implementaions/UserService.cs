@@ -52,17 +52,17 @@ public class UserService(IApiClient api) : IUserService
         await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/activate", null, ct);
     }
 
-    public async Task CreateUserAsync(CreateUserRequest request, CancellationToken ct)
+    public async Task CreateAsync(CreateUserRequest request, CancellationToken ct)
     {
         await api.SendAsync(HttpMethod.Post, "api/users", request, ct);
     }
 
-    public async Task UpdateUserAsync(string id, UpdateUserRequest request, CancellationToken ct)
+    public async Task UpdateAsync(string id, UpdateUserRequest request, CancellationToken ct)
     {
         await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/update", request, ct);
     }
 
-    public async Task UpdateUserEmailAsync(string id, UpdateUserEmailRequest request, CancellationToken ct)
+    public async Task UpdateEmailAsync(string id, UpdateUserEmailRequest request, CancellationToken ct)
     {
         await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/update-email", request, ct);
     }

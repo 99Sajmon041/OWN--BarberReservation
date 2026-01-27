@@ -47,4 +47,14 @@ public sealed class Service(IApiClient api) : IService
     {
         await api.SendAsync(HttpMethod.Patch, $"api/services/{id}/deactivate", null, ct);
     }
+
+    public async Task<int> CreateAsync(UpsertServiceRequest request, CancellationToken ct)
+    {
+        return await api.PostAsyncWithResponse<UpsertServiceRequest, int>(HttpMethod.Post, "api/services", request, ct);
+    }
+
+    public async Task UpdateAsync(int id, UpsertServiceRequest request, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Put, $"api/services/{id}", request, ct);
+    }
 }

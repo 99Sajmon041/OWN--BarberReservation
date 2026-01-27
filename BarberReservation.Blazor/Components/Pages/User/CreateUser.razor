@@ -131,7 +131,7 @@ else if (!redirecting)
 
         try
         {
-            await UserService.CreateUserAsync(request, CancellationToken.None);
+            await UserService.CreateAsync(request, CancellationToken.None);
             MessageService.ShowSuccess("Uživatel byl vytvořen. Byl mu odeslán e-mail pro nastavení hesla.");
             Nav.NavigateTo("/users/list", replace: true);
         }

@@ -1,0 +1,110 @@
+﻿@page "/services/create"
+
+@inject IService Service
+@inject NavigationManager Nav
+@inject AuthState AuthState
+@inject MessageService MessageService
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else if (!redirecting)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Vytvoření služby</h1>
+        <p class="page-subtitle muted">Vytvoření slůžby pro kadeřníky.</p>
+    </div>
+
+    <div class="stack-top">
+        <div class="card card-md">
+            <EditForm Model="request" OnValidSubmit="HandleCreateServiceAsync">
+                <DataAnnotationsValidator />
+
+                <div class="field">
+                    <label class="label" for="name">Název</label>
+                    <InputText id="name"
+                               class="input"
+                               @bind-Value="request.Name"
+                               placeholder="Střih" />
+                    <ValidationMessage For="@(() => request.Name)" class="field-error" />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="description">Popis</label>
+                    <InputText id="description"
+                               class="input"
+                               @bind-Value="request.Description"
+                               placeholder="Střih vlasů" />
+                    <ValidationMessage For="@(() => request.Description)" class="field-error" />
+                </div>
+
+                <div class="row-between" style="margin:0;">
+                    <a class="btn btn-outline" href="/services/list">
+                        Zpět na seznam
+                    </a>
+
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">
+                        @(isSubmitting ? "Vytvářím..." : "Vytvořit")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private UpsertServiceRequest request = new();
+    private bool isSubmitting;
+    private bool _checked;
+    private bool loaded;
+    private bool redirecting;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        await AuthState.LoadAsync();
+        if (!AuthState.IsAuthenticated || !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+        {
+            redirecting = true;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+            Nav.NavigateTo("/", replace: true);
+            return;
+        }
+
+        _checked = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleCreateServiceAsync()
+    {
+        if (isSubmitting)
+            return;
+
+        isSubmitting = true;
+
+        try
+        {
+            var id = await Service.CreateAsync(request, CancellationToken.None);
+            MessageService.ShowSuccess("Služba úspěšně vytvořena.");
+            Nav.NavigateTo($"/services/{id}", replace: true);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

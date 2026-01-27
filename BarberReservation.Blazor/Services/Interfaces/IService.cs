@@ -9,4 +9,6 @@ public interface IService
     Task<ServiceDto> GetByIdAsync(int id, CancellationToken ct);
     Task DeactivateByIdAsync(int id, CancellationToken ct);
     Task ActivateByIdAsync(int id, CancellationToken ct);
+    Task<int> CreateAsync(UpsertServiceRequest request, CancellationToken ct);
+    Task UpdateAsync(int id, UpsertServiceRequest request, CancellationToken ct);
 }

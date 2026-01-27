@@ -1,8 +1,9 @@
-﻿@page "/users/{Id}/update"
+﻿@page "/services/{id:int}/update"
+
 
 @inject AuthState AuthState
 @inject MessageService MessageService
-@inject IUserService UserService
+@inject IService Service
 @inject NavigationManager Nav
 
 @if (!_checked)
@@ -16,14 +17,14 @@ else
 {
     <div class="profile-wrap">
         <div class="page-head page-head-center">
-            <h1 class="page-title">Úprava účtu</h1>
-            <p class="page-subtitle muted">Osobní údaje uživatele</p>
+            <h1 class="page-title">Úprava služby</h1>
+            <p class="page-subtitle muted">Parametry služby</p>
         </div>
 
         <div class="card card-md">
             @if (isLoading)
             {
-                <div class="muted center">Načítám účet...</div>
+                <div class="muted center">Načítám službu...</div>
             }
             else
             {
@@ -31,29 +32,28 @@ else
                     <DataAnnotationsValidator />
 
                     <div class="field">
-                        <label class="label" for="firstName">Jméno</label>
-                        <InputText id="firstName" class="input" @bind-Value="request.FirstName" />
-                        <ValidationMessage For="@(() => request.FirstName)" class="field-error" />
+                        <label class="label" for="id">ID</label>
+                        <input id="id" class="input" readonly value="@model.Id" />
                     </div>
 
                     <div class="field">
-                        <label class="label" for="lastName">Příjmení</label>
-                        <InputText id="lastName" class="input" @bind-Value="request.LastName" />
-                        <ValidationMessage For="@(() => request.LastName)" class="field-error" />
+                        <label class="label" for="name">Název</label>
+                        <InputText id="name" class="input" @bind-Value="request.Name" />
+                        <ValidationMessage For="@(() => request.Name)" class="field-error" />
                     </div>
 
                     <div class="field">
-                        <label class="label" for="phone">Telefon</label>
-                        <InputText id="phone" class="input" @bind-Value="request.PhoneNumber" />
-                        <ValidationMessage For="@(() => request.PhoneNumber)" class="field-error" />
+                        <label class="label" for="description">Popis</label>
+                        <InputText id="description" class="input" @bind-Value="request.Description" />
+                        <ValidationMessage For="@(() => request.Description)" class="field-error" />
                     </div>
 
                     <div class="divider"></div>
 
                     <div class="row-between" style="margin:0;">
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <a class="btn btn-outline" href="@($"/users/{Id}")">Zpět na detail</a>
-                            <a class="btn btn-link" href="/users/list">Zpět na seznam</a>
+                            <a class="btn btn-outline" href="@($"/services/{Id}")">Zpět na detail</a>
+                            <a class="btn btn-link" href="/services/list">Zpět na seznam</a>
                         </div>
 
                         <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
@@ -65,17 +65,18 @@ else
         </div>
     </div>
 }
+
 @code {
     [Parameter]
-    public string Id { get; set; } = default!;
+    public int Id { get; set; }
 
-    private UpdateUserRequest request = new();
-    private UserDto model = new();
+    private UpsertServiceRequest request = new();
+    private ServiceDto model = new();
 
     private bool isLoading;
-    private bool loaded;
     private bool isSubmitting;
     private bool _checked;
+    private bool loaded;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -98,13 +99,11 @@ else
 
         try
         {
-            model = await UserService.GetByIdAsync(Id, CancellationToken.None);
-
-            request.FirstName = model.FirstName;
-            request.LastName = model.LastName;
-            request.PhoneNumber = model.PhoneNumber;
+            model = await Service.GetByIdAsync(Id, CancellationToken.None);
+            request.Name = model.Name;
+            request.Description = model.Description;
         }
-        catch (ApiRequestException ex)
+        catch(ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
         }
@@ -125,11 +124,11 @@ else
 
         try
         {
-            await UserService.UpdateAsync(Id, request, CancellationToken.None);
-            MessageService.ShowSuccess("Účet úspěšně upraven.");
-            Nav.NavigateTo($"/users/{Id}", replace: true);
+            await Service.UpdateAsync(Id, request, CancellationToken.None);
+            MessageService.ShowSuccess("Služba byla úspěšně upravena.");
+            Nav.NavigateTo($"/services/{Id}", replace: true);
         }
-        catch (ApiRequestException ex)
+        catch(ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
         }

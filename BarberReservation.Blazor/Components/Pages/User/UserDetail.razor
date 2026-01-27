@@ -255,7 +255,7 @@ else
 
         try
         {
-            await UserService.UpdateUserEmailAsync(model.Id, emailRequest, CancellationToken.None);
+            await UserService.UpdateEmailAsync(model.Id, emailRequest, CancellationToken.None);
             model.Email = emailRequest.Email.Trim();
             MessageService.ShowSuccess("E-mail byl úspěšně upraven.");
             showEmailModal = false;

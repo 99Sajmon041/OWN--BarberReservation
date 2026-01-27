@@ -40,11 +40,11 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> Create([FromBody] UpsertServiceRequest request, CancellationToken ct)
+        public async Task<ActionResult<int>> Create([FromBody] UpsertServiceRequest request, CancellationToken ct)
         {
             var command = request.ToCreateServiceCommand();
             var id = await mediator.Send(command, ct);
-            return CreatedAtAction(nameof(GetById), new { id }, new { id });
+            return CreatedAtAction(nameof(GetById), new { id }, id);
         }
 
         [HttpPatch("{id:int}/deactivate")]
