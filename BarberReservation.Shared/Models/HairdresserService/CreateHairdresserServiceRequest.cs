@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.HairdresserService.Common;
+namespace BarberReservation.Shared.Models.HairdresserService;
 
 public sealed class CreateHairdresserServiceRequest
 {

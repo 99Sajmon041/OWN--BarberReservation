@@ -1,9 +1,9 @@
 ﻿using BarberReservation.Shared.Models.Common;
 using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.HairdresserService.Admin;
+namespace BarberReservation.Shared.Models.HairdresserService;
 
-public sealed class HairdresserAdminServicePagedRequest : PagedRequest
+public sealed class CommonHairdresserServicePagedRequest : PagedRequest
 {
     [StringLength(120, ErrorMessage = "ID kadeřníka může mít maximálně 120 znaků.")]
     public string? HairdresserId { get; set; }

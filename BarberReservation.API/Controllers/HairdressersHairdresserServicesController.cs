@@ -4,7 +4,7 @@ using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHa
 using BarberReservation.Application.HairdresserService.Queries.Self.GetSelfHairdressersService;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

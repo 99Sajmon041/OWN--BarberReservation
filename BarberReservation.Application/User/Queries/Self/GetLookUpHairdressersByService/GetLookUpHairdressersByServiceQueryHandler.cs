@@ -12,9 +12,9 @@ public sealed class GetLookUpHairdressersByServiceQueryHandler(
     ILogger<GetLookUpHairdressersByServiceQueryHandler> logger,
     UserManager<ApplicationUser> userManager,
     IMapper mapper,
-    IUnitOfWork unitOfWork) : IRequestHandler<GetLookUpHairdressersByServiceQuery, IReadOnlyList<Shared.Models.LookUpModels.GetLookUpHairdressersByService>>
+    IUnitOfWork unitOfWork) : IRequestHandler<GetLookUpHairdressersByServiceQuery, IReadOnlyList<Shared.Models.LookUpModels.GetLookUpHairdressers>>
 {
-    public async Task<IReadOnlyList<Shared.Models.LookUpModels.GetLookUpHairdressersByService>> Handle(GetLookUpHairdressersByServiceQuery request, CancellationToken ct)
+    public async Task<IReadOnlyList<Shared.Models.LookUpModels.GetLookUpHairdressers>> Handle(GetLookUpHairdressersByServiceQuery request, CancellationToken ct)
     {
         var ids = await unitOfWork.HairdresserServiceRepository.GetActiveHairdresserIdsByServiceIdAsync(request.ServiceId, ct);
 
@@ -22,7 +22,7 @@ public sealed class GetLookUpHairdressersByServiceQueryHandler(
             .Where(u => ids.Contains(u.Id))
             .ToListAsync(ct);
 
-        var hairdressersDto = mapper.Map<List<Shared.Models.LookUpModels.GetLookUpHairdressersByService>>(hairdressers);
+        var hairdressersDto = mapper.Map<List<Shared.Models.LookUpModels.GetLookUpHairdressers>>(hairdressers);
 
         logger.LogInformation("Retrieved hairdressers by their service. Service ID {ServiceId}.", request.ServiceId);
 

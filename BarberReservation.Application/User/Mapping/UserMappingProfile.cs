@@ -32,7 +32,7 @@ public sealed class UserMappingProfile : Profile
             .ForMember(x => x.CustomerEmail, opt => opt.MapFrom(x => x.Email))
             .ForMember(x => x.CustomerPhone, opt => opt.MapFrom(x => x.PhoneNumber));
 
-        CreateMap<ApplicationUser, GetLookUpHairdressersByService>()
+        CreateMap<ApplicationUser, GetLookUpHairdressers>()
             .ForMember(x => x.FullName, opt => opt.MapFrom(x => $"{x.FirstName} {x.LastName}"));
     }
 }

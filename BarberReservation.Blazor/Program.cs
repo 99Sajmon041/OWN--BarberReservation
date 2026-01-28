@@ -27,6 +27,8 @@ builder.Services.AddScoped<IApiClient, ApiClient>();
 builder.Services.AddScoped<IMeService, MeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IService, Service>();
+builder.Services.AddScoped<IHairdresserService, HairdresserService>();
+builder.Services.AddScoped<ILookUpsService, LookUpsService>();
 
 builder.Services.AddHttpClient("Api", client =>
 {

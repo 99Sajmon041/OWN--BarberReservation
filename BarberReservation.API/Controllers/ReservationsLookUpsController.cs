@@ -25,7 +25,7 @@ namespace BarberReservation.API.Controllers
 
         [HttpGet("hairdressers")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<GetLookUpHairdressersByService>>> GetLookUpHairdressers(CancellationToken ct)
+        public async Task<ActionResult<IReadOnlyList<GetLookUpHairdressers>>> GetLookUpHairdressers(CancellationToken ct)
         {
             var result = await mediator.Send(new GetLookUpHairdressersQuery(), ct);
             return Ok(result);
@@ -33,7 +33,7 @@ namespace BarberReservation.API.Controllers
 
         [HttpGet("service/{serviceId:int}/hairdressers")]
         [AllowAnonymous]
-        public async Task<ActionResult<IReadOnlyList<GetLookUpHairdressersByService>>> GetLookUpHaidressersByService(int serviceId, CancellationToken ct)
+        public async Task<ActionResult<IReadOnlyList<GetLookUpHairdressers>>> GetLookUpHaidressersByService(int serviceId, CancellationToken ct)
         {
             var result = await mediator.Send(new GetLookUpHairdressersByServiceQuery(serviceId), ct);
             return Ok(result);

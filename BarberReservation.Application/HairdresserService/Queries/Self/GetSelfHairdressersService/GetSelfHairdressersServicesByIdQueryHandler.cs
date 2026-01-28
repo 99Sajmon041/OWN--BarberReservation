@@ -2,7 +2,7 @@
 using BarberReservation.Application.Exceptions;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

@@ -268,6 +268,27 @@ img {
     flex-wrap: wrap;
 }
 
+.row-between.filters-row {
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.row-between.filters-row .field {
+    flex: 1 1 220px;
+    min-width: 220px;
+}
+
+.row-between.filters-row .field:nth-last-child(2),
+.row-between.filters-row .field:last-child {
+    flex: 0 1 160px;
+    min-width: 160px;
+}
+
+.row-between.filters-row .btn.btn-link {
+    white-space: nowrap;
+}
+
 .check {
     display: flex;
     align-items: center;

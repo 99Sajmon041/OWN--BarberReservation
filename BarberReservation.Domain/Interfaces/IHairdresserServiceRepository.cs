@@ -1,6 +1,5 @@
 ﻿using BarberReservation.Domain.Entities;
-using BarberReservation.Shared.Models.HairdresserService.Admin;
-using BarberReservation.Shared.Models.HairdresserService.Self;
+using BarberReservation.Shared.Models.HairdresserService;
 
 namespace BarberReservation.Domain.Interfaces;
 
@@ -14,9 +13,9 @@ public interface IHairdresserServiceRepository
     Task<bool> ExistsActiveWithSameServiceAsync(string hairdresserId, int serviceId, CancellationToken ct);
     bool Deactivate(HairdresserService hairdresserService);
     void Delete(HairdresserService hairdresserService);
-    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(HairdresserAdminServicePagedRequest request, CancellationToken ct);
+    Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(CommonHairdresserServicePagedRequest request, CancellationToken ct);
     Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(
-        HairdresserSelfServicePagedRequest request, 
+        CommonHairdresserServicePagedRequest request, 
         string userId, 
         CancellationToken ct);
     Task<IReadOnlyList<string>> GetActiveHairdresserIdsByServiceIdAsync(int id, CancellationToken ct);

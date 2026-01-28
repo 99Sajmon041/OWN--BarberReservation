@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.HairdresserService.Commands.Self.CreateSelfHairdresserService;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 
 namespace BarberReservation.Application.HairdresserService.Mapping;
 

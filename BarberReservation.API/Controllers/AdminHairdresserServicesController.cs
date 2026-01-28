@@ -1,10 +1,10 @@
 ﻿using BarberReservation.Application.HairdresserService.Commands.Admin.DeleteHairdresserService;
 using BarberReservation.Application.HairdresserService.Commands.Admin.NewFolder;
 using BarberReservation.Application.HairdresserService.Queries.Admin.GetAdminHairdresserService;
-using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
+using BarberReservation.Application.HairdresserService.Queries.Admin.GetAllAdminHairdressersServices;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +17,7 @@ namespace BarberReservation.API.Controllers
     public class AdminHairdresserServicesController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] GetAllSelfHairdressersServicesQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<HairdresserServiceDto>>> GetAll([FromQuery] GetAllAdminHairdressersServicesQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);

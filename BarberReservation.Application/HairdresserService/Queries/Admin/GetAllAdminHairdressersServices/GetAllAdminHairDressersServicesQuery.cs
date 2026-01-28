@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Application.Common.PagedSettings;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 
 namespace BarberReservation.Application.HairdresserService.Queries.Admin.GetAllAdminHairdressersServices;

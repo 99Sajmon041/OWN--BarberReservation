@@ -1,8 +1,7 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
-using BarberReservation.Shared.Models.HairdresserService.Admin;
-using BarberReservation.Shared.Models.HairdresserService.Self;
+using BarberReservation.Shared.Models.HairdresserService;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;
@@ -72,7 +71,7 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
         return await _context.HairdresserServices.AnyAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive, ct);
     }
 
-    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(HairdresserAdminServicePagedRequest request, CancellationToken ct)
+    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(CommonHairdresserServicePagedRequest request, CancellationToken ct)
     {
         var query = _context.HairdresserServices
             .Include(x => x.Hairdresser)
@@ -117,7 +116,7 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
         return (items, total);
     }
 
-    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(HairdresserSelfServicePagedRequest request, string userId, CancellationToken ct)
+    public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForCurrentUserAsync(CommonHairdresserServicePagedRequest request, string userId, CancellationToken ct)
     {
         var query = _context.HairdresserServices
             .Include(x => x.Service)

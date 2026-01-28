@@ -3,7 +3,7 @@ using BarberReservation.Application.HairdresserService.Mapping;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +19,7 @@ public sealed class GetAllSelfHairdressersServicesQueryHandler(
     {
         var currentUser = currentAppUser.User;
 
-        var hairdresserSelfServicePagedRequest = request.ToHairDresserSelfServicePagedRequest();
+        var hairdresserSelfServicePagedRequest = request.ToHairdresserSelfServicePagedRequest();
 
         var (hairdresserServices, total) = await unitOfWork.HairdresserServiceRepository.GetAllPagedForCurrentUserAsync(hairdresserSelfServicePagedRequest, currentUser.Id, ct);
 

@@ -1,14 +1,13 @@
 ﻿using BarberReservation.Application.HairdresserService.Queries.Admin.GetAllAdminHairdressersServices;
-using BarberReservation.Shared.Models.HairdresserService.Admin;
-using BarberReservation.Shared.Models.HairdresserService.Self;
+using BarberReservation.Shared.Models.HairdresserService;
 
 namespace BarberReservation.Application.HairdresserService.Mapping;
 
 public static class HairdresserServiceRequestMappingExtensions
 {
-    public static HairdresserSelfServicePagedRequest ToHairDresserSelfServicePagedRequest(this Queries.Self.GetAllSelfHairdressersServices.GetAllSelfHairdressersServicesQuery query)
+    public static CommonHairdresserServicePagedRequest ToHairdresserSelfServicePagedRequest(this Queries.Self.GetAllSelfHairdressersServices.GetAllSelfHairdressersServicesQuery query)
     {
-        return new HairdresserSelfServicePagedRequest
+        return new CommonHairdresserServicePagedRequest
         {
             Page = query.Page,
             PageSize = query.PageSize,
@@ -20,9 +19,9 @@ public static class HairdresserServiceRequestMappingExtensions
         };
     }
 
-    public static HairdresserAdminServicePagedRequest ToHairdresserAdminServicePagedRequest(this GetAllAdminHairdressersServicesQuery query)
+    public static CommonHairdresserServicePagedRequest ToHairdresserAdminServicePagedRequest(this GetAllAdminHairdressersServicesQuery query)
     {
-        return new HairdresserAdminServicePagedRequest
+        return new CommonHairdresserServicePagedRequest
         {
             Page = query.Page,
             PageSize = query.PageSize,

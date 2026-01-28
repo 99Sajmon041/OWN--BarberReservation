@@ -1,0 +1,412 @@
+﻿@page "/hairdresser-services/list"
+
+@inject MessageService MessageService
+@inject IHairdresserService HairdresserService
+@inject NavigationManager Nav
+@inject AuthState AuthState
+@inject ILookUpsService LookUpsService
+
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-head">
+            <div class="row-between" style="margin:0;">
+                <div>
+                    @if (isAdmin)
+                    {
+                        <h1 class="page-title">Služby kadeřníka</h1>
+                        <p class="page-subtitle muted">Správa služeb všech kadeřníků</p>
+                    }
+                    else
+                    {
+                        <h1 class="page-title">Moje služby</h1>
+                        <p class="page-subtitle muted">Správa mých služeb</p>
+                    }
+                </div>
+
+                <div class="header-actions">
+                    <a class="btn btn-outline" href="/">
+                        Zpět
+                    </a>
+                    <a class="btn btn-primary" href="/hairdresser-services/create">
+                        + Vytvořit službu
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="field">
+                <label class="label" for="search">Hledat</label>
+
+                <div class="input-row">
+                    <div class="input-wrap">
+                        <input id="search"
+                               class="input input-has-clear"
+                               value="@search"
+                               @oninput="OnSearchInput"
+                               placeholder="Název..." />
+
+
+                        @if (!string.IsNullOrWhiteSpace(search))
+                        {
+                            <button type="button" class="input-clear" @onclick="ClearSearchAsync" aria-label="Vyčistit hledání">
+                                ×
+                            </button>
+                        }
+                    </div>
+
+                    <button class="btn btn-outline" type="button" @onclick="ApplyFiltersAsync" disabled="@isLoading">
+                        Filtrovat
+                    </button>
+                </div>
+            </div>
+
+            <div class="row-between filters-row">
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="isActive">Stav</label>
+                    <select class="input" disabled="@isLoading" @bind="isActiveFilter" @bind:after="OnFiltersChangedAsync">
+                        <option value="">Všechny</option>
+                        <option value="true">Aktivní</option>
+                        <option value="false">Neaktivní</option>
+                    </select>
+                </div>
+
+                @if (isAdmin)
+                {
+                    <div class="field" style="margin:0; min-width: 220px;">
+                        <label class="label" for="hairdresserId">Kadeřník</label>
+                        <select class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="OnFiltersChangedAsync">
+                            <option value="">--Všichni--</option>
+                            @foreach (var hd in hairdressers)
+                            {
+                                <option value="@hd.Id">@hd.FullName</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="serviceId">Služba</label>
+                    <select class="input" disabled="@isLoading" @bind="serviceId" @bind:after="OnFiltersChangedAsync">
+                        <option value="">--Všechny--</option>
+                        @foreach (var s in services)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="sortBy">Řazení</label>
+                    <select id="sortBy" disabled="@isLoading" class="input" @bind="sortBy" @bind:after="OnFiltersChangedAsync">
+                        @if(isAdmin)
+                        {
+                            <option value="isactive">Stav</option>
+                            <option value="durationminutes">Délka trvání</option>
+                            <option value="servicename">Název služby</option>
+                            <option value="hairdresserlastname">Příjmení kadeřníka</option>
+                            <option value="price">Cena</option>
+                        }
+                        else
+                        {
+                            <option value="isactive">Stav</option>
+                            <option value="durationminutes">Délka trvání</option>
+                            <option value="servicename">Název služby</option>
+                            <option value="price">Cena</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 160px;">
+                    <label class="label" for="pageSize">Na stránku</label>
+                    <select id="pageSize" class="input" @bind="pageSize" @bind:after="OnFiltersChangedAsync">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 160px;">
+                    <label class="label">&nbsp;</label>
+                    <button class="btn btn-link" type="button" @onclick="ToggleSortAsync" disabled="@isLoading">
+                        @((desc ? "↓ Sestupně" : "↑ Vzestupně"))
+                    </button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám služby...</div>
+            }
+            else if (model is null || model.Items is null || !model.Items.Any())
+            {
+                <div class="muted center">Žádné služby nenalezeny.</div>
+            }
+            else
+            {
+                <div style="overflow:auto;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align:left; border-bottom: 1px solid var(--line);">
+                                <th style="padding: 10px 6px;">ID</th>
+                                <th style="padding: 10px 6px;">Jméno kadeřníka</th>
+                                <th style="padding: 10px 6px;">Název služby</th>
+                                <th style="padding: 10px 6px;">Délka trvání</th>
+                                <th style="padding: 10px 6px;">Cena</th>
+                                <th style="padding: 10px 6px;">Stav</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var hs in model.Items)
+                            {
+                                <tr style="border-bottom: 1px solid var(--line);">
+                                    <td style="padding: 10px 6px;">
+                                        @hs.Id
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span><a href="/users/@hs.HairdresserId">@hs.HairdresserName</a></span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span class="muted"><a href="/services/@hs.ServiceId">@hs.ServiceName</a></span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span class="muted">@hs.DurationMinutes</span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span class="muted">@hs.Price.ToString("C2")</span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        @if (hs.IsActive)
+                                        {
+                                            <span class="muted">Ano</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="muted">Ne</span>
+                                        }
+                                    </td>
+                                    <td style="padding: 10px 6px; text-align:right;">
+                                        <a class="btn btn-link" href="@($"/hairdresser-services/{hs.Id}")">Detail</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="row-between" style="margin:0;">
+                    <div class="muted">
+                        Celkem: @model.TotalItemsCount
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || page <= 1)">
+                            Předchozí
+                        </button>
+
+                        <span class="muted">@($"Strana: {page} / {TotalPages}")</span>
+
+                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || page >= TotalPages)">
+                            Další
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    private PagedResult<HairdresserServiceDto> model = new();
+    private List<GetLookUpHairdressers> hairdressers = new();
+    private List<ServiceLookUpDto> services = new();
+
+    private bool _checked;
+    private bool isLoading;
+    private bool loaded;
+    private CancellationTokenSource? searchCts;
+    private bool isAdmin;
+
+    private int page = 1;
+    private int pageSize = 20;
+    private int? serviceId;
+    private string? hairdresserId;
+
+    private string? search;
+    private string sortBy = "price";
+    private bool desc;
+
+
+    private string isActiveFilter = "";
+
+    private int TotalPages => model is null || model.TotalItemsCount <= 0 ? 1 : (int)Math.Ceiling(model.TotalItemsCount / (double)pageSize);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+
+            if (!AuthState.IsAuthenticated || (!AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin))))
+            {
+                _checked = true;
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+            services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
+
+            if(isAdmin)
+                hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch (Exception ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            var req = new CommonHairdresserServicePagedRequest
+            {
+                Page = page,
+                PageSize = pageSize,
+                Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                SortBy = sortBy,
+                Desc = desc,
+                IsActive = ParseNullableBool(isActiveFilter),
+                ServiceId = serviceId,
+                HairdresserId = isAdmin ? hairdresserId : null
+            };
+
+            model = await HairdresserService.GetAllAsync(req, CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task ToggleSortAsync()
+    {
+        desc = !desc;
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task PrevPageAsync()
+    {
+        if (page <= 1)
+            return;
+
+        page--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (page >= TotalPages)
+            return;
+
+        page++;
+        await LoadAsync();
+    }
+
+    private static bool? ParseNullableBool(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (bool.TryParse(value, out var b))
+            return b;
+
+        return null;
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = null;
+
+        search = null;
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        search = e.Value?.ToString() ?? "";
+        page = 1;
+
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(350, searchCts.Token);
+            await LoadAsync();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private async Task OnFiltersChangedAsync()
+    {
+        page = 1;
+        await LoadAsync();
+    }
+}

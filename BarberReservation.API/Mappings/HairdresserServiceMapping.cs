@@ -1,5 +1,5 @@
 ﻿using BarberReservation.Application.HairdresserService.Commands.Self.CreateSelfHairdresserService;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 
 namespace BarberReservation.API.Mappings;
 

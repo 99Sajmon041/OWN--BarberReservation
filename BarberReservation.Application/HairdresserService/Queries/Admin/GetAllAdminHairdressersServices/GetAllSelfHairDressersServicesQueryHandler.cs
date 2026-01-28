@@ -2,7 +2,7 @@
 using BarberReservation.Application.HairdresserService.Mapping;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.HairdresserService.Common;
+using BarberReservation.Shared.Models.HairdresserService;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
