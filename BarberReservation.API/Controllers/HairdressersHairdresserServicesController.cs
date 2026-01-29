@@ -1,4 +1,6 @@
 ﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.HairdresserService.Commands.Admin.ActivateHairdresserService;
+using BarberReservation.Application.HairdresserService.Commands.Self.ActivateSelfHairdresserService;
 using BarberReservation.Application.HairdresserService.Commands.Self.DeactivateSelfHairdresserService;
 using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
 using BarberReservation.Application.HairdresserService.Queries.Self.GetSelfHairdressersService;
@@ -42,6 +44,13 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
         {
             await mediator.Send(new DeactivateSelfHairdresserServiceCommand(id), ct);
+            return NoContent();
+        }
+
+        [HttpPatch("{id:int}/activate")]
+        public async Task<IActionResult> Activate(int id, CancellationToken ct)
+        {
+            await mediator.Send(new ActivateSelfHairdresserServiceCommand(id), ct);
             return NoContent();
         }
     }

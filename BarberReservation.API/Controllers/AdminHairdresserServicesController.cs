@@ -1,4 +1,5 @@
-﻿using BarberReservation.Application.HairdresserService.Commands.Admin.DeleteHairdresserService;
+﻿using BarberReservation.Application.HairdresserService.Commands.Admin.ActivateHairdresserService;
+using BarberReservation.Application.HairdresserService.Commands.Admin.DeleteHairdresserService;
 using BarberReservation.Application.HairdresserService.Commands.Admin.NewFolder;
 using BarberReservation.Application.HairdresserService.Queries.Admin.GetAdminHairdresserService;
 using BarberReservation.Application.HairdresserService.Queries.Admin.GetAllAdminHairdressersServices;
@@ -34,6 +35,13 @@ namespace BarberReservation.API.Controllers
         public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
         {
             await mediator.Send(new DeactivateHairdresserServiceCommand(id), ct);
+            return NoContent();
+        }
+
+        [HttpPatch("{id:int}/activate")]
+        public async Task<IActionResult> Activate(int id, CancellationToken ct)
+        {
+            await mediator.Send(new ActivateHairdresserServiceCommand(id), ct);
             return NoContent();
         }
 

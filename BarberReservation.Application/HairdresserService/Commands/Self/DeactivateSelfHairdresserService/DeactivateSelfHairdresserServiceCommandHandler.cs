@@ -19,7 +19,7 @@ public sealed class DeactivateSelfHairdresserServiceCommandHandler(
         if(hairdresserService is null)
         {
             logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} not found for hairdresser ID {HairdresserId}.", request.Id, hairdresserId);
-            throw new NotFoundException("Hairdresser service not found.");
+            throw new NotFoundException("Služba kadeřníka nebyla nalezena.");
         }
 
         if (!unitOfWork.HairdresserServiceRepository.Deactivate(hairdresserService))

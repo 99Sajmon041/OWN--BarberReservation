@@ -111,7 +111,7 @@ else
         {
             await AuthState.LoadAsync();
 
-            if (!AuthState.IsAuthenticated)
+            if (!AuthState.Roles.Contains(nameof(UserRoles.Admin)))
             {
                 StateHasChanged();
                 Nav.NavigateTo("/", replace: true);
@@ -138,6 +138,8 @@ else
         if (!ok)
             return;
 
+        isLoading = true;
+
         try
         {
             await Service.DeactivateByIdAsync(id, CancellationToken.None);
@@ -148,6 +150,10 @@ else
         {
             MessageService.ShowError(ex.Message);
         }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task ActivateAsync(int id)
@@ -155,6 +161,8 @@ else
         var ok = await JS.ConfirmAction($"Opravdu chcete službu {model.Name} aktivovat ?");
         if (!ok)
             return;
+
+        isLoading = true;
 
         try
         {
@@ -165,6 +173,10 @@ else
         catch (ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 }

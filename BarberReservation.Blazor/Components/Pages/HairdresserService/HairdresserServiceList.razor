@@ -85,7 +85,7 @@ else
                     <div class="field" style="margin:0; min-width: 220px;">
                         <label class="label" for="hairdresserId">Kadeřník</label>
                         <select class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="OnFiltersChangedAsync">
-                            <option value="">--Všichni--</option>
+                            <option value="">Všichni</option>
                             @foreach (var hd in hairdressers)
                             {
                                 <option value="@hd.Id">@hd.FullName</option>
@@ -97,7 +97,7 @@ else
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label" for="serviceId">Služba</label>
                     <select class="input" disabled="@isLoading" @bind="serviceId" @bind:after="OnFiltersChangedAsync">
-                        <option value="">--Všechny--</option>
+                        <option value="">Všechny</option>
                         @foreach (var s in services)
                         {
                             <option value="@s.Id">@s.Name</option>
@@ -109,7 +109,7 @@ else
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label" for="sortBy">Řazení</label>
                     <select id="sortBy" disabled="@isLoading" class="input" @bind="sortBy" @bind:after="OnFiltersChangedAsync">
-                        @if(isAdmin)
+                        @if (isAdmin)
                         {
                             <option value="isactive">Stav</option>
                             <option value="durationminutes">Délka trvání</option>
@@ -176,10 +176,17 @@ else
                                         @hs.Id
                                     </td>
                                     <td style="padding: 10px 6px;">
-                                        <span><a href="/users/@hs.HairdresserId">@hs.HairdresserName</a></span>
+                                        <a class="link-chip" href="/users/@hs.HairdresserId">
+                                            @hs.HairdresserName
+                                            <span class="link-chip-icon">↗</span>
+                                        </a>
                                     </td>
+
                                     <td style="padding: 10px 6px;">
-                                        <span class="muted"><a href="/services/@hs.ServiceId">@hs.ServiceName</a></span>
+                                        <a class="link-chip link-chip-muted" href="/services/@hs.ServiceId">
+                                            @hs.ServiceName
+                                            <span class="link-chip-icon">↗</span>
+                                        </a>
                                     </td>
                                     <td style="padding: 10px 6px;">
                                         <span class="muted">@hs.DurationMinutes</span>
@@ -232,6 +239,30 @@ else
 
 
 @code {
+    [Parameter, SupplyParameterFromQuery(Name = "serviceId")]
+    public int? ServiceIdQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "page")]
+    public int? PageQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "pageSize")]
+    public int? PageSizeQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "desc")]
+    public bool? DescQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "isActive")]
+    public string? IsActiveQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "search")]
+    public string? SearchQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "sortBy")]
+    public string? SortByQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "hairdresserId")]
+    public string? HairdresserIdQuery { get; set; }
+
     private PagedResult<HairdresserServiceDto> model = new();
     private List<GetLookUpHairdressers> hairdressers = new();
     private List<ServiceLookUpDto> services = new();
@@ -250,7 +281,6 @@ else
     private string? search;
     private string sortBy = "price";
     private bool desc;
-
 
     private string isActiveFilter = "";
 
@@ -279,8 +309,31 @@ else
             isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
             services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
 
-            if(isAdmin)
+            if (isAdmin)
                 hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+            if (PageQuery.HasValue && PageQuery.Value > 0)
+                page = PageQuery.Value;
+
+            if (PageSizeQuery.HasValue && PageSizeQuery.Value > 0)
+                pageSize = PageSizeQuery.Value;
+
+            if (DescQuery.HasValue)
+                desc = DescQuery.Value;
+
+            if (!string.IsNullOrWhiteSpace(IsActiveQuery))
+                isActiveFilter = IsActiveQuery;
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+                search = SearchQuery;
+
+            if (!string.IsNullOrWhiteSpace(SortByQuery))
+                sortBy = SortByQuery;
+
+            serviceId = ServiceIdQuery;
+
+            if (isAdmin && !string.IsNullOrWhiteSpace(HairdresserIdQuery))
+                hairdresserId = HairdresserIdQuery; ;
 
             await LoadAsync();
         }
@@ -407,6 +460,35 @@ else
     private async Task OnFiltersChangedAsync()
     {
         page = 1;
+
+        Nav.NavigateTo(BuildUrl(), replace: true);
+
         await LoadAsync();
+    }
+
+    private string BuildUrl()
+    {
+        var qs = new List<string>();
+
+        qs.Add($"page={page}");
+        qs.Add($"pageSize={pageSize}");
+        qs.Add($"desc={desc}");
+
+        if (!string.IsNullOrWhiteSpace(isActiveFilter))
+            qs.Add($"isActive={isActiveFilter}");
+
+        if (!string.IsNullOrWhiteSpace(search))
+            qs.Add($"search={Uri.EscapeDataString(search.Trim())}");
+
+        if (!string.IsNullOrWhiteSpace(sortBy))
+            qs.Add($"sortBy={sortBy.Trim()}");
+
+        if (serviceId is not null)
+            qs.Add($"serviceId={serviceId}");
+
+        if (isAdmin && !string.IsNullOrWhiteSpace(hairdresserId))
+            qs.Add($"hairdresserId={Uri.EscapeDataString(hairdresserId)}");
+
+        return qs.Count == 0 ? "/hairdresser-services/list" : $"/hairdresser-services/list?{string.Join("&", qs)}";
     }
 }

@@ -1,0 +1,5 @@
+﻿using BarberReservation.Application.Common.Validation.IdValidation;
+
+namespace BarberReservation.Application.HairdresserService.Commands.Self.ActivateSelfHairdresserService;
+
+public sealed class ActivateSelfHairdresserServiceCommandValidator : IdValidator<ActivateSelfHairdresserServiceCommand> { }

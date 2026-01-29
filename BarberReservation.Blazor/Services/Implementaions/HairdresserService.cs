@@ -41,7 +41,7 @@ public sealed class HairdresserService(IApiClient api, AuthState authState) : IH
         }
 
         var qs = string.Join("&", parts);
-        var url = string.Empty;
+        string? url;
 
         if(authState.Roles.Contains(nameof(UserRoles.Admin)))
         {
@@ -53,5 +53,52 @@ public sealed class HairdresserService(IApiClient api, AuthState authState) : IH
         }
 
         return await api.GetAsync<PagedResult<HairdresserServiceDto>>(url, ct);
+    }
+
+    public async Task<HairdresserServiceDto> GetByIdAsync(int id, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        if(authState.Roles.Contains(nameof(UserRoles.Admin)))
+        {
+            return await api.GetAsync<HairdresserServiceDto>($"api/admin/hairdresser-services/{id}", ct);
+        }
+        else
+        {
+            return await api.GetAsync<HairdresserServiceDto>($"api/me/hairdresser-services/{id}", ct);
+        }
+    }
+
+    public async Task DeleteAsync(int id, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Delete, $"api/admin/hairdresser-services/{id}", null, ct);
+    }
+
+    public async Task DeactivateAsync(int id, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        if(authState.Roles.Contains(nameof(UserRoles.Admin)))
+        {
+            await api.SendAsync(HttpMethod.Patch, $"api/admin/hairdresser-services/{id}/deactivate", null, ct); 
+        }
+        else
+        {
+            await api.SendAsync(HttpMethod.Patch, $"api/me/hairdresser-services/{id}/deactivate", null, ct);
+        }
+    }
+
+    public async Task ActivateAsync(int id, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        if (authState.Roles.Contains(nameof(UserRoles.Admin)))
+        {
+            await api.SendAsync(HttpMethod.Patch, $"api/admin/hairdresser-services/{id}/activate", null, ct);
+        }
+        else
+        {
+            await api.SendAsync(HttpMethod.Patch, $"api/me/hairdresser-services/{id}/activate", null, ct);
+        }
     }
 }

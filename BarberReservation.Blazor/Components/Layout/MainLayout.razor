@@ -24,6 +24,14 @@
                     <a class="nav-link" href="/users/list">Uživatelé</a>
                     <a class="nav-link" href="/services/list">Služby</a>
                 }
+                @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)) && AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+                {
+                    <a class="nav-link" href="/hairdresser-services/list">Služby kadeřníků</a>
+                }
+                @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                {
+                    <a class="nav-link" href="/hairdresser-services/list">Moje služby</a>
+                }
             </nav>
 
             @if (!AuthState.IsAuthenticated)
@@ -59,6 +67,14 @@
                     {
                         <a class="mobile-link" href="/users/list" @onclick="CloseMobileMenu">Uživatelé</a>
                         <a class="mobile-link" href="/services/list" @onclick="CloseMobileMenu">Služby</a>
+                    }
+                    @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)) && AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+                    {
+                        <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseMobileMenu">Služby kadeřníků</a>
+                    }
+                    @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                    {
+                        <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseMobileMenu">Moje služby</a>
                     }
                 </div>
             </div>
@@ -106,12 +122,16 @@
     private bool _disposed;
     private bool _mobileMenuOpen;
     private bool _authLoaded;   
+    private EventHandler<LocationChangedEventArgs>? locationChangedHandler;
+
 
     protected override void OnInitialized()
     {
         MessageService.OnChange += OnMessageChanged;
         AuthState.OnChange += OnAuthChanged;
-        Nav.LocationChanged += (_, __) => _mobileMenuOpen = false;
+
+        locationChangedHandler = (_, __) => _mobileMenuOpen = false;
+        Nav.LocationChanged += locationChangedHandler;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -180,9 +200,12 @@
     public void Dispose()
     {
         _disposed = true;
+
         MessageService.OnChange -= OnMessageChanged;
         AuthState.OnChange -= OnAuthChanged;
-        Nav.LocationChanged -= (_, __) => _mobileMenuOpen = false;
+
+        if (locationChangedHandler is not null)
+            Nav.LocationChanged -= locationChangedHandler;
     }
 
     private void CloseMobileMenu() => _mobileMenuOpen = false;

@@ -1,0 +1,236 @@
+﻿@page "/hairdresser-services/{id:int}"
+
+@inject AuthState AuthState
+@inject IHairdresserService HairdresserService
+@inject MessageService MessageService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="profile-wrap">
+        <div class="page-head page-head-center">
+            @if (isAdmin)
+            {
+                <h1 class="page-title">Detail kadeřníkovi služby - @model.ServiceName</h1>
+            }
+            else
+            {
+                <h1 class="page-title">Detail mojí služby - @model.ServiceName</h1>
+            }
+            <p class="page-subtitle muted">Detailní specifikace služby</p>
+        </div>
+
+        <div class="card card-md">
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám službu...</div>
+            }
+            else
+            {
+                <div class="field">
+                    <label class="label">ID</label>
+                    <div class="input input-readonly">
+                        @model.Id
+                    </div>
+                </div>
+
+                @if (isAdmin)
+                {
+                    <div class="field">
+                        <label class="label">Kadeřník</label>
+                        <div class="input input-readonly">
+                           <a href="/users/@model.HairdresserId">
+                                @model.HairdresserName
+                           </a> 
+                        </div>
+                    </div>
+                }
+
+                <div class="field">
+                    <label class="label">Služba</label>
+                    <div class="input input-readonly">
+                        <a href="/services/@model.ServiceId">
+                            @model.ServiceName
+                        </a>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Délka trvání</label>
+                    <div class="input input-readonly">
+                        @model.DurationMinutes
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Cena</label>
+                    <div class="input input-readonly">
+                        @model.Price.ToString("C2")
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Stav služby</label>
+                    <div class="input input-readonly">
+                        @(model.IsActive ? "Aktivní" : "Deaktivovaný")
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="detail-actions">
+                    <a class="btn btn-outline" href="/hairdresser-services/list">
+                        Zpět na seznam
+                    </a>
+
+                    @if (isAdmin)
+                    {
+                        <button class="btn btn-danger" @onclick="() => DeleteAsync(model.Id)" disabled="@isLoading">
+                            Smazat službu
+                        </button>
+                    }
+
+                    @if (model.IsActive)
+                    {
+                        <button class="btn btn-danger" @onclick="() => DeactivateAsync(model.Id)" disabled="@isLoading">
+                            Deaktivovat službu
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success" @onclick="() => ActivateAsync(model.Id)" disabled="@isLoading">
+                            Aktivovat službu
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private HairdresserServiceDto model = new();
+
+    private bool isLoading;
+    private bool loaded;
+    private bool _checked;
+    bool isAdmin;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+        isLoading = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.Roles.Contains(nameof(UserRoles.Admin)) && !AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            {
+                StateHasChanged();
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+
+            model = await HairdresserService.GetByIdAsync(Id, CancellationToken.None);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu chcete trvale odstranit službu kadeřníka s ID: {id} ?");
+        if (!ok)
+            return;
+
+        isLoading = true;
+
+        try
+        {
+            await HairdresserService.DeleteAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Služba byla trvale odstraněna.");
+            Nav.NavigateTo("/hairdresser-services/list", replace: true);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeactivateAsync(int id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu si přejete deaktivovat službu s ID: {id} ?");
+        if (!ok) 
+            return;
+
+        isLoading = true;
+
+        try
+        {
+            await HairdresserService.DeactivateAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Služba byla deaktivována.");
+            model.IsActive = false;
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ActivateAsync(int id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu si přejete aktivovat službu s ID: {id} ?");
+        if (!ok)
+            return;
+
+        isLoading = true;
+
+        try
+        {
+            await HairdresserService.ActivateAsync(id, CancellationToken.None);
+            MessageService.ShowSuccess("Služba byla aktivována.");
+            model.IsActive = true;
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

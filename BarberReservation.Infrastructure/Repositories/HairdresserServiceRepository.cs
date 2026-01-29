@@ -92,8 +92,6 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
 
         if (request.IsActive.HasValue)
             query = query.Where(x => x.IsActive == request.IsActive.Value);
-        else
-            query = query.Where(x => x.IsActive == true);
 
         var total = await query.CountAsync(ct);
 
@@ -135,8 +133,6 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
 
         if (request.IsActive.HasValue)
             query = query.Where(x => x.IsActive == request.IsActive.Value);
-        else
-            query = query.Where(x => x.IsActive == true);
 
         var total = await query.CountAsync(ct);
 
