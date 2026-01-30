@@ -32,6 +32,10 @@
                 {
                     <a class="nav-link" href="/hairdresser-services/list">Moje služby</a>
                 }
+                @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                {
+                    <a class="nav-link" href="/working-hours">Pracovní doba</a>
+                }
             </nav>
 
             @if (!AuthState.IsAuthenticated)
@@ -75,6 +79,10 @@
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                     {
                         <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseMobileMenu">Moje služby</a>
+                    }
+                    @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                    {
+                        <a class="mobile-link" href="/working-hours" @onclick="CloseMobileMenu">Pracovní doba</a>
                     }
                 </div>
             </div>

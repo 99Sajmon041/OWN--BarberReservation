@@ -785,7 +785,6 @@ select.input option {
     display: block;
 }
 
-/* User detail actions: equal-width buttons, clean layout */
 .detail-actions {
     display: grid;
     grid-template-columns: 1fr 1fr; /* PC: 2 sloupce */
@@ -867,4 +866,14 @@ select.input option {
 
 .link-chip-muted {
     color: rgba(255,255,255,.75);
+}
+
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input[type="number"] {
+    -moz-appearance: textfield;
 }

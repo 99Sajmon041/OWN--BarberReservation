@@ -1,7 +1,7 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.HairdresserWorkingHours.Admin;
-using BarberReservation.Shared.Models.HairdresserWorkingHours.Common;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
+using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -11,9 +11,9 @@ namespace BarberReservation.Application.HairdresserWorkingHours.Queries.Admin.Ge
 public sealed class GetWorkingHoursForHairdresserQueryHandler(
     ILogger<GetWorkingHoursForHairdresserQueryHandler> logger,
     IUnitOfWork unitOfWork,
-    UserManager<ApplicationUser> userManager) : IRequestHandler<GetWorkingHoursForHairdresserQuery, AdminHairdresserWorkingHoursDto>
+    UserManager<ApplicationUser> userManager) : IRequestHandler<GetWorkingHoursForHairdresserQuery, HairdresserWorkingHoursDto>
 {
-    public async Task<AdminHairdresserWorkingHoursDto> Handle(GetWorkingHoursForHairdresserQuery request, CancellationToken ct)
+    public async Task<HairdresserWorkingHoursDto> Handle(GetWorkingHoursForHairdresserQuery request, CancellationToken ct)
     {
         var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -28,7 +28,7 @@ public sealed class GetWorkingHoursForHairdresserQueryHandler(
         {
             var hairdresser = await userManager.FindByIdAsync(request.HairdresserId);
 
-            return new AdminHairdresserWorkingHoursDto
+            return new HairdresserWorkingHoursDto
             {
                 HairdresserName = hairdresser?.FullName ?? string.Empty,
                 EffectiveFrom = default,
@@ -38,7 +38,7 @@ public sealed class GetWorkingHoursForHairdresserQueryHandler(
 
         var first = response[0];
 
-        var dto = new AdminHairdresserWorkingHoursDto
+        var dto = new HairdresserWorkingHoursDto
         {
             EffectiveFrom = first.EffectiveFrom,
             HairdresserName = $"{first.Hairdresser.FirstName} {first.Hairdresser.LastName}",

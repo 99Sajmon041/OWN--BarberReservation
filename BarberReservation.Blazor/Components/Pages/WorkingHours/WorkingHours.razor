@@ -1,0 +1,250 @@
+﻿@page "/working-hours"
+
+@inject IWorkingHoursService WorkingHoursService
+@inject MessageService MessageService
+@inject NavigationManager Nav
+@inject AuthState AuthState
+@inject ILookUpsService LookUpsService
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-head">
+            <div class="row-between" style="margin:0;">
+                <div>
+                    <h1 class="page-title">Pracovní doba</h1>
+                    <p class="page-subtitle muted">
+                        Přehled aktuálně platné pracovní doby.
+                    </p>
+                </div>
+
+                <div class="header-actions">
+                    <a class="btn btn-outline" href="/">Zpět</a>
+
+                    @if (CanEditSelected && WorkWeek is not null && WorkWeek.WorkingHours.Any())
+                    {
+                        <a class="btn btn-primary" href="/working-hours/update">Upravit</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            @if (isAdmin)
+            {
+                <div class="field" style="margin:0 0 12px 0; max-width:420px;">
+                    <label class="label" for="hairdresserId">Kadeřník</label>
+
+                    <select id="hairdresserId"
+                            class="input"
+                            disabled="@isLoading"
+                            @bind="selectedHairdresserId"
+                            @bind:after="OnHairdresserChangedAsync">
+                        @foreach (var hd in Hairdressers)
+                        {
+                            <option value="@hd.Id">@hd.FullName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="divider"></div>
+            }
+
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám pracovní dobu...</div>
+            }
+            else if (WorkWeek is null || WorkWeek.WorkingHours is null || !WorkWeek.WorkingHours.Any())
+            {
+                <div class="muted center">
+                    Pracovní doba zatím není nastavena.
+                </div>
+
+                @if (CanEditSelected)
+                {
+                    <div class="divider"></div>
+                    <div class="row-between" style="margin:0;">
+                        <span class="muted">Tip: nastav si pracovní dobu, ať lze vytvářet rezervace.</span>
+                        <a class="btn btn-primary" href="/working-hours/update">Nastavit</a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="row-between" style="margin:0 0 12px 0; align-items:flex-end;">
+                    <div>
+                        <div class="muted" style="margin-bottom:4px;">Kadeřník</div>
+                        <div style="font-weight:700;">
+                            @(string.IsNullOrWhiteSpace(WorkWeek.HairdresserName) ? "—" : WorkWeek.HairdresserName)
+                        </div>
+                    </div>
+
+                    <div style="text-align:right;">
+                        <div class="muted" style="margin-bottom:4px;">Platnost od</div>
+                        <div style="font-weight:700;">@WorkWeek.EffectiveFrom.ToString("dd.MM.yyyy")</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                @foreach (var day in WorkWeek.WorkingHours.OrderBy(x => x.DayOfWeek))
+                {
+                    <div style="display:grid; grid-template-columns: 180px 1fr; align-items:center; gap:16px; margin-bottom:12px;">
+
+                        <strong>@GetDayName(day.DayOfWeek)</strong>
+
+                        @if (!day.IsWorkingDay)
+                        {
+                            <span class="muted">Nepracuje</span>
+                        }
+                        else
+                        {
+                            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                                <span class="muted">Od</span>
+                                <span style="font-weight:600;">@day.WorkFrom.ToString("HH:mm")</span>
+
+                                <span class="muted">Do</span>
+                                <span style="font-weight:600;">@day.WorkTo.ToString("HH:mm")</span>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (CanEditSelected)
+                {
+                    <div class="divider"></div>
+
+                    <div class="row-between" style="margin:0;">
+                        <span class="muted">
+                            Změny pracovní doby se projeví od následujícího pondělí za 3 týdny.
+                        </span>
+
+                        <a class="btn btn-primary" href="/working-hours/update">Upravit pracovní dobu</a>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private bool _checked;
+    private bool isLoading;
+    private bool loaded;
+    private bool isAdmin;
+    private string? selectedHairdresserId;
+
+    private List<GetLookUpHairdressers> Hairdressers = new();
+    private HairdresserWorkingHoursDto? WorkWeek;
+
+    private bool CanEditSelected => !isAdmin ? true : (!string.IsNullOrWhiteSpace(selectedHairdresserId) && selectedHairdresserId == AuthState.UserId);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+        isLoading = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.IsAuthenticated || !AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            {
+                _checked = true;
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+            selectedHairdresserId = AuthState.UserId;
+
+            if (isAdmin)
+            {
+                Hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+                if (Hairdressers.Count > 0 && !Hairdressers.Any(x => x.Id == selectedHairdresserId))
+                {
+                    selectedHairdresserId = Hairdressers[0].Id;
+                }
+            }
+
+            await LoadWorkWeekAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            _checked = true;
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnHairdresserChangedAsync()
+    {
+        if (!isAdmin)
+            return;
+
+        await LoadWorkWeekAsync();
+    }
+
+    private async Task LoadWorkWeekAsync()
+    {
+        isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            if (!isAdmin)
+            {
+                WorkWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+                return;
+            }
+
+            if (selectedHairdresserId == AuthState.UserId)
+            {
+                WorkWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+            }
+            else if (!string.IsNullOrWhiteSpace(selectedHairdresserId))
+            {
+                WorkWeek = await WorkingHoursService.GetForHairdresserByIdAsync(selectedHairdresserId, CancellationToken.None);
+            }
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+            WorkWeek = new HairdresserWorkingHoursDto();
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static string GetDayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "Pondělí",
+        DayOfWeek.Tuesday => "Úterý",
+        DayOfWeek.Wednesday => "Středa",
+        DayOfWeek.Thursday => "Čtvrtek",
+        DayOfWeek.Friday => "Pátek",
+        _ => day.ToString()
+    };
+}

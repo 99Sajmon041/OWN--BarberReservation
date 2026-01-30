@@ -10,4 +10,5 @@ public interface IHairdresserService
     Task DeleteAsync(int id, CancellationToken ct);
     Task DeactivateAsync(int id, CancellationToken ct);
     Task ActivateAsync(int id, CancellationToken ct);
+    Task<int> CreateAsync(CreateHairdresserServiceRequest request, CancellationToken ct);
 }

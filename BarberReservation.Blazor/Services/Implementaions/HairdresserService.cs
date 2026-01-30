@@ -101,4 +101,9 @@ public sealed class HairdresserService(IApiClient api, AuthState authState) : IH
             await api.SendAsync(HttpMethod.Patch, $"api/me/hairdresser-services/{id}/activate", null, ct);
         }
     }
+
+    public async Task<int> CreateAsync(CreateHairdresserServiceRequest request, CancellationToken ct)
+    {
+        return await api.PostAsyncWithResponse<CreateHairdresserServiceRequest, int>(HttpMethod.Post, "api/me/hairdresser-services", request, ct);
+    }
 }

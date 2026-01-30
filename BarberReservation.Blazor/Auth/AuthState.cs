@@ -43,6 +43,7 @@ public sealed class AuthState
     }
 
     public string FullName => Principal.Identity?.Name ?? "Uživatel";
+    public string UserId => Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
     public IReadOnlyList<string> Roles
     {

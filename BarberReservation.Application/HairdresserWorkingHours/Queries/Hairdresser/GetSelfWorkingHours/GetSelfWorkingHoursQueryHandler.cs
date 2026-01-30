@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.HairdresserWorkingHours.Common;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
 using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
 using MediatR;
 using Microsoft.Extensions.Logging;

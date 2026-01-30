@@ -12,6 +12,8 @@ public sealed class HairdresserServiceMappingProfile : Profile
             .ForMember(x => x.HairdresserName, opt => opt.MapFrom(x => x.Hairdresser.FullName))
             .ForMember(x => x.ServiceName, opt => opt.MapFrom(x => x.Service.Name));
 
-        CreateMap<CreateSelfHairdresserServiceCommand, BarberReservation.Domain.Entities.HairdresserService>();
+        CreateMap<CreateSelfHairdresserServiceCommand, BarberReservation.Domain.Entities.HairdresserService>()
+            .ForMember(x => x.IsActive, opt => opt.Ignore())
+            .AfterMap((y, x) => x.IsActive = true);
     }
 }

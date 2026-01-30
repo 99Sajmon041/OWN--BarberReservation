@@ -1,0 +1,206 @@
+﻿@page "/working-hours/update"
+
+@inject IWorkingHoursService WorkingHoursService
+@inject MessageService MessageService
+@inject NavigationManager Nav
+@inject AuthState AuthState
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-head">
+            <h1 class="page-title">Moje pracovní doba</h1>
+            <p class="page-subtitle muted">
+                Nastavení pracovní doby (změny se projeví od následujícího pondělí za 3 týdny).
+            </p>
+        </div>
+
+        <div class="card">
+            @foreach (var day in Days)
+            {
+                <div style="display:grid; grid-template-columns: 44px 180px 1fr;  align-items:center; gap:16px; margin-bottom:12px;">
+
+                    <label class="switch" style="justify-self:start;">
+                        <input type="checkbox" @bind="day.IsWorkingDay" />
+                        <span class="slider"></span>
+                    </label>
+
+                    <strong>@GetDayName(day.DayOfWeek)</strong>
+
+                    <div style="display:flex; align-items:center; gap:18px; justify-content:flex-start; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="muted" style="min-width:22px;">Od</span>
+                            <select class="input"
+                                    style="width:180px; padding:8px 10px;"
+                                    disabled="@(!day.IsWorkingDay)"
+                                    @bind="day.WorkFrom">
+                                @foreach (var t in TimeOptions)
+                                {
+                                    <option value="@t">@t.ToString("HH:mm")</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="muted" style="min-width:22px;">Do</span>
+                            <select class="input"
+                                    style="width:180px; padding:8px 10px;"
+                                    disabled="@(!day.IsWorkingDay)"
+                                    @bind="day.WorkTo">
+                                @foreach (var t in TimeOptions)
+                                {
+                                    <option value="@t">@t.ToString("HH:mm")</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="divider"></div>
+
+            <div class="row-between">
+                <a class="btn btn-outline" href="/">
+                    Zpět
+                </a>
+
+                <button class="btn btn-primary" @onclick="SaveAsync" disabled="@isSubmitting">
+                    @(isSubmitting ? "Ukládám..." : "Uložit změny")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    private bool _checked;
+    private bool isSubmitting;
+
+    private List<WorkingHoursDto> Days = new();
+    private List<TimeOnly> TimeOptions = WorkingHoursInterval.GetHalfHours();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await AuthState.LoadAsync();
+
+        if (!AuthState.IsAuthenticated || !AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+        {
+            _checked = true;
+            Nav.NavigateTo("/", replace: true);
+            return;
+        }
+
+        var workWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+
+        if (workWeek.WorkingHours is null || !workWeek.WorkingHours.Any())
+            InitDefaultDays();
+        else
+            Days = workWeek.WorkingHours.OrderBy(x => x.DayOfWeek).ToList();
+
+        _checked = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void InitDefaultDays()
+    {
+        Days =
+        [
+            CreateDay(DayOfWeek.Monday),
+            CreateDay(DayOfWeek.Tuesday),
+            CreateDay(DayOfWeek.Wednesday),
+            CreateDay(DayOfWeek.Thursday),
+            CreateDay(DayOfWeek.Friday),
+        ];
+    }
+
+    private static WorkingHoursDto CreateDay(DayOfWeek day)
+    {
+        return new WorkingHoursDto
+        {
+            DayOfWeek = day,
+            IsWorkingDay = true,
+            WorkFrom = new TimeOnly(8, 0),
+            WorkTo = new TimeOnly(16, 0)
+        };
+    }
+
+
+    private async Task SaveAsync()
+    {
+        if (isSubmitting)
+            return;
+
+        if (!Validate(out var error))
+        {
+            MessageService.ShowError(error);
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var request = new HairdresserWorkingHoursUpsertDto
+            {
+                DaysOfWorkingWeek = Days
+            };
+
+            await WorkingHoursService.UpdateSelfWorkingHoursAsync(request, CancellationToken.None);
+
+            MessageService.ShowSuccess("Pracovní doba byla uložena.");
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private bool Validate(out string error)
+    {
+        error = "";
+
+        if (Days.Count != 5)
+        {
+            error = "Musíte nastavit pracovní dobu pro Po–Pá.";
+            return false;
+        }
+
+        foreach (var d in Days.Where(x => x.IsWorkingDay))
+        {
+            if (d.WorkFrom >= d.WorkTo)
+            {
+                error = $"Neplatný čas u {GetDayName(d.DayOfWeek)}.";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static string GetDayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "Pondělí",
+        DayOfWeek.Tuesday => "Úterý",
+        DayOfWeek.Wednesday => "Středa",
+        DayOfWeek.Thursday => "Čtvrtek",
+        DayOfWeek.Friday => "Pátek",
+        _ => day.ToString()
+    };
+}

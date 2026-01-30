@@ -1,0 +1,123 @@
+﻿@page "/hairdresser-services/create"
+
+@inject IHairdresserService HairdresserService
+@inject NavigationManager Nav
+@inject AuthState AuthState
+@inject MessageService MessageService
+@inject ILookUpsService LookUpsService
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else if (!redirecting)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Vytvoření služby</h1>
+        <p class="page-subtitle muted">Vytvoření své (kadeřníkovi) služby.</p>
+    </div>
+
+    <div class="stack-top">
+        <div class="card card-md">
+            <EditForm Model="request" OnValidSubmit="HandleCreateHairdresserServiceAsync">
+                <DataAnnotationsValidator />
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="serviceId">Služba</label>
+                    <select id="serviceId" class="input" disabled="@isSubmitting" @bind="request.ServiceId">
+                        @foreach (var s in services)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="duration">Délka trvání služby</label>
+                    <InputNumber id="duration"
+                               class="input"
+                               @bind-Value="request.DurationMinutes"
+                               placeholder="30 minut..." />
+                    <ValidationMessage For="@(() => request.DurationMinutes)" class="field-error" />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="price">Cena v Kč</label>
+                    <InputNumber id="price"
+                               class="input"
+                               @bind-Value="request.Price"
+                               placeholder="400,- kč..." />
+                    <ValidationMessage For="@(() => request.Price)" class="field-error" />
+                </div>
+
+                <div class="row-between" style="margin:0;">
+                    <a class="btn btn-outline" href="/services/list">
+                        Zpět na seznam
+                    </a>
+
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">
+                        @(isSubmitting ? "Vytvářím..." : "Vytvořit")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private CreateHairdresserServiceRequest request = new();
+    private List<ServiceLookUpDto> services = new();
+    private bool isSubmitting;
+    private bool _checked;
+    private bool loaded;
+    private bool redirecting;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        await AuthState.LoadAsync();
+        if (!AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+        {
+            redirecting = true;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+            Nav.NavigateTo("/", replace: true);
+            return;
+        }
+
+        services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
+        _checked = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleCreateHairdresserServiceAsync()
+    {
+        if (isSubmitting)
+            return;
+
+        isSubmitting = true;
+
+        try
+        {
+            int id = await HairdresserService.CreateAsync(request, CancellationToken.None);
+            MessageService.ShowSuccess("Služba úspěšně vytvořena.");
+            Nav.NavigateTo($"hairdresser-services/{id}", replace: true);
+        }
+        catch(ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

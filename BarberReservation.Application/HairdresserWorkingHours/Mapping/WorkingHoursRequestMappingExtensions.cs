@@ -1,5 +1,5 @@
 ﻿using BarberReservation.Application.HairdresserWorkingHours.Commands.Hairdresser.UpsertSelfWorkingHours;
-using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
 
 namespace BarberReservation.Application.HairdresserWorkingHours.Mapping;
 

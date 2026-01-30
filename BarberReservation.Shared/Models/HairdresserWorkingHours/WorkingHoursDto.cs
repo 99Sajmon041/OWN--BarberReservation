@@ -1,4 +1,4 @@
-﻿namespace BarberReservation.Shared.Models.HairdresserWorkingHours.Common;
+﻿namespace BarberReservation.Shared.Models.HairdresserWorkingHours;
 
 public sealed class WorkingHoursDto
 {

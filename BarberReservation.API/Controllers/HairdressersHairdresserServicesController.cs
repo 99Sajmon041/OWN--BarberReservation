@@ -1,5 +1,4 @@
 ﻿using BarberReservation.API.Mappings;
-using BarberReservation.Application.HairdresserService.Commands.Admin.ActivateHairdresserService;
 using BarberReservation.Application.HairdresserService.Commands.Self.ActivateSelfHairdresserService;
 using BarberReservation.Application.HairdresserService.Commands.Self.DeactivateSelfHairdresserService;
 using BarberReservation.Application.HairdresserService.Queries.Self.GetAllSelfHairdressersServices;
@@ -33,11 +32,11 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateHairdresserServiceRequest request, CancellationToken ct)
+        public async Task<ActionResult<int>> Create([FromBody] CreateHairdresserServiceRequest request, CancellationToken ct)
         {
             var command = request.ToCreateHairdresserServiceSelfCommand();
             var id = await mediator.Send(command, ct);
-            return CreatedAtAction(nameof(GetById), new { id }, new { id });
+            return CreatedAtAction(nameof(GetById), new { id }, id);
         }
 
         [HttpPatch("{id:int}/deactivate")]

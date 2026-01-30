@@ -97,6 +97,13 @@ else
                         </a>
                     }
 
+                    @if (model.Roles.Contains(nameof(UserRoles.Admin)) || model.Roles.Contains(nameof(UserRoles.Hairdresser)))
+                    {
+                        <a class="btn btn-outline" href="@($"/hairdresser-services/list?hairdresserId={model.Id}")">
+                            Zobrazit Služby
+                        </a>
+                    }
+
                     @if (model.IsActive)
                     {
                         <button class="btn btn-danger" @onclick="() => DeactivateAsync(model.Id)" disabled="@isLoading">

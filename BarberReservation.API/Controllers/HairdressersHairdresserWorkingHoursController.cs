@@ -6,6 +6,7 @@ using BarberReservation.Application.HairdresserWorkingHours.Mapping;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
 
 namespace BarberReservation.API.Controllers
 {
