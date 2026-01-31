@@ -24,15 +24,6 @@ else
                         Přehled aktuálně platné pracovní doby.
                     </p>
                 </div>
-
-                <div class="header-actions">
-                    <a class="btn btn-outline" href="/">Zpět</a>
-
-                    @if (CanEditSelected && WorkWeek is not null && WorkWeek.WorkingHours.Any())
-                    {
-                        <a class="btn btn-primary" href="/working-hours/update">Upravit</a>
-                    }
-                </div>
             </div>
         </div>
 
@@ -82,7 +73,14 @@ else
                     <div>
                         <div class="muted" style="margin-bottom:4px;">Kadeřník</div>
                         <div style="font-weight:700;">
-                            @(string.IsNullOrWhiteSpace(WorkWeek.HairdresserName) ? "—" : WorkWeek.HairdresserName)
+                            @if (isAdmin && selectedHairdresserId != AuthState.UserId)
+                            {
+                                @(string.IsNullOrWhiteSpace(WorkWeek.HairdresserName) ? "—" : WorkWeek.HairdresserName)
+                            }
+                            else
+                            {
+                                @AuthState.FullName
+                            }
                         </div>
                     </div>
 
@@ -98,11 +96,11 @@ else
                 {
                     <div style="display:grid; grid-template-columns: 180px 1fr; align-items:center; gap:16px; margin-bottom:12px;">
 
-                        <strong>@GetDayName(day.DayOfWeek)</strong>
+                        <strong>@DayHelper.GetDayName(day.DayOfWeek)</strong>
 
                         @if (!day.IsWorkingDay)
                         {
-                            <span class="muted">Nepracuje</span>
+                            <span class="muted">Pravidelné volno</span>
                         }
                         else
                         {
@@ -237,14 +235,4 @@ else
             await InvokeAsync(StateHasChanged);
         }
     }
-
-    private static string GetDayName(DayOfWeek day) => day switch
-    {
-        DayOfWeek.Monday => "Pondělí",
-        DayOfWeek.Tuesday => "Úterý",
-        DayOfWeek.Wednesday => "Středa",
-        DayOfWeek.Thursday => "Čtvrtek",
-        DayOfWeek.Friday => "Pátek",
-        _ => day.ToString()
-    };
 }

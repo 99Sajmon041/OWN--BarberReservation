@@ -44,6 +44,34 @@ public sealed class HairdresserWorkingHoursRepository(BarberDbContext context) :
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<HairdresserWorkingHours>> GetNextWeekAsync(
+        string hairdresserId,
+        DateOnly onDate,
+        bool includeHairdresser, 
+        bool tracked, 
+        CancellationToken ct)
+    {
+        IQueryable<HairdresserWorkingHours> baseQuery = _context.HairdresserWorkingHours;
+
+        if (!tracked)
+            baseQuery = baseQuery.AsNoTracking();
+
+        if (includeHairdresser)
+            baseQuery = baseQuery.Include(x => x.Hairdresser);
+
+        var nextEffectiveFrom = await baseQuery
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom > onDate)
+            .MinAsync(x => (DateOnly?)x.EffectiveFrom, ct);
+
+        if (nextEffectiveFrom is null)
+            return [];
+
+        return await baseQuery
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom == nextEffectiveFrom.Value)
+            .OrderBy(x => x.DayOfWeek)
+            .ToListAsync(ct);
+    }
+
     public void AddDaysToWorkingWeek(IEnumerable<HairdresserWorkingHours> days)
     {
         _context.HairdresserWorkingHours.AddRange(days);

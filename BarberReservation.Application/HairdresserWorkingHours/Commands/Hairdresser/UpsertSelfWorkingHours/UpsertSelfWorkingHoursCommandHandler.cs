@@ -14,22 +14,23 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
 {
     public async Task<Unit> Handle(UpsertSelfWorkingHoursCommand request, CancellationToken ct)
     {
-        var currrentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
         var hairdresser = currentAppUser.User;
-        var daysToMonday = ((int)DayOfWeek.Monday - (int)currrentDate.DayOfWeek + 7) % 7;
-        var nextMonday = daysToMonday == 0 ? 7: daysToMonday;
         const int WeeksDelay = 3;
 
         var hairdresserWorkingDays = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
             hairdresser.Id,
-            currrentDate,
+            currentDate,
             true,
             true,
             ct);
 
         if(!hairdresserWorkingDays.Any())
         {
-            var days = request.DaysOfWorkingWeek.ToHairdresserWorkingHours(hairdresser.Id, currrentDate.AddDays(nextMonday));
+            var daysSinceMonday = ((int)currentDate.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+            var mondayOfThisWeek = currentDate.AddDays(-daysSinceMonday);
+
+            var days = request.DaysOfWorkingWeek.ToHairdresserWorkingHours(hairdresser.Id, mondayOfThisWeek);
 
             unitOfWork.HairdresserWorkingHoursRepository.AddDaysToWorkingWeek(days);
 
@@ -37,7 +38,10 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
         }
         else
         {
-            var upcomingChangeDate = currrentDate.AddDays(nextMonday + (7 * WeeksDelay));
+            var daysToMonday = ((int)DayOfWeek.Monday - (int)currentDate.DayOfWeek + 7) % 7;
+            var nextMonday = daysToMonday == 0 ? 7 : daysToMonday;
+
+            var upcomingChangeDate = currentDate.AddDays(nextMonday + (7 * WeeksDelay));
             var existingUpatedWeek = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekByEffectiveFromAsync(hairdresser.Id, upcomingChangeDate, ct);
 
             if(existingUpatedWeek.Count > 0 && existingUpatedWeek.Count != 5)

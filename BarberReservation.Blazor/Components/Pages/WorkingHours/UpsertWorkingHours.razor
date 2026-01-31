@@ -17,8 +17,8 @@ else
     <div class="container">
         <div class="page-head">
             <h1 class="page-title">Moje pracovní doba</h1>
-            <p class="page-subtitle muted">
-                Nastavení pracovní doby (změny se projeví od následujícího pondělí za 3 týdny).
+            <p class="page-subtitle">
+                Načtena je aktuálně platná pracovní doba! Její změny se projeví od následujícího pondělí za 3 týdny.
             </p>
         </div>
 
@@ -32,7 +32,7 @@ else
                         <span class="slider"></span>
                     </label>
 
-                    <strong>@GetDayName(day.DayOfWeek)</strong>
+                    <strong>@DayHelper.GetDayName(day.DayOfWeek)</strong>
 
                     <div style="display:flex; align-items:center; gap:18px; justify-content:flex-start; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -67,7 +67,7 @@ else
             <div class="divider"></div>
 
             <div class="row-between">
-                <a class="btn btn-outline" href="/">
+                <a class="btn btn-outline" href="/working-hours">
                     Zpět
                 </a>
 
@@ -186,21 +186,11 @@ else
         {
             if (d.WorkFrom >= d.WorkTo)
             {
-                error = $"Neplatný čas u {GetDayName(d.DayOfWeek)}.";
+                error = $"Neplatný čas u {DayHelper.GetDayName(d.DayOfWeek)}.";
                 return false;
             }
         }
 
         return true;
     }
-
-    private static string GetDayName(DayOfWeek day) => day switch
-    {
-        DayOfWeek.Monday => "Pondělí",
-        DayOfWeek.Tuesday => "Úterý",
-        DayOfWeek.Wednesday => "Středa",
-        DayOfWeek.Thursday => "Čtvrtek",
-        DayOfWeek.Friday => "Pátek",
-        _ => day.ToString()
-    };
 }

@@ -7,9 +7,9 @@ namespace BarberReservation.Blazor.Services.Implementaions;
 
 public sealed class WorkingHoursService(IApiClient api) : IWorkingHoursService
 {
-    public Task<HairdresserWorkingHoursDto> GetCurrentSelfWorkingHoursAsync(CancellationToken ct)
+    public async Task<HairdresserWorkingHoursDto> GetCurrentSelfWorkingHoursAsync(CancellationToken ct)
     {
-        return api.GetAsync<HairdresserWorkingHoursDto>("api/me/working-hours", ct);
+        return await api.GetAsync<HairdresserWorkingHoursDto>("api/me/working-hours", ct);
     }
 
     public async Task<HairdresserWorkingHoursDto> GetForHairdresserByIdAsync(string hairdresserId, CancellationToken ct)

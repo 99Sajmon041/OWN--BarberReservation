@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BarberReservation.Shared.Models.HairdresserWorkingHours;
+using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetNextSelfWorkingHours;
 
 namespace BarberReservation.API.Controllers
 {
@@ -19,6 +20,13 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<HairdresserWorkingHoursDto>> GetMyWorkingHours(CancellationToken ct)
         {
             var result = await mediator.Send(new GetSelfWorkingHoursQuery(), ct);
+            return Ok(result);
+        }
+
+        [HttpGet("upcoming")]
+        public async Task<ActionResult<HairdresserWorkingHoursDto>> GetMyUpcomingWorkingHours(CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetNextSelfWorkingHoursQuery(), ct);
             return Ok(result);
         }
 
