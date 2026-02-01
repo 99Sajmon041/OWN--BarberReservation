@@ -8,4 +8,6 @@ public interface IWorkingHoursService
     Task UpdateSelfWorkingHoursAsync(HairdresserWorkingHoursUpsertDto request, CancellationToken ct);
     Task<HairdresserWorkingHoursDto> GetCurrentSelfWorkingHoursAsync(CancellationToken ct);
     Task<HairdresserWorkingHoursDto> GetForHairdresserByIdAsync(string hairdresserId, CancellationToken ct);
+    Task<HairdresserWorkingHoursDto> GetNextSelfWorkingHoursAsync(CancellationToken ct);
+    Task<HairdresserWorkingHoursDto> GetNextForHairdresserByIdAsync(string hairdresserId, CancellationToken ct);
 }

@@ -17,9 +17,19 @@ else
     <div class="container">
         <div class="page-head">
             <h1 class="page-title">Moje pracovní doba</h1>
-            <p class="page-subtitle">
-                Načtena je aktuálně platná pracovní doba! Její změny se projeví od následujícího pondělí za 3 týdny.
-            </p>
+            @if (isCurrentWeek)
+            {
+                <p class="page-subtitle">
+                    Načtena je aktuálně platná pracovní doba! Její změny se projeví od následujícího pondělí za 3 týdny.
+                </p>
+            }
+            else
+            {
+                <p class="page-subtitle">
+                    Načtena je budoucí (nová) pracovní doba! Její změny se projeví od: @date?.ToString("dd.MM.yyyy")
+                </p>
+            }
+
         </div>
 
         <div class="card">
@@ -84,6 +94,8 @@ else
 @code {
     private bool _checked;
     private bool isSubmitting;
+    private bool isCurrentWeek;
+    DateOnly? date;
 
     private List<WorkingHoursDto> Days = new();
     private List<TimeOnly> TimeOptions = WorkingHoursInterval.GetHalfHours();
@@ -102,7 +114,15 @@ else
             return;
         }
 
-        var workWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+        var currentWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+        var nextWeek = await WorkingHoursService.GetNextSelfWorkingHoursAsync(CancellationToken.None);
+
+        var hasNext = nextWeek.WorkingHours is not null && nextWeek.WorkingHours.Any();
+
+        isCurrentWeek = !hasNext;
+        date = hasNext ? nextWeek.EffectiveFrom : null;
+
+        var workWeek = hasNext ? nextWeek : currentWeek;
 
         if (workWeek.WorkingHours is null || !workWeek.WorkingHours.Any())
             InitDefaultDays();
@@ -186,7 +206,7 @@ else
         {
             if (d.WorkFrom >= d.WorkTo)
             {
-                error = $"Neplatný čas u {DayHelper.GetDayName(d.DayOfWeek)}.";
+                error = $"Neplatně zvolený čas v den: {DayHelper.GetDayName(d.DayOfWeek)}.";
                 return false;
             }
         }

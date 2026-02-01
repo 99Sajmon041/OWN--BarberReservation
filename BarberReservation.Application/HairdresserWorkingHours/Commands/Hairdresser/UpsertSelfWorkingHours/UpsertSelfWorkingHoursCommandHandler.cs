@@ -40,19 +40,28 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
         {
             var daysToMonday = ((int)DayOfWeek.Monday - (int)currentDate.DayOfWeek + 7) % 7;
             var nextMonday = daysToMonday == 0 ? 7 : daysToMonday;
-
             var upcomingChangeDate = currentDate.AddDays(nextMonday + (7 * WeeksDelay));
-            var existingUpatedWeek = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekByEffectiveFromAsync(hairdresser.Id, upcomingChangeDate, ct);
 
-            if(existingUpatedWeek.Count > 0 && existingUpatedWeek.Count != 5)
+            var existingUpatedWeek = await unitOfWork.HairdresserWorkingHoursRepository.GetNextWeekAsync(
+                hairdresser.Id,
+                currentDate,
+                false,
+                true,
+                ct);
+
+            var targetEffectiveFrom = existingUpatedWeek.Count == 5
+                ? existingUpatedWeek[0].EffectiveFrom
+                : upcomingChangeDate;
+
+            if (existingUpatedWeek.Count > 0 && existingUpatedWeek.Count != 5)
             {
                 logger.LogWarning("Existing days to update count does not match to 5. Failed do update. hairdresser ID: {HairdresserId},Start date of week: {StartWeekDate}",
                     hairdresser.Id,
-                    upcomingChangeDate);
+                    targetEffectiveFrom);
                 throw new DomainException("Problém při úpravě dnů, některé dny chybí. Kontaktujte administrátora webu.");
             }
 
-            var timeOff = await unitOfWork.HairdresserTimeOffRepository.GetTimeOffFromDateAsync(hairdresser.Id, upcomingChangeDate, ct);
+            var timeOff = await unitOfWork.HairdresserTimeOffRepository.GetTimeOffFromDateAsync(hairdresser.Id, targetEffectiveFrom, ct);
             var newDaysToUpdate = request.DaysOfWorkingWeek.ToDictionary(x => x.DayOfWeek);
 
             foreach (var freeDay in timeOff)
@@ -72,7 +81,7 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
                         freeDay.StartAt.DayOfWeek,
                         freeDay.StartAt,
                         freeDay.EndAt,
-                        upcomingChangeDate);
+                        targetEffectiveFrom);
 
                     throw new ConflictException(
                         $"Nelze nastavit den na nepracovní, máte naplánované volno: {freeDay.StartAt:dd.MM. HH:mm} - {freeDay.EndAt:HH:mm}. Nejdřív ho odstraňte.");
@@ -91,7 +100,7 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
                         freeDay.EndAt,
                         existingDay.WorkFrom,
                         existingDay.WorkTo,
-                        upcomingChangeDate);
+                        targetEffectiveFrom);
 
                     throw new ConflictException(
                         $"Nelze upravit pracovní dobu. {freeDay.StartAt:dd.MM. HH:mm} - {freeDay.EndAt:HH:mm} máte naplánované volno, které se s pracovní dobou překrývá.");
@@ -111,12 +120,12 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
                 }
 
                 logger.LogInformation("Hairdresser updated own working days valid from: {EffectiveFrom}. Hairdresser ID: {HairdresserId}",
-                    existingUpatedWeek.First().EffectiveFrom.ToString("yyyy-MM-dd"),
+                    existingUpatedWeek[0].EffectiveFrom.ToString("yyyy-MM-dd"),
                     hairdresser.Id);
             }
             else
             {
-                var days = request.DaysOfWorkingWeek.ToHairdresserWorkingHours(hairdresser.Id, upcomingChangeDate);
+                var days = request.DaysOfWorkingWeek.ToHairdresserWorkingHours(hairdresser.Id, targetEffectiveFrom);
 
                 unitOfWork.HairdresserWorkingHoursRepository.AddDaysToWorkingWeek(days);
 

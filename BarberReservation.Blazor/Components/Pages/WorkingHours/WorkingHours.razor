@@ -20,15 +20,41 @@ else
             <div class="row-between" style="margin:0;">
                 <div>
                     <h1 class="page-title">Pracovní doba</h1>
-                    <p class="page-subtitle muted">
-                        Přehled aktuálně platné pracovní doby.
-                    </p>
+                    @if (!isShowedUpcoming)
+                    {
+                        <p class="page-subtitle muted">
+                            Přehled aktuálně platné pracovní doby.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="page-subtitle muted">
+                            Přehled nové (budoucí) pracovní doby.
+                        </p>
+                    }
+
                 </div>
+                @if (UpcomingWorkWeek is not null && UpcomingWorkWeek.WorkingHours.Count > 0 && !isShowedUpcoming)
+                {
+                    <div class="header-actions">
+                        <a class="btn btn-primary" @onclick="ShowUpcomingWorkingHours">
+                            Zobrazit novou (budoucí) pracovní dobu
+                        </a>
+                    </div>
+                }
+                @if (isShowedUpcoming)
+                {
+                    <div class="header-actions">
+                        <a class="btn btn-primary" @onclick="ShowCurrentWorkingHours">
+                            Zobrazit aktuální pracovní dobu
+                        </a>
+                    </div>
+                }
             </div>
         </div>
 
         <div class="card">
-            @if (isAdmin)
+            @if (isAdmin && !isShowedUpcoming)
             {
                 <div class="field" style="margin:0 0 12px 0; max-width:420px;">
                     <label class="label" for="hairdresserId">Kadeřník</label>
@@ -138,9 +164,12 @@ else
     private bool loaded;
     private bool isAdmin;
     private string? selectedHairdresserId;
+    private bool isShowedUpcoming;
 
     private List<GetLookUpHairdressers> Hairdressers = new();
+    private HairdresserWorkingHoursDto? CurrentWorkWeek = new();
     private HairdresserWorkingHoursDto? WorkWeek;
+    private HairdresserWorkingHoursDto? UpcomingWorkWeek;
 
     private bool CanEditSelected => !isAdmin ? true : (!string.IsNullOrWhiteSpace(selectedHairdresserId) && selectedHairdresserId == AuthState.UserId);
 
@@ -177,6 +206,7 @@ else
             }
 
             await LoadWorkWeekAsync();
+            ShowCurrentWorkingHours();
         }
         catch (ApiRequestException ex)
         {
@@ -196,10 +226,12 @@ else
 
     private async Task OnHairdresserChangedAsync()
     {
-        if (!isAdmin)
+        if (!isAdmin || isShowedUpcoming)
             return;
 
         await LoadWorkWeekAsync();
+
+        ShowCurrentWorkingHours();
     }
 
     private async Task LoadWorkWeekAsync()
@@ -211,28 +243,47 @@ else
         {
             if (!isAdmin)
             {
-                WorkWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+                CurrentWorkWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+                UpcomingWorkWeek = await WorkingHoursService.GetNextSelfWorkingHoursAsync(CancellationToken.None);
                 return;
             }
 
             if (selectedHairdresserId == AuthState.UserId)
             {
-                WorkWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+                CurrentWorkWeek = await WorkingHoursService.GetCurrentSelfWorkingHoursAsync(CancellationToken.None);
+                UpcomingWorkWeek = await WorkingHoursService.GetNextSelfWorkingHoursAsync(CancellationToken.None);
             }
             else if (!string.IsNullOrWhiteSpace(selectedHairdresserId))
             {
-                WorkWeek = await WorkingHoursService.GetForHairdresserByIdAsync(selectedHairdresserId, CancellationToken.None);
+                CurrentWorkWeek = await WorkingHoursService.GetForHairdresserByIdAsync(selectedHairdresserId, CancellationToken.None);
+                UpcomingWorkWeek = await WorkingHoursService.GetNextForHairdresserByIdAsync(selectedHairdresserId, CancellationToken.None);
             }
+
+            ShowCurrentWorkingHours();
         }
         catch (ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
-            WorkWeek = new HairdresserWorkingHoursDto();
+            CurrentWorkWeek = new HairdresserWorkingHoursDto();
+            UpcomingWorkWeek = new HairdresserWorkingHoursDto();
+            ShowCurrentWorkingHours();
         }
         finally
         {
             isLoading = false;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private void ShowUpcomingWorkingHours()
+    {
+        isShowedUpcoming = true;
+        WorkWeek = UpcomingWorkWeek;
+    }
+
+    private void ShowCurrentWorkingHours()
+    {
+        isShowedUpcoming = false;
+        WorkWeek = CurrentWorkWeek;
     }
 }

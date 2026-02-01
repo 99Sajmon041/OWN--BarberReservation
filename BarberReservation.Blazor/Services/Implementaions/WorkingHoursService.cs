@@ -21,4 +21,14 @@ public sealed class WorkingHoursService(IApiClient api) : IWorkingHoursService
     {
         await api.SendAsync(HttpMethod.Put, "api/me/working-hours", request, ct);
     }
+
+    public async Task<HairdresserWorkingHoursDto> GetNextForHairdresserByIdAsync(string hairdresserId, CancellationToken ct)
+    {
+        return await api.GetAsync<HairdresserWorkingHoursDto>($"api/admin/working-hours/{hairdresserId}/upcoming", ct);
+    }
+
+    public async Task<HairdresserWorkingHoursDto> GetNextSelfWorkingHoursAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<HairdresserWorkingHoursDto>("api/me/working-hours/upcoming", ct);
+    }
 }
