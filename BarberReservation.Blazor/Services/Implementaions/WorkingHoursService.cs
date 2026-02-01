@@ -31,4 +31,9 @@ public sealed class WorkingHoursService(IApiClient api) : IWorkingHoursService
     {
         return await api.GetAsync<HairdresserWorkingHoursDto>("api/me/working-hours/upcoming", ct);
     }
+
+    public Task<WorkingHoursDto> GetByDayAsync(DateOnly day, CancellationToken ct)
+    {
+        return api.GetAsync<WorkingHoursDto>($"api/me/working-hours/daily?day={day:yyyy-MM-dd}", ct);
+    }
 }

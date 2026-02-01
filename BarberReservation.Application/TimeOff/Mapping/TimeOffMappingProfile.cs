@@ -19,5 +19,9 @@ public sealed class TimeOffMappingProfile : Profile
         CreateMap<CreateSelfTimeOffCommand, HairdresserTimeOff>()
             .ForMember(x => x.Id, opt => opt.Ignore())
             .ForMember(x => x.CreatedAt, opt => opt.MapFrom(x => DateTime.UtcNow));
+
+        CreateMap<UpdateSelfTimeOffCommand, HairdresserTimeOff>()
+            .ForMember(x => x.Id, opt => opt.Ignore())
+            .ForMember(x => x.CreatedAt, opt => opt.Ignore());
     }
 }

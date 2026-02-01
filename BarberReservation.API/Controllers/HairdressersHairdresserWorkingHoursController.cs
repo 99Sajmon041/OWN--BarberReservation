@@ -1,13 +1,14 @@
 ﻿using BarberReservation.Application.HairdresserWorkingHours.Commands.Hairdresser.UpsertSelfWorkingHours;
+using BarberReservation.Application.HairdresserWorkingHours.Mapping;
+using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetNextSelfWorkingHours;
+using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfDailyWorkingHours;
 using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfWorkingHours;
 using BarberReservation.Shared.Enums;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
 using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
-using BarberReservation.Application.HairdresserWorkingHours.Mapping;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BarberReservation.Shared.Models.HairdresserWorkingHours;
-using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetNextSelfWorkingHours;
 
 namespace BarberReservation.API.Controllers
 {
@@ -41,6 +42,13 @@ namespace BarberReservation.API.Controllers
             }, ct);
 
             return NoContent();
+        }
+
+        [HttpGet("daily")]
+        public async Task<ActionResult<WorkingHoursDto>> GetMyDailyWorkingHours([FromQuery] DateOnly day, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetSelfDailyWorkingHoursQuery(day), ct);
+            return Ok(result);
         }
     }
 }

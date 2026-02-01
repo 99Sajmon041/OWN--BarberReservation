@@ -80,10 +80,10 @@ public sealed class UpdateSelfTimeOffCommandHandler(
                 freeTo.ToString("HH:mm"),
                 freeFrom.ToString("yyyy.MM.dd"));
 
-            throw new ConflictException("Nelze vytvořit volno, zasahuje do pracovní doby. Musí být uvnitř pracovní doby.");
+            throw new ConflictException("Nelze upravit volno, zasahuje do pracovní doby. Musí být uvnitř pracovní doby.");
         }
 
-        var daysFree = await unitOfWork.HairdresserTimeOffRepository.GetAllByDayForHairdresserAsync(hairdresser.Id, freeFrom, ct);
+        var daysFree = await unitOfWork.HairdresserTimeOffRepository.GetAllByDayForHairdresserAsync(hairdresser.Id, DateOnly.FromDateTime(freeFrom), ct);
         foreach (var freeTime in daysFree)
         {
             if (freeTime.Id == request.Id)
@@ -112,7 +112,7 @@ public sealed class UpdateSelfTimeOffCommandHandler(
                 freeFrom.ToString("HH:mm"),
                 freeTo.ToString("HH:mm"));
 
-            throw new ConflictException("Nelze vytvořit volno, překrývá se s již vytvořenou rezervací.");
+            throw new ConflictException("Nelze upravit volno, překrývá se s již vytvořenou rezervací.");
         }
 
         mapper.Map(request, free);

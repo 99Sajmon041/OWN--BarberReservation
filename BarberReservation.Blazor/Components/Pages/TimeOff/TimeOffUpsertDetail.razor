@@ -1,0 +1,698 @@
+﻿@page "/time-off/detail"
+
+@inject ITimeOffService TimeOffService
+@inject IWorkingHoursService WorkingHoursService
+@inject MessageService MessageService
+@inject AuthState AuthState
+@inject NavigationManager Nav
+
+<div class="container">
+    <div class="page-head">
+        <div class="page-head-left">
+            <h1 class="page-title">Správa osobního volna – detail dne</h1>
+            <p class="page-subtitle muted mt-6">
+                Vyberte den a spravujte volno (tvorba / úprava / mazání).
+            </p>
+
+            <div class="row-actions mt-10">
+                <button class="btn btn-outline btn-compact"
+                        @onclick="PrevDayAsync"
+                        disabled="@(!CanGoPrev || IsLoading)">
+                    ←
+                </button>
+
+                <button class="btn btn-outline btn-compact"
+                        @onclick="GoTodayAsync"
+                        disabled="@IsLoading">
+                    Dnes
+                </button>
+
+                <button class="btn btn-outline btn-compact"
+                        @onclick="NextDayAsync"
+                        disabled="@(IsLoading)">
+                    →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-16">
+        <div class="timeoff-toolbar">
+            <div class="field field-inline">
+                <label class="label">Den</label>
+                <div class="input-wrap">
+                    <input class="input input-date-dark timeoff-date" type="date"
+                           value="@SelectedDay.ToString("yyyy-MM-dd")"
+                           @onchange="OnDayChanged" />
+                </div>
+            </div>
+
+            <div class="toolbar-right">
+                <button class="btn btn-success btn-compact"
+                        @onclick="OpenCreate"
+                        disabled="@(!CanEditDay || IsLoading)">
+                    + Vytvořit volno
+                </button>
+            </div>
+        </div>
+
+        @if (!CanEditDay)
+        {
+            <div class="note warn mt-12">
+                Tento den je v minulosti – zde nelze upravovat. (Historie bude v týdenním přehledu.)
+            </div>
+        }
+    </div>
+
+    @if (!_checked)
+    {
+        <div class="page-head page-head-center mt-24">
+            <h2 class="page-title">Načítám...</h2>
+            <p class="page-subtitle muted mt-6">Chvilku strpení.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid-2 mt-16">
+            <div class="card">
+                <div class="timeoff-head">
+                    <div class="timeoff-head-left">
+                        <h2 class="card-title">Denní osa</h2>
+                        <div class="muted small mt-6">@SelectedDayText</div>
+
+                        @if (TimeOffs.Count == 0)
+                        {
+                            <div class="muted small mt-6">Žádné volno pro tento den.</div>
+                        }
+                    </div>
+
+                    <button class="btn btn-outline btn-compact"
+                            @onclick="Reload"
+                            disabled="@IsLoading">
+                        Obnovit
+                    </button>
+                </div>
+
+                <div class="mt-12">
+                    <div class="gcal-grid">
+                        <div class="gcal-time-col">
+                            @foreach (var t in TimelineSlots)
+                            {
+                                <div class="gcal-timecell">
+                                    @if (t.Minute == 0)
+                                    {
+                                        <span>@t.ToString("H:mm")</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="gcal-canvas">
+                            @foreach (var t in TimelineSlots)
+                            {
+                                <div class="gcal-rowline @(t.Minute == 0 ? "hour" : "half")"></div>
+                            }
+
+                            @foreach (var nw in NonWorkBlocks)
+                            {
+                                var top = ToTopPx(SelectedDay.ToDateTime(nw.From));
+                                var height = ToHeightPx(
+                                SelectedDay.ToDateTime(nw.From),
+                                SelectedDay.ToDateTime(nw.To));
+
+                                <div class="gcal-event nonwork"
+                                     style="@($"top:{top}px; height:{height}px")">
+                                    <div class="evt-row">
+                                        <span class="evt-chip">Není pracovní doba</span>
+                                        <span class="evt-dot">•</span>
+                                        <span class="evt-time">@nw.From.ToString("HH:mm")–@nw.To.ToString("HH:mm")</span>
+                                    </div>
+                                </div>
+                            }
+
+                            @foreach (var item in TimeOffs.OrderBy(x => x.StartAt))
+                            {
+                                var isSelected = SelectedTimeOffId == item.Id;
+                                var top = ToTopPx(item.StartAt);
+                                var height = ToHeightPx(item.StartAt, item.EndAt);
+
+                                <button type="button"
+                                        class="gcal-event timeoff warning @(isSelected ? "selected" : "")"
+                                        style="@($"top:{top}px; height:{height}px")"
+                                        @onclick="() => SelectTimeOff(item)"
+                                        @ondblclick="() => OpenEditFromItem(item)"
+                                        disabled="@(!CanEditDay)">
+
+                                    <div class="evt-row">
+                                        <span class="evt-chip">Volno</span>
+                                        <span class="evt-dot">•</span>
+                                        <span class="evt-time">@item.StartAt.ToString("HH:mm")–@item.EndAt.ToString("HH:mm")</span>
+                                        <span class="evt-dot">•</span>
+                                        <span class="evt-reason">@item.Reason</span>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row-between mt-14">
+                        <div class="muted small">Klikni na volno a pak uprav.</div>
+
+                        <div class="row-actions">
+                            <button class="btn btn-outline btn-compact"
+                                    @onclick="OpenEditSelected"
+                                    disabled="@(SelectedTimeOff is null || !CanEditDay)">
+                                Upravit
+                            </button>
+
+                            <button class="btn btn-danger btn-compact"
+                                    @onclick="OpenDeleteSelected"
+                                    disabled="@(SelectedTimeOff is null || !CanEditDay)">
+                                Smazat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<UiModal Open="@ModalOpen"
+         OpenChanged="@( (bool v) => { ModalOpen = v; } )"
+         Title="@ModalTitle"
+         Subtitle="@SelectedDayText">
+
+    @if (!string.IsNullOrWhiteSpace(FormError))
+    {
+        <div class="note warn mb-12">@FormError</div>
+    }
+
+    <div class="row gap">
+        <div class="col">
+            <label class="label">Od</label>
+            <input class="input" type="time" step="900"
+                   value="@FormStartTimeText"
+                   @onchange="OnStartTimeChanged" />
+        </div>
+        <div class="col">
+            <label class="label">Do</label>
+            <input class="input" type="time" step="900"
+                   value="@FormEndTimeText"
+                   @onchange="OnEndTimeChanged" />
+        </div>
+    </div>
+
+    <div class="mt-12">
+        <label class="label">Důvod</label>
+        <input class="input" maxlength="120"
+               @bind="FormReason"
+               @bind:event="oninput" />
+        <div class="muted small mt-6">5–120 znaků</div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(FormReasonError))
+    {
+        <div class="field-error mt-6">@FormReasonError</div>
+    }
+
+    <div class="ui-modal-foot">
+        <button class="btn btn-outline btn-compact" @onclick="CloseModal" disabled="@IsSaving">Zrušit</button>
+
+        @if (ModalMode == ModalModeEnum.Edit)
+        {
+            <button class="btn btn-danger btn-compact" @onclick="ConfirmDelete" disabled="@IsSaving">Smazat</button>
+        }
+
+        <button class="btn btn-success btn-compact" @onclick="Save" disabled="@(!CanEditDay || IsSaving)">
+            @(IsSaving ? "Ukládám..." : "Uložit")
+        </button>
+    </div>
+</UiModal>
+
+<UiModal Open="@DeleteModalOpen"
+         OpenChanged="@( (bool v) => { DeleteModalOpen = v; } )"
+         Title="Smazat volno?"
+         Subtitle="@SelectedDayText">
+
+    <div class="note warn">
+        Opravdu chceš smazat vybrané volno?
+        @if (SelectedTimeOff is not null)
+        {
+            <div class="mt-12 muted small">
+                @SelectedTimeOff.StartAt.ToString("HH:mm") – @SelectedTimeOff.EndAt.ToString("HH:mm") • @SelectedTimeOff.Reason
+            </div>
+        }
+    </div>
+
+    <div class="ui-modal-foot">
+        <button class="btn btn-outline btn-compact" @onclick="() => DeleteModalOpen = false" disabled="@IsSaving">Zrušit</button>
+        <button class="btn btn-danger btn-compact" @onclick="Delete" disabled="@(!CanEditDay || IsSaving)">
+            @(IsSaving ? "Mažu..." : "Smazat")
+        </button>
+    </div>
+</UiModal>
+
+@code
+{
+    private bool _checked;
+    private bool loaded;
+    private bool IsLoading;
+    private bool IsSaving;
+
+    private DateOnly MinAllowedDay => DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly SelectedDay = DateOnly.FromDateTime(DateTime.Today);
+
+    private List<HairdresserTimeOffDto> TimeOffs = new();
+    private HairdresserTimeOffDto? SelectedTimeOff;
+    private int? SelectedTimeOffId;
+
+    private bool CanGoPrev => CoerceToWorkday(SelectedDay.AddDays(-1), direction: -1) >= MinAllowedDay;
+    private bool CanEditDay => SelectedDay >= MinAllowedDay;
+
+    private static readonly TimeOnly TimelineStart = new(5, 0);
+    private static readonly TimeOnly TimelineEnd = new(22, 0);
+    private const int SlotMinutes = 30;
+    private const int SlotHeightPx = 46;
+
+    private List<TimeOnly> TimelineSlots => WorkingHoursInterval
+        .GetHalfHours()
+        .Where(x => x >= TimelineStart && x < TimelineEnd)
+        .ToList();
+
+    private string SelectedDayText => SelectedDay.ToString("dddd d. M. yyyy", new CultureInfo("cs-CZ"));
+
+    private WorkingHoursDto? WorkingHours;
+    private List<(TimeOnly From, TimeOnly To)> NonWorkBlocks = new();
+
+    private bool ModalOpen;
+    private bool DeleteModalOpen;
+    private string ModalTitle = "";
+
+    private string? FormError;
+    private string? FormReasonError;
+
+    private string FormStartTimeText = "09:00";
+    private string FormEndTimeText = "09:15";
+    private string FormReason = "";
+
+    private ModalModeEnum ModalMode = ModalModeEnum.Create;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+
+            if (!AuthState.IsAuthenticated || !AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            {
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            await LoadAsync(showWeekendInfo: true);
+        }
+        catch (ApiRequestException ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch (Exception ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadAsync(bool showWeekendInfo = false)
+    {
+        try
+        {
+            if (SelectedDay < MinAllowedDay)
+                SelectedDay = MinAllowedDay;
+
+            var coerced = CoerceToWorkday(SelectedDay, direction: +1);
+            if (coerced != SelectedDay)
+            {
+                SelectedDay = coerced;
+
+                if (showWeekendInfo)
+                    MessageService.ShowInfo("O víkendu nelze nastavit volno – přesouvám na nejbližší pracovní den.");
+            }
+
+            IsLoading = true;
+            _checked = false;
+
+            WorkingHours = await WorkingHoursService.GetByDayAsync(SelectedDay, CancellationToken.None);
+            if (WorkingHours is null)
+            {
+                MessageService.ShowWarning("Nemáte nastavenou pracovní dobu. Nejprve si ji prosím nastavte.");
+                Nav.NavigateTo("/working-hours/update", replace: true);
+                return;
+            }
+
+            TimeOffs = await TimeOffService.GetByDayAsync(SelectedDay, CancellationToken.None);
+
+            BuildNonWorkBlocks();
+
+            SelectedTimeOff = null;
+            SelectedTimeOffId = null;
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError($"Nepodařilo se načíst volno. {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+            _checked = true;
+        }
+    }
+
+    private static DateOnly CoerceToWorkday(DateOnly day, int direction)
+    {
+        return day.DayOfWeek switch
+        {
+            DayOfWeek.Saturday => direction >= 0 ? day.AddDays(2) : day.AddDays(-1),
+            DayOfWeek.Sunday => direction >= 0 ? day.AddDays(1) : day.AddDays(-2),
+            _ => day
+        };
+    }
+
+    private void BuildNonWorkBlocks()
+    {
+        NonWorkBlocks.Clear();
+
+        if (WorkingHours is null)
+            return;
+
+        if (!WorkingHours.IsWorkingDay)
+        {
+            NonWorkBlocks.Add((TimelineStart, TimelineEnd));
+            return;
+        }
+
+        var from = WorkingHours.WorkFrom;
+        var to = WorkingHours.WorkTo;
+
+        if (from > TimelineStart)
+            NonWorkBlocks.Add((TimelineStart, Clamp(from, TimelineStart, TimelineEnd)));
+
+        if (to < TimelineEnd)
+            NonWorkBlocks.Add((Clamp(to, TimelineStart, TimelineEnd), TimelineEnd));
+    }
+
+    private async Task Reload() => await LoadAsync();
+
+    private async Task OnDayChanged(ChangeEventArgs e)
+    {
+        var s = e?.Value?.ToString();
+        if (!DateOnly.TryParseExact(s, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+            return;
+
+        await SetDayAsync(day, direction: +1, showWeekendInfo: true);
+    }
+
+
+    private async Task PrevDayAsync()
+    {
+        if (!CanGoPrev) return;
+
+        var target = SelectedDay.AddDays(-1);
+        await SetDayAsync(target, direction: -1, showWeekendInfo: false);
+    }
+
+    private async Task NextDayAsync()
+    {
+        var target = SelectedDay.AddDays(1);
+        await SetDayAsync(target, direction: +1, showWeekendInfo: false);
+    }
+
+    private async Task GoTodayAsync()
+    {
+        await SetDayAsync(MinAllowedDay, direction: +1, showWeekendInfo: false);
+    }
+
+    private async Task SetDayAsync(DateOnly day, int direction, bool showWeekendInfo)
+    {
+        var clamped = day < MinAllowedDay ? MinAllowedDay : day;
+
+        var coerced = CoerceToWorkday(clamped, direction);
+        if (showWeekendInfo && coerced != clamped)
+            MessageService.ShowInfo("O víkendu nelze nastavit volno – přesouvám na nejbližší pracovní den.");
+
+        SelectedDay = coerced;
+        await LoadAsync(showWeekendInfo: false);
+    }
+
+    private void SelectTimeOff(HairdresserTimeOffDto item)
+    {
+        SelectedTimeOff = item;
+        SelectedTimeOffId = item.Id;
+    }
+
+    private void OpenCreate()
+    {
+        FormError = null;
+        FormReasonError = null;
+
+        ModalMode = ModalModeEnum.Create;
+        ModalTitle = "Vytvořit volno";
+
+        FormStartTimeText = "09:00";
+        FormEndTimeText = "09:15";
+        FormReason = "";
+
+        ModalOpen = true;
+    }
+
+    private void OpenEditSelected()
+    {
+        FormError = null;
+        FormReasonError = null;
+
+        if (SelectedTimeOff is null) return;
+
+        ModalMode = ModalModeEnum.Edit;
+        ModalTitle = "Upravit volno";
+
+        FormStartTimeText = SelectedTimeOff.StartAt.ToString("HH:mm");
+        FormEndTimeText = SelectedTimeOff.EndAt.ToString("HH:mm");
+        FormReason = SelectedTimeOff.Reason;
+
+        ModalOpen = true;
+    }
+
+    private void OpenDeleteSelected()
+    {
+        if (SelectedTimeOff is null) return;
+        DeleteModalOpen = true;
+    }
+
+    private void CloseModal() => ModalOpen = false;
+
+    private void ConfirmDelete()
+    {
+        ModalOpen = false;
+        DeleteModalOpen = true;
+    }
+
+    private void OnStartTimeChanged(ChangeEventArgs e)
+    {
+        var v = e?.Value?.ToString()?.Trim();
+        if (string.IsNullOrWhiteSpace(v))
+            return;
+
+        FormStartTimeText = NormalizeTime(v) ?? v;
+    }
+
+    private void OnEndTimeChanged(ChangeEventArgs e)
+    {
+        var v = e?.Value?.ToString()?.Trim();
+        if (string.IsNullOrWhiteSpace(v))
+            return;
+
+        FormEndTimeText = NormalizeTime(v) ?? v;
+    }
+
+    private async Task Save()
+    {
+        FormError = null;
+        FormReasonError = null;
+
+        if (!CanEditDay)
+        {
+            MessageService.ShowError("Nelze upravovat den v minulosti.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormReason) || FormReason.Trim().Length < 5)
+        {
+            FormReasonError = "Důvod volna musí mít alespoň 5 znaků.";
+            return;
+        }
+
+        if (FormReason.Trim().Length > 120)
+        {
+            FormReasonError = "Důvod volna může mít maximálně 120 znaků.";
+            return;
+        }
+
+        var startText = (FormStartTimeText ?? "").Trim();
+        var endText = (FormEndTimeText ?? "").Trim();
+
+        var formats = new[] { "H:mm", "HH:mm", "H:mm:ss", "HH:mm:ss" };
+
+        if (!TimeOnly.TryParseExact(startText, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var st) ||
+            !TimeOnly.TryParseExact(endText, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var en))
+        {
+            FormError = $"Neplatný čas. (Od: '{startText}', Do: '{endText}')";
+            return;
+        }
+
+        var startAt = SelectedDay.ToDateTime(st);
+        var endAt = SelectedDay.ToDateTime(en);
+
+        if (startAt >= endAt)
+        {
+            FormError = "Čas 'Od' musí být dříve než 'Do'.";
+            return;
+        }
+
+        var req = new UpsertTimeOffRequest
+        {
+            StartAt = startAt,
+            EndAt = endAt,
+            Reason = FormReason.Trim()
+        };
+
+        try
+        {
+            IsSaving = true;
+
+            if (ModalMode == ModalModeEnum.Create)
+            {
+                await TimeOffService.CreateAsync(req, CancellationToken.None);
+                MessageService.ShowSuccess("Volno vytvořeno.");
+            }
+            else
+            {
+                if (SelectedTimeOff is null)
+                {
+                    FormError = "Vyberte volno.";
+                    return;
+                }
+
+                await TimeOffService.UpdateAsync(SelectedTimeOff.Id, req, CancellationToken.None);
+                MessageService.ShowSuccess("Volno upraveno.");
+            }
+
+            ModalOpen = false;
+            await LoadAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            FormError = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            FormError = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task Delete()
+    {
+        if (!CanEditDay)
+        {
+            MessageService.ShowError("Nelze mazat den v minulosti.");
+            return;
+        }
+
+        if (SelectedTimeOff is null)
+        {
+            MessageService.ShowError("Vyber volno.");
+            return;
+        }
+
+        try
+        {
+            IsSaving = true;
+
+            await TimeOffService.DeleteAsync(SelectedTimeOff.Id, CancellationToken.None);
+
+            MessageService.ShowSuccess("Volno smazáno.");
+            DeleteModalOpen = false;
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private static string? NormalizeTime(string value)
+    {
+        var formats = new[] { "H:mm", "HH:mm", "H:mm:ss", "HH:mm:ss" };
+
+        if (TimeOnly.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))
+            return t.ToString("HH:mm", CultureInfo.InvariantCulture);
+
+        return null;
+    }
+
+    private int ToTopPx(DateTime startAt)
+    {
+        var t = TimeOnly.FromDateTime(startAt);
+        var clamped = Clamp(t, TimelineStart, TimelineEnd);
+        var minutesFromStart = MinutesBetween(TimelineStart, clamped);
+        return (int)Math.Round(minutesFromStart * (SlotHeightPx / (double)SlotMinutes));
+    }
+
+    private int ToHeightPx(DateTime startAt, DateTime endAt)
+    {
+        var s = Clamp(TimeOnly.FromDateTime(startAt), TimelineStart, TimelineEnd);
+        var e = Clamp(TimeOnly.FromDateTime(endAt), TimelineStart, TimelineEnd);
+
+        var minutes = Math.Max(15, MinutesBetween(s, e));
+        return (int)Math.Round(minutes * (SlotHeightPx / (double)SlotMinutes));
+    }
+
+    private static int MinutesBetween(TimeOnly from, TimeOnly to)
+    {
+        return (int)(to.ToTimeSpan() - from.ToTimeSpan()).TotalMinutes;
+    }
+
+    private static TimeOnly Clamp(TimeOnly x, TimeOnly min, TimeOnly max)
+    {
+        return x < min ? min : (x > max ? max : x);
+    }
+
+    private void OpenEditFromItem(HairdresserTimeOffDto item)
+    {
+        SelectTimeOff(item);
+        OpenEditSelected();
+    }
+
+    private enum ModalModeEnum { Create, Edit }
+}

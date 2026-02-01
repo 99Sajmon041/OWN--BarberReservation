@@ -51,7 +51,7 @@ public sealed class CreateSelfTimeOffCommandHandler(
         var workDay = await unitOfWork.HairdresserWorkingHoursRepository.GetEffectiveFromDayByTimeOffAsync(hairdresser.Id, DateOnly.FromDateTime(freeFrom), ct);
         if(workDay is null)
         {
-            logger.LogInformation("Hairdresser tries to free, but no working-day was found. Hairdresser ID: {HairdresserId}, Day: {WorkingDay}",
+            logger.LogInformation("Hairdresser tries to set free, but no working-day was found. Hairdresser ID: {HairdresserId}, Day: {WorkingDay}",
                 hairdresser.Id, 
                 freeTo.Date.ToString("yyyy.MM.dd"));
 
@@ -70,7 +70,7 @@ public sealed class CreateSelfTimeOffCommandHandler(
             throw new ConflictException("Nelze vytvořit volno, zasahuje do pracovní doby. Musí být uvnitř ní.");
         }
 
-        var daysFree = await unitOfWork.HairdresserTimeOffRepository.GetAllByDayForHairdresserAsync(hairdresser.Id, freeFrom, ct);
+        var daysFree = await unitOfWork.HairdresserTimeOffRepository.GetAllByDayForHairdresserAsync(hairdresser.Id, DateOnly.FromDateTime(freeFrom), ct);
         foreach (var freeTime in daysFree)
         {
             if (freeTime.StartAt < freeTo && freeTime.EndAt > freeFrom)
@@ -99,6 +99,7 @@ public sealed class CreateSelfTimeOffCommandHandler(
         }
 
         var timeOff = mapper.Map<HairdresserTimeOff>(request);
+        timeOff.HairdresserId = hairdresser.Id; // - toto jsem neměl
 
         unitOfWork.HairdresserTimeOffRepository.Add(timeOff);
 

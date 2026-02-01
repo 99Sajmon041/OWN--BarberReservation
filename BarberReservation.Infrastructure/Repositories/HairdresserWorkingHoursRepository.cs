@@ -97,4 +97,13 @@ public sealed class HairdresserWorkingHoursRepository(BarberDbContext context) :
             && x.HairdresserId == hairdresserId
             && x.EffectiveFrom <= TimeOffDay, ct);
     }
+
+    public async Task<HairdresserWorkingHours?> GetEffectiveForDayAsync(string hairdresserId, DayOfWeek dayOfWeek, DateOnly day, CancellationToken ct)
+    {
+        return await _context.HairdresserWorkingHours
+            .AsNoTracking()
+            .Where(x => x.HairdresserId == hairdresserId && x.DayOfWeek == dayOfWeek && x.EffectiveFrom <= day)
+            .OrderByDescending(x => x.EffectiveFrom)
+            .FirstOrDefaultAsync(ct);
+    }
 }

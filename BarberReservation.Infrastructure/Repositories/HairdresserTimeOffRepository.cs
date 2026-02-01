@@ -126,11 +126,14 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
         return (items, total);
     }
 
-    public async Task<IReadOnlyList<HairdresserTimeOff>> GetAllByDayForHairdresserAsync(string hairdresserId, DateTime today, CancellationToken ct)
+    public async Task<List<HairdresserTimeOff>> GetAllByDayForHairdresserAsync(string hairdresserId, DateOnly day, CancellationToken ct)
     {
-        return await _context
-            .HairdresserTimeOffs
-            .Where(x => x.HairdresserId == hairdresserId && x.StartAt.Date == today.Date)
+        var from = day.ToDateTime(TimeOnly.MinValue);
+        var to = from.AddDays(1);
+
+        return await _context.HairdresserTimeOffs
+            .Where(x => x.HairdresserId == hairdresserId && x.StartAt >= from && x.StartAt < to)
+            .OrderBy(x => x.StartAt)
             .ToListAsync(ct);
     }
 
