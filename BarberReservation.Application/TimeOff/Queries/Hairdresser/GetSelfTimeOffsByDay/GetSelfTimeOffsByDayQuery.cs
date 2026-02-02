@@ -1,5 +1,5 @@
 ﻿using BarberReservation.Application.Common.Security;
-using BarberReservation.Shared.Models.TimeOff.Hairdresser;
+using BarberReservation.Shared.Models.TimeOff;
 using MediatR;
 
 namespace BarberReservation.Application.TimeOff.Queries.Hairdresser.GetSelfTimeOffsByDay;

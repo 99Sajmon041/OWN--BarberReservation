@@ -340,4 +340,18 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             .Include(x => x.HairdresserService)
             .ThenInclude(x => x.Service);
     }
+
+    public async Task<List<Reservation>> GetForHairdresserDailyAsync(string hairdresserId, DateOnly day, CancellationToken ct)
+    {
+        var from = day.ToDateTime(TimeOnly.MinValue);
+        var to = from.AddDays(1);
+
+        return await _context.Reservations
+            .AsNoTracking()
+            .Include(x => x.HairdresserService)
+            .ThenInclude(x => x.Service)
+            .Where(x => x.HairdresserId == hairdresserId && x.StartAt >= from && x.StartAt < to)
+            .OrderBy(x => x.StartAt)
+            .ToListAsync(ct);
+    }
 }

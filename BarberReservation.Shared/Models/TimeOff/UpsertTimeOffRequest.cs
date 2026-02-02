@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.TimeOff.Common;
+namespace BarberReservation.Shared.Models.TimeOff;
 
 public class UpsertTimeOffRequest
 {

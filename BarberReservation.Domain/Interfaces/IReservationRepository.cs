@@ -17,4 +17,5 @@ public interface IReservationRepository
     Task CreateAsync(Reservation reservation, CancellationToken ct);
     Task<bool> ExistsOverlapForHairdresserAsync(string hairdresserId, DateTime startAt, DateTime endAt, CancellationToken ct);
     Task<bool> ExistAnyUpComingReservationAsync(string userId, CancellationToken ct);
+    Task<List<Reservation>> GetForHairdresserDailyAsync(string hairdresserId, DateOnly day, CancellationToken ct);
 }

@@ -2,7 +2,7 @@
 using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.TimeOff.Common;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.TimeOff.Hairdresser;
+using BarberReservation.Shared.Models.TimeOff;
 using MediatR;
 
 namespace BarberReservation.Application.TimeOff.Queries.Hairdresser.GetAllSelfTimeOffs;

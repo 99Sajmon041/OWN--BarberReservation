@@ -2,6 +2,7 @@
 using BarberReservation.Application.Reservation.Mapping;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairDresserReservation;
+using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairdresserReservationByDay;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Reservation.Common;
@@ -45,6 +46,13 @@ namespace BarberReservation.API.Controllers
             var command = request.ToCreateHairDresserReservationCommand();
             var reservationId = await mediator.Send(command, ct);
             return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
+        }
+
+        [HttpGet("daily")]
+        public async Task<ActionResult<List<HairdresserReservationDto>>> GetMyDailyReservations([FromQuery]DateOnly day, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetHairdresserReservationByDayQuery(day), ct);
+            return Ok(result);
         }
     }
 }

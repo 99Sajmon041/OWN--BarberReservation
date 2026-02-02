@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.TimeOff.Hairdresser;
+using BarberReservation.Shared.Models.TimeOff;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

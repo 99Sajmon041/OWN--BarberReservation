@@ -1,7 +1,9 @@
 ﻿@page "/time-off/detail"
+@using BarberReservation.Shared.Models.TimeOff
 
 @inject ITimeOffService TimeOffService
 @inject IWorkingHoursService WorkingHoursService
+@inject IReservationService ReservationService
 @inject MessageService MessageService
 @inject AuthState AuthState
 @inject NavigationManager Nav
@@ -15,19 +17,19 @@
             </p>
 
             <div class="row-actions mt-10">
-                <button class="btn btn-outline btn-compact"
+                <button class="btn btn-outline"
                         @onclick="PrevDayAsync"
                         disabled="@(!CanGoPrev || IsLoading)">
                     ←
                 </button>
 
-                <button class="btn btn-outline btn-compact"
+                <button class="btn btn-outline"
                         @onclick="GoTodayAsync"
                         disabled="@IsLoading">
                     Dnes
                 </button>
 
-                <button class="btn btn-outline btn-compact"
+                <button class="btn btn-outline"
                         @onclick="NextDayAsync"
                         disabled="@(IsLoading)">
                     →
@@ -48,7 +50,7 @@
             </div>
 
             <div class="toolbar-right">
-                <button class="btn btn-success btn-compact"
+                <button class="btn btn-primary"
                         @onclick="OpenCreate"
                         disabled="@(!CanEditDay || IsLoading)">
                     + Vytvořit volno
@@ -84,9 +86,13 @@
                         {
                             <div class="muted small mt-6">Žádné volno pro tento den.</div>
                         }
+                        @if (Reservations.Count == 0)
+                        {
+                            <div class="muted small mt-6">Žádné rezervace pro tento den.</div>
+                        }
                     </div>
 
-                    <button class="btn btn-outline btn-compact"
+                    <button class="btn btn-outline"
                             @onclick="Reload"
                             disabled="@IsLoading">
                         Obnovit
@@ -152,20 +158,41 @@
                                     </div>
                                 </button>
                             }
+
+                            @foreach (var r in Reservations.OrderBy(x => x.StartAt))
+                            {
+                                var top = ToTopPx(r.StartAt);
+                                var height = ToHeightPx(r.StartAt, r.EndAt);
+
+                                <div class="gcal-event reservation success"
+                                     style="@($"top:{top}px; height:{height}px")"
+                                     title="@($"{r.ServiceName} • {r.ClientFullName} ({r.ClientEmail}, {r.ClientPhone})")">
+
+                                    <div class="evt-row one-line">
+                                        <span class="evt-chip">Rezervace</span>
+                                        <span class="evt-dot">•</span>
+                                        <span class="evt-time">@r.StartAt.ToString("HH:mm")–@r.EndAt.ToString("HH:mm")</span>
+                                        <span class="evt-dot">•</span>
+                                        <span class="evt-reason">@r.ServiceName</span>
+                                        <span class="evt-dot">•</span>
+                                        <span class="evt-reason">@r.ClientFullName</span>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
 
                     <div class="row-between mt-14">
-                        <div class="muted small">Klikni na volno a pak uprav.</div>
+                        <div class="muted small">Klikněte na volno a pak upravte.</div>
 
                         <div class="row-actions">
-                            <button class="btn btn-outline btn-compact"
+                            <button class="btn btn-outline"
                                     @onclick="OpenEditSelected"
                                     disabled="@(SelectedTimeOff is null || !CanEditDay)">
                                 Upravit
                             </button>
 
-                            <button class="btn btn-danger btn-compact"
+                            <button class="btn btn-danger"
                                     @onclick="OpenDeleteSelected"
                                     disabled="@(SelectedTimeOff is null || !CanEditDay)">
                                 Smazat
@@ -217,14 +244,14 @@
     }
 
     <div class="ui-modal-foot">
-        <button class="btn btn-outline btn-compact" @onclick="CloseModal" disabled="@IsSaving">Zrušit</button>
+        <button class="btn btn-outline" @onclick="CloseModal" disabled="@IsSaving">Zrušit</button>
 
         @if (ModalMode == ModalModeEnum.Edit)
         {
-            <button class="btn btn-danger btn-compact" @onclick="ConfirmDelete" disabled="@IsSaving">Smazat</button>
+            <button class="btn btn-danger" @onclick="ConfirmDelete" disabled="@IsSaving">Smazat</button>
         }
 
-        <button class="btn btn-success btn-compact" @onclick="Save" disabled="@(!CanEditDay || IsSaving)">
+        <button class="btn btn-primary" @onclick="Save" disabled="@(!CanEditDay || IsSaving)">
             @(IsSaving ? "Ukládám..." : "Uložit")
         </button>
     </div>
@@ -246,8 +273,8 @@
     </div>
 
     <div class="ui-modal-foot">
-        <button class="btn btn-outline btn-compact" @onclick="() => DeleteModalOpen = false" disabled="@IsSaving">Zrušit</button>
-        <button class="btn btn-danger btn-compact" @onclick="Delete" disabled="@(!CanEditDay || IsSaving)">
+        <button class="btn btn-outline" @onclick="() => DeleteModalOpen = false" disabled="@IsSaving">Zrušit</button>
+        <button class="btn btn-danger" @onclick="Delete" disabled="@(!CanEditDay || IsSaving)">
             @(IsSaving ? "Mažu..." : "Smazat")
         </button>
     </div>
@@ -264,6 +291,7 @@
     private DateOnly SelectedDay = DateOnly.FromDateTime(DateTime.Today);
 
     private List<HairdresserTimeOffDto> TimeOffs = new();
+    private List<HairdresserReservationDto> Reservations = new();
     private HairdresserTimeOffDto? SelectedTimeOff;
     private int? SelectedTimeOffId;
 
@@ -364,6 +392,7 @@
             }
 
             TimeOffs = await TimeOffService.GetByDayAsync(SelectedDay, CancellationToken.None);
+            Reservations = await ReservationService.GetByDayAsync(SelectedDay, CancellationToken.None);
 
             BuildNonWorkBlocks();
 
@@ -425,7 +454,6 @@
         await SetDayAsync(day, direction: +1, showWeekendInfo: true);
     }
 
-
     private async Task PrevDayAsync()
     {
         if (!CanGoPrev) return;
@@ -480,10 +508,20 @@
 
     private void OpenEditSelected()
     {
+        if (SelectedTimeOff is null)
+        {
+            MessageService.ShowError("Vyber volno.");
+            return;
+        }
+
+        if (!IsWithinAllowedModifyWindow(SelectedTimeOff))
+        {
+            MessageService.ShowError("Volno nelze upravovat méně než hodinu před začátkem nebo pokud již probíhá.");
+            return;
+        }
+
         FormError = null;
         FormReasonError = null;
-
-        if (SelectedTimeOff is null) return;
 
         ModalMode = ModalModeEnum.Edit;
         ModalTitle = "Upravit volno";
@@ -497,7 +535,18 @@
 
     private void OpenDeleteSelected()
     {
-        if (SelectedTimeOff is null) return;
+        if (SelectedTimeOff is null)
+        {
+            MessageService.ShowError("Vyber volno.");
+            return;
+        }
+
+        if (!IsWithinAllowedModifyWindow(SelectedTimeOff))
+        {
+            MessageService.ShowError("Volno nelze smazat méně než hodinu před začátkem nebo pokud již probíhá.");
+            return;
+        }
+
         DeleteModalOpen = true;
     }
 
@@ -695,4 +744,9 @@
     }
 
     private enum ModalModeEnum { Create, Edit }
+
+    private bool IsWithinAllowedModifyWindow(HairdresserTimeOffDto timeOff)
+    {
+        return timeOff.StartAt > DateTime.UtcNow.AddHours(1);
+    }
 }

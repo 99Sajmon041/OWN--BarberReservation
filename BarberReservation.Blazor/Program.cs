@@ -31,6 +31,7 @@ builder.Services.AddScoped<IHairdresserService, HairdresserService>();
 builder.Services.AddScoped<ILookUpsService, LookUpsService>();
 builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
 builder.Services.AddScoped<ITimeOffService, TimeOffService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
 builder.Services.AddHttpClient("Api", client =>
 {

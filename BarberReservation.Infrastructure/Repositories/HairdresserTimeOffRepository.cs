@@ -1,8 +1,7 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
-using BarberReservation.Shared.Models.TimeOff.Admin;
-using BarberReservation.Shared.Models.TimeOff.Hairdresser;
+using BarberReservation.Shared.Models.TimeOff;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;
@@ -35,7 +34,7 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
         return await _context.HairdresserTimeOffs.FirstOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
     }
 
-    public async Task<(IReadOnlyList<HairdresserTimeOff>, int)> GetAllPagedForAdminAsync(AdminHairdresserPagedRequest request, int? year, int? month, CancellationToken ct)
+    public async Task<(IReadOnlyList<HairdresserTimeOff>, int)> GetAllPagedForAdminAsync(HairdresserPagedRequest request, int? year, int? month, CancellationToken ct)
     {
         var query = _context.HairdresserTimeOffs
             .AsNoTracking()

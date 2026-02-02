@@ -35,6 +35,25 @@
                 @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                 {
                     <a class="nav-link" href="/working-hours">Pracovní doba</a>
+
+                    <div class="nav-dropdown">
+                        <button type="button"
+                                class="nav-link nav-dropdown-toggle"
+                                @onclick="ToggleTimeOffMenu"
+                                @onclick:stopPropagation="true"
+                                aria-haspopup="menu"
+                                aria-expanded="@_timeOffMenuOpen">
+                            Volna
+                        </button>
+
+                        @if (_timeOffMenuOpen)
+                        {
+                            <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
+                                <a class="nav-dropdown-item" href="/time-off/list" @onclick="CloseTimeOffMenu">Zobrazit volna</a>
+                                <a class="nav-dropdown-item" href="/time-off/detail" @onclick="CloseTimeOffMenu">Vytvořit volno</a>
+                            </div>
+                        }
+                    </div>
                 }
             </nav>
 
@@ -61,6 +80,12 @@
             }
         </div>
 
+        @if (_timeOffMenuOpen && !_mobileMenuOpen)
+        {
+            <div class="dropdown-backdrop" @onclick="CloseTimeOffMenu"></div>
+        }
+
+
         @if (_mobileMenuOpen)
         {
             <div class="mobile-overlay" @onclick="CloseMobileMenu">
@@ -83,6 +108,18 @@
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                     {
                         <a class="mobile-link" href="/working-hours" @onclick="CloseMobileMenu">Pracovní doba</a>
+
+                        <button type="button" class="mobile-link mobile-link-toggle" @onclick="ToggleTimeOffMenu">
+                            Volna
+                        </button>
+
+                        @if (_timeOffMenuOpen)
+                        {
+                            <div class="mobile-submenu">
+                                <a class="mobile-link" href="/time-off/list" @onclick="CloseMobileMenu">Zobrazit volna</a>
+                                <a class="mobile-link" href="/time-off/detail" @onclick="CloseMobileMenu">Vytvořit volno</a>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -130,6 +167,8 @@
     private bool _disposed;
     private bool _mobileMenuOpen;
     private bool _authLoaded;   
+    private bool _timeOffMenuOpen;
+
     private EventHandler<LocationChangedEventArgs>? locationChangedHandler;
 
 
@@ -138,7 +177,12 @@
         MessageService.OnChange += OnMessageChanged;
         AuthState.OnChange += OnAuthChanged;
 
-        locationChangedHandler = (_, __) => _mobileMenuOpen = false;
+        locationChangedHandler = (_, __) =>
+        {
+            _mobileMenuOpen = false;
+            _timeOffMenuOpen = false;
+        };
+
         Nav.LocationChanged += locationChangedHandler;
     }
 
@@ -216,6 +260,15 @@
             Nav.LocationChanged -= locationChangedHandler;
     }
 
-    private void CloseMobileMenu() => _mobileMenuOpen = false;
     private void ClearMessage() => MessageService.Clear();
+
+    private void ToggleTimeOffMenu() => _timeOffMenuOpen = !_timeOffMenuOpen;
+
+    private void CloseTimeOffMenu() => _timeOffMenuOpen = false;
+
+    private void CloseMobileMenu()
+    {
+        _mobileMenuOpen = false;
+        _timeOffMenuOpen = false;
+    }
 }

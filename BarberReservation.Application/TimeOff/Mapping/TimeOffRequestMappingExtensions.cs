@@ -2,17 +2,15 @@
 using BarberReservation.Application.TimeOff.Commands.Hairdresser.UpdateSelfTimeOff;
 using BarberReservation.Application.TimeOff.Queries.Admin.GetAllAdminTimeOffs;
 using BarberReservation.Application.TimeOff.Queries.Hairdresser.GetAllSelfTimeOffs;
-using BarberReservation.Shared.Models.TimeOff.Admin;
-using BarberReservation.Shared.Models.TimeOff.Common;
-using BarberReservation.Shared.Models.TimeOff.Hairdresser;
+using BarberReservation.Shared.Models.TimeOff;
 
 namespace BarberReservation.Application.TimeOff.Mapping;
 
 public static class TimeOffRequestMappingExtensions
 {
-    public static AdminHairdresserPagedRequest ToAdminHairdresserPagedRequest(this GetAllAdminTimeOffsQuery query)
+    public static HairdresserPagedRequest ToAdminHairdresserPagedRequest(this GetAllAdminTimeOffsQuery query)
     {
-        return new AdminHairdresserPagedRequest
+        return new HairdresserPagedRequest
         {
             Desc = query.Desc,
             HairdresserId = query.HairdresserId,

@@ -4,15 +4,14 @@ using BarberReservation.Application.TimeOff.Queries.Hairdresser.GetAllSelfTimeOf
 using BarberReservation.Application.TimeOff.Queries.Hairdresser.GetSelfTimeOffsByDay;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.TimeOff.Common;
-using BarberReservation.Shared.Models.TimeOff.Hairdresser;
+using BarberReservation.Shared.Models.TimeOff;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberReservation.API.Controllers
 {
-    [Route("api/me/timeoff")]
+    [Route("api/me/time-off")]
     [Authorize(Roles = nameof(UserRoles.Hairdresser))]
     [ApiController]
     public class HairdressersHairdresserTimeOffController(IMediator mediator) : ControllerBase

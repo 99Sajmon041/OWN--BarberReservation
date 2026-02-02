@@ -67,7 +67,7 @@ public sealed class CreateSelfTimeOffCommandHandler(
                 freeTo.ToString("HH:mm"),
                 freeFrom.ToString("yyyy.MM.dd"));
 
-            throw new ConflictException("Nelze vytvořit volno, zasahuje do pracovní doby. Musí být uvnitř ní.");
+            throw new ConflictException("Nelze vytvořit volno mimo pracovní dobu.");
         }
 
         var daysFree = await unitOfWork.HairdresserTimeOffRepository.GetAllByDayForHairdresserAsync(hairdresser.Id, DateOnly.FromDateTime(freeFrom), ct);
