@@ -44,7 +44,7 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
         if (!string.IsNullOrWhiteSpace(request.HairdresserId))
             query = query.Where(x => x.HairdresserId == request.HairdresserId);
 
-        var term = request.Search?.Trim().ToLowerInvariant();
+        var term = request.Search?.Trim();
         
         if(!string.IsNullOrWhiteSpace(term))
         {
@@ -92,9 +92,10 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
     {
         var query = _context.HairdresserTimeOffs
             .AsNoTracking()
+            .Include(x => x.Hairdresser)
             .Where(x => x.HairdresserId == hairdresserId);
 
-        var term = request.Search?.Trim().ToLowerInvariant();
+        var term = request.Search?.Trim();
 
         if (!string.IsNullOrWhiteSpace(term))
         {

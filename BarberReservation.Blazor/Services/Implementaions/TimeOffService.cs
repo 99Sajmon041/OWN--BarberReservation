@@ -14,21 +14,21 @@ public sealed class TimeOffService(IApiClient api, AuthState authState) : ITimeO
     {
         var qs = $"day={day:yyyy-MM-dd}";
 
-        return await api.GetAsync<List<HairdresserTimeOffDto>>($"api/me/timeoff/daily?{qs}", ct);
+        return await api.GetAsync<List<HairdresserTimeOffDto>>($"api/me/time-off/daily?{qs}", ct);
     }
 
     public async Task CreateAsync(UpsertTimeOffRequest request, CancellationToken ct)
     {
-        await api.SendAsync(HttpMethod.Post, "api/me/timeoff", request, ct);
+        await api.SendAsync(HttpMethod.Post, "api/me/time-off", request, ct);
     }
     public async Task UpdateAsync(int id, UpsertTimeOffRequest request, CancellationToken ct)
     {
-        await api.SendAsync(HttpMethod.Put, $"api/me/timeoff/{id}", request, ct);
+        await api.SendAsync(HttpMethod.Put, $"api/me/time-off/{id}", request, ct);
     }
 
     public async Task DeleteAsync(int id, CancellationToken ct)
     {
-        await api.SendAsync(HttpMethod.Delete, $"api/me/timeoff/{id}", null, ct);
+        await api.SendAsync(HttpMethod.Delete, $"api/me/time-off/{id}", null, ct);
     }
 
     public async Task<PagedResult<HairdresserTimeOffDto>> GetAllAsync(HairdresserPagedRequest request, CancellationToken ct)
@@ -62,7 +62,7 @@ public sealed class TimeOffService(IApiClient api, AuthState authState) : ITimeO
 
         var qs = string.Join("&", parts);
 
-        var url = isAdmin ? $"api/admin/time-off?{qs}" : $"api/me/timeoff?{qs}";
+        var url = isAdmin ? $"api/admin/time-off?{qs}" : $"api/me/time-off?{qs}";
 
         return await api.GetAsync<PagedResult<HairdresserTimeOffDto>>(url, ct);
     }

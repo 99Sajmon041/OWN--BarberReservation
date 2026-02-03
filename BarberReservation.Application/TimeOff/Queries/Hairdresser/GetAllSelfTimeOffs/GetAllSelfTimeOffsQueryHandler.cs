@@ -6,6 +6,7 @@ using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.TimeOff;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace BarberReservation.Application.TimeOff.Queries.Hairdresser.GetAllSelfTimeOffs;
 
