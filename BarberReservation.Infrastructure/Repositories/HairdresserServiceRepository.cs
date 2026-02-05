@@ -153,4 +153,11 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
 
         return (items, total);
     }
+
+    public async Task<bool> ExistsAnyByHairdresserAsync(string hairdresserId, CancellationToken ct)
+    {
+        return await _context.HairdresserServices
+            .AsNoTracking()
+            .AnyAsync(x => x.HairdresserId == hairdresserId && x.IsActive, ct);
+    }
 }

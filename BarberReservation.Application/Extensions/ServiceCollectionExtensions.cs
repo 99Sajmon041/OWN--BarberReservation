@@ -1,5 +1,6 @@
 ﻿using BarberReservation.Application.Authorization.Command.Login;
 using BarberReservation.Application.Behaviors;
+using BarberReservation.Application.ReservationEnums;
 using BarberReservation.Application.User.Mapping;
 using BarberReservation.Application.UserIdentity;
 using FluentValidation;

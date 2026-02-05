@@ -55,9 +55,19 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             .AnyAsync(x => x.HairdresserId == hairdresserId && x.Status != ReservationStatus.Canceled && (x.StartAt < endAt && x.EndAt > startAt), ct);
     }
 
-    public async Task<bool> ExistAnyUpComingReservationAsync(string userId, CancellationToken ct)
+    public async Task<bool> ExistAnyUpComingReservationForClientAsync(string userId, CancellationToken ct)
     {
         return await _context.Reservations.AnyAsync(x => x.CustomerId == userId && x.Status != ReservationStatus.Canceled && x.StartAt >= DateTime.UtcNow, ct);
+    }
+
+    public async Task<bool> ExistAnyUpComingReservationForHairdresserAsync(string hairdresserId, CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+
+        return await _context.Reservations.AnyAsync(
+            x => x.HairdresserId == hairdresserId
+                 && x.Status != ReservationStatus.Canceled
+                 && x.StartAt >= now, ct);
     }
 
     public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(ReservationPagedRequest request, CancellationToken ct)
@@ -346,6 +356,7 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
 
         return await _context.Reservations
             .AsNoTracking()
+            .Include(x => x.Customer)
             .Include(x => x.HairdresserService)
             .ThenInclude(x => x.Service)
             .Where(x => x.HairdresserId == hairdresserId && x.StartAt >= from && x.StartAt < to)

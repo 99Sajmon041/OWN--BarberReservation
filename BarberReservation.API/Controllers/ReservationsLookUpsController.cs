@@ -48,18 +48,21 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpGet("reservation-canceled-reasons")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<EnumLookUpDto>>> GetCanceledReasons(CancellationToken ct)
         {
             return Ok(await mediator.Send(new GetEnumLookUpQuery<CanceledReason>(), ct));
         }
 
         [HttpGet("reservation-canceled-by")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<EnumLookUpDto>>> GetCanceledBy(CancellationToken ct)
         {
             return Ok(await mediator.Send(new GetEnumLookUpQuery<ReservationCanceledBy>(), ct));
         }
 
         [HttpGet("reservation-statuses")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<EnumLookUpDto>>> GetReservationStatuses(CancellationToken ct)
         {
             return Ok(await mediator.Send(new GetEnumLookUpQuery<ReservationStatus>(), ct));

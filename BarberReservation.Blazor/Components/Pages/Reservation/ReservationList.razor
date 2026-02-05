@@ -64,7 +64,7 @@ else
             </div>
 
             <div class="row-between filters-row" style="align-items:flex-end;">
-                @if (!isHairdresser)
+                @if (isAdmin || isCustomer)
                 {
                     <div class="field" style="margin:0; min-width: 220px;">
                         <label class="label">Kadeřník</label>
@@ -91,33 +91,33 @@ else
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Status</label>
-                    <select class="input" disabled="@isLoading" @bind="status" @bind:after="LoadAsync">
+                    <select class="input" disabled="@isLoading" value="@status" @onchange="OnStatusChanged">
                         <option value="">Všechny</option>
                         @foreach (var rs in reservationStatuses)
                         {
-                            <option value="@rs.Value">@rs.LabelCs</option>
+                            <option value="@((ReservationStatus)rs.Value)">@rs.LabelCs</option>
                         }
                     </select>
                 </div>
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Zrušeno (kým)</label>
-                    <select class="input" disabled="@isLoading" @bind="canceledBy" @bind:after="LoadAsync">
+                    <select class="input" disabled="@(!cancelFiltersEnabled || isLoading)" @bind="canceledBy" @bind:after="LoadAsync">
                         <option value="">Všichni</option>
                         @foreach (var cb in canceledByOptions)
                         {
-                            <option value="@cb.Value">@cb.LabelCs</option>
+                            <option value="@((ReservationCanceledBy)cb.Value)">@cb.LabelCs</option>
                         }
                     </select>
                 </div>
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Důvod zrušení</label>
-                    <select class="input" disabled="@isLoading" @bind="canceledReason" @bind:after="LoadAsync">
+                    <select class="input" disabled="@(!cancelFiltersEnabled || isLoading)" @bind="canceledReason" @bind:after="LoadAsync">
                         <option value="">Všechny</option>
                         @foreach (var cr in canceledReasons)
                         {
-                            <option value="@cr.Value">@cr.LabelCs</option>
+                            <option value="@((CanceledReason)cr.Value)">@cr.LabelCs</option>
                         }
                     </select>
                 </div>
@@ -125,12 +125,13 @@ else
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Řazení</label>
                     <select disabled="@isLoading" class="input" @bind="sortBy" @bind:after="LoadAsync">
+                        <option value="">Vyberte možnost</option>
                         <option value="service">Služba</option>
                         <option value="status">Status</option>
                         <option value="createdat">Vytvořeno</option>
                         <option value="startat">Začátek</option>
                         <option value="canceledat">Zrušeno (kdy)</option>
-                        @if (!isHairdresser)
+                        @if (isAdmin || isCustomer)
                         {
                             <option value="hairdresser">Kadeřník</option>
                         }
@@ -175,14 +176,41 @@ else
                     <input type="date" class="input" @bind="startTo" @bind:after="LoadAsync" />
                 </div>
 
-                <div class="field" style="margin:0; min-width: 220px;">
+                <div class="field" style="margin:0; min-width: 220px; flex:0 0 220px;">
                     <label class="label">Zrušeno od</label>
-                    <input type="date" class="input" @bind="canceledFrom" @bind:after="LoadAsync" />
+                    <input type="date"
+                           class="input"
+                           disabled="@(!cancelFiltersEnabled || isLoading)"
+                           value="@FormatDateForInput(canceledFrom)"
+                           @onchange="OnCanceledFromChanged" />
+                    @if (cancelFiltersEnabled && canceledFrom is not null)
+                    {
+                        <div class="muted" style="font-size:12px; margin-top:6px;">
+                            @canceledFrom.Value.ToString("dd.MM.yyyy")
+                        </div>
+                    }
                 </div>
 
-                <div class="field" style="margin:0; min-width: 220px;">
+                <div class="field" style="margin:0; min-width: 220px; flex:0 0 220px;">
                     <label class="label">Zrušeno do</label>
-                    <input type="date" class="input" @bind="canceledTo" @bind:after="LoadAsync" />
+                    <input type="date"
+                           class="input"
+                           disabled="@(!cancelFiltersEnabled || isLoading)"
+                           value="@FormatDateForInput(canceledTo)"
+                           @onchange="OnCanceledToChanged" />
+                    @if (cancelFiltersEnabled && canceledTo is not null)
+                    {
+                        <div class="muted" style="font-size:12px; margin-top:6px;">
+                            @canceledTo.Value.ToString("dd.MM.yyyy")
+                        </div>
+                    }
+                </div>
+
+                <div class="field" style="margin:0 0 0 auto; min-width: 160px; flex:0 0 160px; text-align:right;">
+                    <label class="label">&nbsp;</label>
+                    <button class="btn btn-primary" type="button" @onclick="ResetFiltersAsync" disabled="@isLoading">
+                        Zrušit filtry
+                    </button>
                 </div>
             </div>
 
@@ -198,18 +226,21 @@ else
             }
             else
             {
+                var showHairdresserCol = isAdmin || isCustomer;
+                var showClientCol = isAdmin || isHairdresser;
+
                 <div style="overflow:auto;">
                     <table style="width:100%; border-collapse: collapse;">
                         <thead>
                             <tr style="border-bottom:1px solid var(--line);">
                                 <th style="padding:10px 6px;">ID</th>
 
-                                @if (isAdmin)
+                                @if (showHairdresserCol)
                                 {
                                     <th style="padding:10px 6px;">Kadeřník</th>
-                                    <th style="padding:10px 6px;">Klient</th>
                                 }
-                                else if (isHairdresser)
+
+                                @if (showClientCol)
                                 {
                                     <th style="padding:10px 6px;">Klient</th>
                                 }
@@ -227,54 +258,60 @@ else
                                 <tr style="border-bottom:1px solid var(--line);">
                                     <td style="padding:10px 6px;">@r.Id</td>
 
-                                    @if (isAdmin)
+                                    @if (showHairdresserCol)
                                     {
                                         <td style="padding:10px 6px;">
                                             <span class="muted">@r.HairdresserFullName</span>
                                         </td>
-
-                                        <td style="padding:10px 6px;">
-                                            <span>@(string.IsNullOrWhiteSpace(r.ClientFullName) ? "-" : r.ClientFullName)</span>
-                                            <div class="muted" style="font-size:12px;">
-                                                @(!string.IsNullOrWhiteSpace(r.ClientEmail) ? r.ClientEmail : "")
-                                                @if (!string.IsNullOrWhiteSpace(r.ClientEmail) && !string.IsNullOrWhiteSpace(r.ClientPhone))
-                                                {
-                                                    <br />
-                                                }
-                                                @(!string.IsNullOrWhiteSpace(r.ClientPhone) ? r.ClientPhone : "")
-                                                @if (string.IsNullOrWhiteSpace(r.ClientFullName) && string.IsNullOrWhiteSpace(r.ClientEmail) && string.IsNullOrWhiteSpace(r.ClientPhone))
-                                                {
-                                                    <br />
-                                                    <span class="muted">CustomerId: @r.CustomerId</span>
-                                                }
-                                            </div>
-                                        </td>
                                     }
-                                    else if (isHairdresser)
+
+                                    @if (showClientCol)
                                     {
                                         <td style="padding:10px 6px;">
-                                            <span>@(string.IsNullOrWhiteSpace(r.ClientFullName) ? "-" : r.ClientFullName)</span>
-                                            <div class="muted" style="font-size:12px;">
-                                                @(!string.IsNullOrWhiteSpace(r.ClientEmail) ? r.ClientEmail : "")
-                                                @if (!string.IsNullOrWhiteSpace(r.ClientEmail) && !string.IsNullOrWhiteSpace(r.ClientPhone))
+                                            @{
+                                                var hasClient =
+                                                !string.IsNullOrWhiteSpace(r.ClientFullName) ||
+                                                !string.IsNullOrWhiteSpace(r.ClientEmail) ||
+                                                !string.IsNullOrWhiteSpace(r.ClientPhone);
+                                            }
+
+                                            @if (!hasClient)
+                                            {
+                                                <span class="muted">—</span>
+                                                @if (!string.IsNullOrWhiteSpace(r.CustomerId))
                                                 {
-                                                    <br />
+                                                    <div class="muted" style="font-size:12px;">CustomerId: @r.CustomerId</div>
                                                 }
-                                                @(!string.IsNullOrWhiteSpace(r.ClientPhone) ? r.ClientPhone : "")
-                                            </div>
+                                            }
+                                            else
+                                            {
+                                                <span>@(string.IsNullOrWhiteSpace(r.ClientFullName) ? "—" : r.ClientFullName)</span>
+
+                                                @if (!string.IsNullOrWhiteSpace(r.ClientEmail) || !string.IsNullOrWhiteSpace(r.ClientPhone))
+                                                {
+                                                    <div class="muted" style="font-size:12px;">
+                                                        @if (!string.IsNullOrWhiteSpace(r.ClientEmail))
+                                                        {
+                                                            <div>@r.ClientEmail</div>
+                                                        }
+                                                        @if (!string.IsNullOrWhiteSpace(r.ClientPhone))
+                                                        {
+                                                            <div>@r.ClientPhone</div>
+                                                        }
+                                                    </div>
+                                                }
+                                            }
                                         </td>
                                     }
 
-                                    <td style="padding:10px 6px;">
-                                        @r.ServiceName
-                                    </td>
+                                    <td style="padding:10px 6px;">@r.ServiceName</td>
 
                                     <td style="padding:10px 6px;">
                                         <span class="muted">@r.StartAt.ToString("dd.MM.yyyy HH:mm")</span>
                                     </td>
 
                                     <td style="padding:10px 6px;">
-                                        <span class="muted">@r.Status</span>
+                                        <span class="muted">@EnumTranslator.GetCzechreservationStatus(r.Status)</span>
                                     </td>
 
                                     <td style="padding:10px 6px; text-align:right;">
@@ -321,6 +358,12 @@ else
     private CancellationTokenSource? searchCts;
     private bool isAdmin;
     private bool isHairdresser;
+    private bool isCustomer;
+
+    private DateTime actualDate = DateTime.Today;
+    private DateTime prevYearActualDate;
+
+    bool cancelFiltersEnabled;
 
     private int page = 1;
     private int pageSize = 20;
@@ -363,14 +406,17 @@ else
 
             isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
             isHairdresser = AuthState.Roles.Contains(nameof(UserRoles.Hairdresser));
+            isCustomer = AuthState.Roles.Contains(nameof(UserRoles.Customer));
 
             services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
             reservationStatuses = await LookUpsService.GetAllReservationStatusesAsync(CancellationToken.None);
             canceledByOptions = await LookUpsService.GetAllCanceledByOptionsAsync(CancellationToken.None);
             canceledReasons = await LookUpsService.GetAllCanceledReasonsAsync(CancellationToken.None);
 
-            if (!isHairdresser)
+            if (isAdmin || isCustomer)
                 hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+            ApplyDefaultDates();
 
             await LoadAsync();
         }
@@ -395,6 +441,8 @@ else
     {
         isLoading = true;
 
+        cancelFiltersEnabled = status == ReservationStatus.Canceled;
+
         try
         {
             var req = new ReservationPagedRequest
@@ -405,7 +453,7 @@ else
                 SortBy = sortBy,
                 Desc = desc,
                 ServiceId = serviceId,
-                HairdresserId = !isHairdresser ? hairdresserId : null,
+                HairdresserId = (isAdmin || isCustomer) ? hairdresserId : null,
                 Status = status,
                 CanceledBy = canceledBy,
                 CanceledReason = canceledReason,
@@ -413,8 +461,8 @@ else
                 CreatedTo = createdTo,
                 StartFrom = startFrom,
                 StartTo = startTo,
-                CanceledFrom = canceledFrom,
-                CanceledTo = canceledTo
+                CanceledFrom = status == ReservationStatus.Canceled ? canceledFrom : null,
+                CanceledTo = status == ReservationStatus.Canceled ? canceledTo : null
             };
 
             model = await ReservationService.GetAllAsync(req, CancellationToken.None);
@@ -489,5 +537,92 @@ else
         catch (TaskCanceledException)
         {
         }
+    }
+
+    private async Task OnStatusChanged(ChangeEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
+            status = null;
+        else
+            status = Enum.Parse<ReservationStatus>(e.Value!.ToString()!, ignoreCase: true);
+
+        if (status != ReservationStatus.Canceled)
+        {
+            canceledBy = null;
+            canceledReason = null;
+            canceledFrom = null;
+            canceledTo = null;
+        }
+        else
+        {
+            if (canceledFrom is null) canceledFrom = prevYearActualDate;
+            if (canceledTo is null) canceledTo = actualDate;
+        }
+
+        page = 1;
+        await LoadAsync();
+    }
+
+    private static string FormatDateForInput(DateTime? value)
+    {
+        return value is null ? "" : value.Value.ToString("yyyy-MM-dd");
+    }
+
+    private async Task OnCanceledFromChanged(ChangeEventArgs e)
+    {
+        canceledFrom = ParseDateFromInput(e.Value?.ToString());
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task OnCanceledToChanged(ChangeEventArgs e)
+    {
+        canceledTo = ParseDateFromInput(e.Value?.ToString());
+        page = 1;
+        await LoadAsync();
+    }
+
+    private static DateTime? ParseDateFromInput(string? value)
+    {
+        return DateTime.TryParse(value, out var dt) ? dt.Date : null;
+    }
+
+    private void ApplyDefaultDates()
+    {
+        actualDate = DateTime.Today;
+        prevYearActualDate = actualDate.AddYears(-1);
+
+        createdFrom = prevYearActualDate;
+        createdTo = actualDate;
+
+        startFrom = prevYearActualDate;
+        startTo = actualDate;
+
+        canceledFrom = prevYearActualDate;
+        canceledTo = actualDate;
+    }
+
+    private async Task ResetFiltersAsync()
+    {
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = null;
+
+        page = 1;
+        pageSize = 20;
+        sortBy = "id";
+        desc = false;
+
+        serviceId = null;
+        hairdresserId = null;
+        status = null;
+        canceledBy = null;
+        canceledReason = null;
+
+        ApplyDefaultDates();
+
+        search = null;
+
+        await LoadAsync();
     }
 }

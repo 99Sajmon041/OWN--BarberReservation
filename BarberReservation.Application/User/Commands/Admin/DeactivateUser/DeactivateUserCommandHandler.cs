@@ -44,20 +44,38 @@ public sealed class DeactivateUserCommandHandler(
             throw new ValidationException("Není povolené deaktivovat uživatele v roli admin.");
         }
 
-        var upComingReservation = await unitOfWork.ReservationRepository.ExistAnyUpComingReservationAsync(user.Id, ct);
-        if(upComingReservation)
+        var isHairdresser = await userManager.IsInRoleAsync(user, nameof(UserRoles.Hairdresser));
+
+        if (isHairdresser)
         {
-            logger.LogWarning("User with ID: {UserId} has upcoming reservation. It is not allowed to deactivate them", request.Id);
+            if (await unitOfWork.HairdresserServiceRepository.ExistsAnyByHairdresserAsync(user.Id, ct))
+            {
+                logger.LogWarning("Hairdresser with ID: {UserId} can not be deactivated. He has active hairdresser services.", request.Id);
+
+                throw new ConflictException("Nelze deaktivovat kadeřníka, má stále aktivní své služby.");
+            }
+
+            if (await unitOfWork.ReservationRepository.ExistAnyUpComingReservationForHairdresserAsync(user.Id, ct))
+            {
+                logger.LogWarning("Hairdresser with ID: {UserId} can not be deactivated. He has active future reservations.", request.Id);
+
+                throw new ConflictException("Nelze deaktivovat kadeřníka, má nadcházející rezervace.");
+            }
+        }
+
+        if (await unitOfWork.ReservationRepository.ExistAnyUpComingReservationForClientAsync(user.Id, ct))
+        {
+            logger.LogWarning("User with ID: {UserId} has upcoming reservation. It is not allowed to deactivate them.", request.Id);
+
             throw new ConflictException("Není povolené deaktivovat uživatele, který má nadcházející rezervaci.");
         }
 
         user.IsActive = false;
 
         var updateResult = await userManager.UpdateAsync(user);
-        if(!updateResult.Succeeded)
+        if (!updateResult.Succeeded)
         {
             var error = string.Join(", ", updateResult.Errors.Select(e => e.Description));
-
             logger.LogError("Deactivation of the user failed. Error: {Errors}", error);
             throw new BarberReservation.Application.Exceptions.ValidationException("Chyba: " + error);
         }

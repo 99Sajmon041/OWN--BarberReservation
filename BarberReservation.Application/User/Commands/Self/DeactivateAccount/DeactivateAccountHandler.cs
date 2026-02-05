@@ -26,7 +26,7 @@ public sealed class DeactivateAccountHandler(
             throw new ConflictException("Deaktivace svého účtu je povolená pouze pro zákazníka.");
         }
 
-        var existsUpComingReservation = await unitOfWork.ReservationRepository.ExistAnyUpComingReservationAsync(appUser.Id, ct);
+        var existsUpComingReservation = await unitOfWork.ReservationRepository.ExistAnyUpComingReservationForClientAsync(appUser.Id, ct);
         if (existsUpComingReservation)
         {
             logger.LogWarning("User tries to deactivate own profile but he has up coming reservation - access denied. User with ID: {UserId}", appUser.Id);

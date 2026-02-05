@@ -8,54 +8,83 @@
 
 <div class="app-shell">
     <header class="topbar">
-        <div class="container topbar-inner">
-            <button class="hamburger" @onclick="() => _mobileMenuOpen = !_mobileMenuOpen" aria-label="Menu">☰</button>
+        <div class="container-wide topbar-inner">
+            <button class="hamburger" @onclick="ToggleMobileMenu" aria-label="Menu">☰</button>
 
-            <a class="brand">
+            <a class="brand" href="/">
                 <span class="brand-dot"></span>
                 Barber rezervace
             </a>
 
-            <nav class="nav-links">
-                <a class="nav-link" href="/">Domů</a>
+            <div class="nav-scroll">
+                <div class="nav-scroll-inner">
+                    <nav class="nav-links">
+                        <a class="nav-link" href="/">Domů</a>
 
-                @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
-                {
-                    <a class="nav-link" href="/users/list">Uživatelé</a>
-                    <a class="nav-link" href="/services/list">Služby</a>
-                }
-                @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)) && AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
-                {
-                    <a class="nav-link" href="/hairdresser-services/list">Služby kadeřníků</a>
-                }
-                @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
-                {
-                    <a class="nav-link" href="/hairdresser-services/list">Moje služby</a>
-                }
-                @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
-                {
-                    <a class="nav-link" href="/working-hours">Pracovní doba</a>
-
-                    <div class="nav-dropdown">
-                        <button type="button"
-                                class="nav-link nav-dropdown-toggle"
-                                @onclick="ToggleTimeOffMenu"
-                                @onclick:stopPropagation="true"
-                                aria-haspopup="menu"
-                                aria-expanded="@_timeOffMenuOpen">
-                            Volna
-                        </button>
-
-                        @if (_timeOffMenuOpen)
+                        @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                         {
-                            <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
-                                <a class="nav-dropdown-item" href="/time-off/list" @onclick="CloseTimeOffMenu">Zobrazit volna</a>
-                                <a class="nav-dropdown-item" href="/time-off/detail" @onclick="CloseTimeOffMenu">Vytvořit volno</a>
+                            <a class="nav-link" href="/users/list">Uživatelé</a>
+                            <a class="nav-link" href="/services/list">Služby</a>
+                        }
+
+                        @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)) && AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+                        {
+                            <a class="nav-link" href="/hairdresser-services/list">Služby kadeřníků</a>
+                        }
+
+                        @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                        {
+                            <a class="nav-link" href="/hairdresser-services/list">Moje služby</a>
+                        }
+
+                        @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                        {
+                            <a class="nav-link" href="/working-hours">Pracovní doba</a>
+
+                            <div class="nav-dropdown">
+                                <button type="button"
+                                        class="nav-link nav-dropdown-toggle"
+                                        @onclick="ToggleTimeOffMenu"
+                                        @onclick:stopPropagation="true"
+                                        aria-haspopup="menu"
+                                        aria-expanded="@_timeOffMenuOpen">
+                                    Volna
+                                </button>
+
+                                @if (_timeOffMenuOpen)
+                                {
+                                    <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
+                                        <a class="nav-dropdown-item" href="/time-off/list" @onclick="CloseAll">Zobrazit volna</a>
+                                        <a class="nav-dropdown-item" href="/time-off/detail" @onclick="CloseAll">Vytvořit volno</a>
+                                    </div>
+                                }
                             </div>
                         }
-                    </div>
-                }
-            </nav>
+
+                        @if (AuthState.IsAuthenticated)
+                        {
+                            <div class="nav-dropdown">
+                                <button type="button"
+                                        class="nav-link nav-dropdown-toggle"
+                                        @onclick="ToggleReservationMenu"
+                                        @onclick:stopPropagation="true"
+                                        aria-haspopup="menu"
+                                        aria-expanded="@_reservationMenuOpen">
+                                    Rezervace
+                                </button>
+
+                                @if (_reservationMenuOpen)
+                                {
+                                    <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
+                                        <a class="nav-dropdown-item" href="/reservation/list" @onclick="CloseAll">Zobrazit rezervace</a>
+                                        <a class="nav-dropdown-item" href="/reservation/create" @onclick="CloseAll">Vytvořit rezervaci</a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </nav>
+                </div>
+            </div>
 
             @if (!AuthState.IsAuthenticated)
             {
@@ -73,41 +102,36 @@
                         <button type="button" class="btn btn-link" @onclick="LogoutAsync">Odhlásit</button>
                     </div>
 
-                    <span class="user-pill">
-                        @AuthState.FullName · @AuthState.Role
-                    </span>
+                    <span class="user-pill">@AuthState.FullName · @AuthState.Role</span>
                 </div>
             }
         </div>
 
-        @if (_timeOffMenuOpen && !_mobileMenuOpen)
-        {
-            <div class="dropdown-backdrop" @onclick="CloseTimeOffMenu"></div>
-        }
-
-
         @if (_mobileMenuOpen)
         {
             <div class="mobile-overlay" @onclick="CloseMobileMenu">
-                <div class="mobile-menu container" @onclick:stopPropagation="true">
-                    <a class="mobile-link" href="/" @onclick="CloseMobileMenu">Domů</a>
+                <div class="mobile-menu" @onclick:stopPropagation="true">
+                    <a class="mobile-link" href="/" @onclick="CloseAll">Domů</a>
 
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                     {
-                        <a class="mobile-link" href="/users/list" @onclick="CloseMobileMenu">Uživatelé</a>
-                        <a class="mobile-link" href="/services/list" @onclick="CloseMobileMenu">Služby</a>
+                        <a class="mobile-link" href="/users/list" @onclick="CloseAll">Uživatelé</a>
+                        <a class="mobile-link" href="/services/list" @onclick="CloseAll">Služby</a>
                     }
+
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Admin)) && AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
                     {
-                        <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseMobileMenu">Služby kadeřníků</a>
+                        <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseAll">Služby kadeřníků</a>
                     }
+
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                     {
-                        <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseMobileMenu">Moje služby</a>
+                        <a class="mobile-link" href="/hairdresser-services/list" @onclick="CloseAll">Moje služby</a>
                     }
+
                     @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                     {
-                        <a class="mobile-link" href="/working-hours" @onclick="CloseMobileMenu">Pracovní doba</a>
+                        <a class="mobile-link" href="/working-hours" @onclick="CloseAll">Pracovní doba</a>
 
                         <button type="button" class="mobile-link mobile-link-toggle" @onclick="ToggleTimeOffMenu">
                             Volna
@@ -116,8 +140,23 @@
                         @if (_timeOffMenuOpen)
                         {
                             <div class="mobile-submenu">
-                                <a class="mobile-link" href="/time-off/list" @onclick="CloseMobileMenu">Zobrazit volna</a>
-                                <a class="mobile-link" href="/time-off/detail" @onclick="CloseMobileMenu">Vytvořit volno</a>
+                                <a class="mobile-link" href="/time-off/list" @onclick="CloseAll">Zobrazit volna</a>
+                                <a class="mobile-link" href="/time-off/detail" @onclick="CloseAll">Vytvořit volno</a>
+                            </div>
+                        }
+                    }
+
+                    @if (AuthState.IsAuthenticated)
+                    {
+                        <button type="button" class="mobile-link mobile-link-toggle" @onclick="ToggleReservationMenu">
+                            Rezervace
+                        </button>
+
+                        @if (_reservationMenuOpen)
+                        {
+                            <div class="mobile-submenu">
+                                <a class="mobile-link" href="/reservation/list" @onclick="CloseAll">Zobrazit rezervace</a>
+                                <a class="mobile-link" href="/reservation/create" @onclick="CloseAll">Vytvořit rezervaci</a>
                             </div>
                         }
                     }
@@ -126,8 +165,7 @@
         }
     </header>
 
-    <main class="content">
-
+    <main class="content" @onclick="CloseAllDropdowns">
         <div class="ui-msg-slot">
             <div class="container">
                 @if (MessageService.Current is not null)
@@ -153,7 +191,6 @@
                 @Body
             </div>
         </div>
-
     </main>
 
     <footer class="footer">
@@ -166,11 +203,11 @@
 @code {
     private bool _disposed;
     private bool _mobileMenuOpen;
-    private bool _authLoaded;   
+    private bool _authLoaded;
     private bool _timeOffMenuOpen;
+    private bool _reservationMenuOpen;
 
     private EventHandler<LocationChangedEventArgs>? locationChangedHandler;
-
 
     protected override void OnInitialized()
     {
@@ -181,6 +218,7 @@
         {
             _mobileMenuOpen = false;
             _timeOffMenuOpen = false;
+            _reservationMenuOpen = false;
         };
 
         Nav.LocationChanged += locationChangedHandler;
@@ -232,20 +270,21 @@
 
     private void OnMessageChanged()
     {
-        if (_disposed)
-            return;
-        try 
-        { 
-            _ = InvokeAsync(StateHasChanged); 
+        if (_disposed) return;
+
+        try
+        {
+            _ = InvokeAsync(StateHasChanged);
         }
         catch
-        {            
+        {
         }
     }
 
     private async Task LogoutAsync()
     {
         await AuthService.LogoutAsync();
+        CloseAll();
         Nav.NavigateTo("/", replace: true);
     }
 
@@ -262,13 +301,40 @@
 
     private void ClearMessage() => MessageService.Clear();
 
-    private void ToggleTimeOffMenu() => _timeOffMenuOpen = !_timeOffMenuOpen;
+    private void ToggleMobileMenu()
+    {
+        _mobileMenuOpen = !_mobileMenuOpen;
+        if (_mobileMenuOpen)
+        {
+            _timeOffMenuOpen = false;
+            _reservationMenuOpen = false;
+        }
+    }
 
-    private void CloseTimeOffMenu() => _timeOffMenuOpen = false;
+    private void ToggleTimeOffMenu()
+    {
+        _timeOffMenuOpen = !_timeOffMenuOpen;
+        if (_timeOffMenuOpen) _reservationMenuOpen = false;
+    }
 
-    private void CloseMobileMenu()
+    private void ToggleReservationMenu()
+    {
+        _reservationMenuOpen = !_reservationMenuOpen;
+        if (_reservationMenuOpen) _timeOffMenuOpen = false;
+    }
+
+    private void CloseAllDropdowns()
+    {
+        _timeOffMenuOpen = false;
+        _reservationMenuOpen = false;
+    }
+
+    private void CloseMobileMenu() => _mobileMenuOpen = false;
+
+    private void CloseAll()
     {
         _mobileMenuOpen = false;
         _timeOffMenuOpen = false;
+        _reservationMenuOpen = false;
     }
 }
