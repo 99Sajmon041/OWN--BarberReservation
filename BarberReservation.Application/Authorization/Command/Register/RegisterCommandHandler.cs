@@ -13,7 +13,7 @@ public sealed class RegisterCommandHandler(
     UserManager<ApplicationUser> userManager,
     IMapper mapper) : IRequestHandler<RegisterCommand>
 {
-    public async Task<Unit> Handle(RegisterCommand request, CancellationToken ct)
+    public async Task Handle(RegisterCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -40,7 +40,5 @@ public sealed class RegisterCommandHandler(
         }
 
         logger.LogInformation("User: {FullName}, with e-mail: {Email} was created successfuly.", user.FullName, user.Email);
-
-        return Unit.Value;
     }
 }

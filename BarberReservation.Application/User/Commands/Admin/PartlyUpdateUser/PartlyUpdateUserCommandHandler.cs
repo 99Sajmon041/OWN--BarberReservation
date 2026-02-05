@@ -14,7 +14,7 @@ public sealed class PartlyUpdateUserCommandHandler(
     IMapper mapper,
     ICurrentAppUser currentAppUser) : IRequestHandler<PartlyUpdateUserCommand>
 {
-    public async Task<Unit> Handle(PartlyUpdateUserCommand request, CancellationToken ct)
+    public async Task Handle(PartlyUpdateUserCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -45,7 +45,5 @@ public sealed class PartlyUpdateUserCommandHandler(
         await userManager.UpdateSecurityStampAsync(user);
 
         logger.LogInformation("User with ID: {UserId} was updated successfuly.", user.Id);
-
-        return Unit.Value;
     }
 }

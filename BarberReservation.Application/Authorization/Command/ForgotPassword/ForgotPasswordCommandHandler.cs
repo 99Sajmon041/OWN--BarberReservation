@@ -10,7 +10,7 @@ public sealed class ForgotPasswordCommandHandler(
     UserManager<ApplicationUser> userManager,
     IEmailService emailService) : IRequestHandler<ForgotPasswordCommand>
 {
-    public async Task<Unit> Handle(ForgotPasswordCommand request, CancellationToken ct)
+    public async Task Handle(ForgotPasswordCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -20,13 +20,12 @@ public sealed class ForgotPasswordCommandHandler(
         if (user is null || !user.IsActive)
         {
             logger.LogInformation("Password reset request acknowledged for email: {Email}.", request.Email);
-            return Unit.Value;
+            return;
         }
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         await emailService.SendPasswordResetEmailAsync(user.Email!, token, ct);
 
         logger.LogInformation("Password reset instructions sent to: {Email}.", request.Email);
-        return Unit.Value;
     }
 }

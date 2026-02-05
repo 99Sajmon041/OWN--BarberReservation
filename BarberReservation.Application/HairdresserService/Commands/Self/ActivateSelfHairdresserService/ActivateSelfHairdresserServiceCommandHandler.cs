@@ -11,7 +11,7 @@ public sealed class ActivateSelfHairdresserServiceCommandHandler(
     ICurrentAppUser currentAppUser,
     IUnitOfWork unitOfWork) : IRequestHandler<ActivateSelfHairdresserServiceCommand>
 {
-    public async Task<Unit> Handle(ActivateSelfHairdresserServiceCommand request, CancellationToken ct)
+    public async Task Handle(ActivateSelfHairdresserServiceCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -25,14 +25,12 @@ public sealed class ActivateSelfHairdresserServiceCommandHandler(
         }
 
         if (hairdresserService.IsActive)
-            return Unit.Value;
+            return;
 
         hairdresserService.IsActive = true;
 
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Hairdresser service with ID {HairdresserServiceId} was reactivated by hairdresser ID {HairdresserId}.", request.Id, hairdresser.Id);
-
-        return Unit.Value;
     }
 }

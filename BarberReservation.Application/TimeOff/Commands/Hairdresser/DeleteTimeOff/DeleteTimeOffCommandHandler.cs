@@ -11,7 +11,7 @@ public sealed class DeleteTimeOffCommandHandler(
     ICurrentAppUser currentAppUser,
     IUnitOfWork unitOfWork) : IRequestHandler<DeleteTimeOffCommand>
 {
-    public async Task<Unit> Handle(DeleteTimeOffCommand request, CancellationToken ct)
+    public async Task Handle(DeleteTimeOffCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var hairdresser = currentAppUser.User;
@@ -46,7 +46,5 @@ public sealed class DeleteTimeOffCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Hairdresser delete own Free with ID: {FreeId}. Hairdresser ID: {HairdresserId}", request.Id, hairdresser.Id);
-
-        return Unit.Value;
     }
 }

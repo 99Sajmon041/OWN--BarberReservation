@@ -15,4 +15,18 @@ public class LookUpsService(IApiClient api) : ILookUpsService
     {
         return await api.GetAsync<List<ServiceLookUpDto>>("api/reservations/lookups/services", ct);
     }
+
+    public async Task<List<EnumLookUpDto>> GetAllCanceledByOptionsAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<List<EnumLookUpDto>>("api/reservations/lookups/reservation-canceled-by", ct);
+    }
+
+    public async Task<List<EnumLookUpDto>> GetAllCanceledReasonsAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<List<EnumLookUpDto>>("api/reservations/lookups/reservation-canceled-reasons", ct);
+    }
+    public async Task<List<EnumLookUpDto>> GetAllReservationStatusesAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<List<EnumLookUpDto>>("api/reservations/lookups/reservation-statuses", ct);
+    }
 }

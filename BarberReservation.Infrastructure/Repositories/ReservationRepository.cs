@@ -3,8 +3,6 @@ using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Reservation.Common;
-using BarberReservation.Shared.Models.Reservation.Hairdresser;
-using BarberReservation.Shared.Models.Reservation.Self;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;
@@ -62,7 +60,7 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         return await _context.Reservations.AnyAsync(x => x.CustomerId == userId && x.Status != ReservationStatus.Canceled && x.StartAt >= DateTime.UtcNow, ct);
     }
 
-    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(AdminReservationPagedRequest request, CancellationToken ct)
+    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(ReservationPagedRequest request, CancellationToken ct)
     {
         var query = GetBaseQuery();
 
@@ -155,7 +153,7 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         return (items, total);
     }
 
-    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForHairdresserAsync(HairdresserReservationPagedRequest request, string hairDresserId, CancellationToken ct)
+    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForHairdresserAsync(ReservationPagedRequest request, string hairDresserId, CancellationToken ct)
     {
         var query = GetBaseQuery();
 
@@ -241,7 +239,7 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         return (items, total);
     }
 
-    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForClientAsync(SelfReservationPagedRequest request, string userId, CancellationToken ct)
+    public async Task<(IReadOnlyList<Reservation>, int)> GetPagedForClientAsync(ReservationPagedRequest request, string userId, CancellationToken ct)
     {
         var query = GetBaseQuery();
         query = query.Where(x => x.CustomerId == userId);

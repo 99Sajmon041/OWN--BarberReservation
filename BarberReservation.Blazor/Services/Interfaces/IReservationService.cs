@@ -1,8 +1,10 @@
-﻿using BarberReservation.Shared.Models.Reservation.Hairdresser;
+﻿using BarberReservation.Shared.Models.Common;
+using BarberReservation.Shared.Models.Reservation.Common;
 
 namespace BarberReservation.Blazor.Services.Interfaces;
 
 public interface IReservationService
 {
-    Task<List<HairdresserReservationDto>> GetByDayAsync(DateOnly day, CancellationToken ct);
+    Task<List<ReservationDto>> GetByDayAsync(DateOnly day, CancellationToken ct);
+    Task<PagedResult<ReservationDto>> GetAllAsync(ReservationPagedRequest request, CancellationToken ct);
 }

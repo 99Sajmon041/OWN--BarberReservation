@@ -14,7 +14,7 @@ public sealed class UpdateAccountCommandHandler(
     IMapper mapper,
     ICurrentAppUser currentAppUser) : IRequestHandler<UpdateAccountCommand>
 {
-    public async Task<Unit> Handle(UpdateAccountCommand request, CancellationToken ct)
+    public async Task Handle(UpdateAccountCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -32,7 +32,5 @@ public sealed class UpdateAccountCommandHandler(
         }
 
         logger.LogInformation("User with ID: {UserId} updated profile successfully.", user.Id);
-
-        return Unit.Value;
     }
 }

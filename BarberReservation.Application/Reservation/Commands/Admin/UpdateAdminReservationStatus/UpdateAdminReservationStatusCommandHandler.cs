@@ -11,7 +11,7 @@ public sealed class UpdateAdminReservationStatusCommandHandler(
     ILogger<UpdateAdminReservationStatusCommandHandler> logger,
     IUnitOfWork unitOfWork) : IRequestHandler<UpdateAdminReservationStatusCommand>
 {
-    public async Task<Unit> Handle(UpdateAdminReservationStatusCommand request, CancellationToken ct)
+    public async Task Handle(UpdateAdminReservationStatusCommand request, CancellationToken ct)
     {
         var reservation = await unitOfWork.ReservationRepository.GetForAdminAsync(request.Id, ct);
         if (reservation is null)
@@ -42,7 +42,5 @@ public sealed class UpdateAdminReservationStatusCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Admin changed reservation status with Reservation ID: {ReservationId} to: {NewReserVationStatus}.", request.Id, request.NewReservationStatus);
-
-        return Unit.Value;
     }
 }

@@ -51,7 +51,6 @@ else
                                @oninput="OnSearchInput"
                                placeholder="Název..." />
 
-
                         @if (!string.IsNullOrWhiteSpace(search))
                         {
                             <button type="button" class="input-clear" @onclick="ClearSearchAsync" aria-label="Vyčistit hledání">
@@ -66,11 +65,12 @@ else
                 </div>
             </div>
 
+            <div class="row-between filters-row">
                 @if (isAdmin)
                 {
                     <div class="field" style="margin:0; min-width: 220px;">
                         <label class="label" for="hairdresserId">Kadeřník</label>
-                        <select class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="OnFiltersChangedAsync">
+                        <select id="hairdresserId" class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="OnFiltersChangedAsync">
                             <option value="">Všichni</option>
                             @foreach (var hd in hairdressers)
                             {
@@ -79,6 +79,28 @@ else
                         </select>
                     </div>
                 }
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="year">Rok</label>
+                    <select id="year" class="input" disabled="@isLoading" @bind="year" @bind:after="OnFiltersChangedAsync">
+                        <option value="">Všechny</option>
+                        @for (int i = 2026; i <= 2046; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label" for="month">Měsíc</label>
+                    <select id="month" class="input" disabled="@isLoading" @bind="month" @bind:after="OnFiltersChangedAsync">
+                        <option value="">Všechny</option>
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
 
                 @if (isAdmin)
                 {
@@ -181,24 +203,31 @@ else
                     </div>
 
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || page <= 1)">
+                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || !model.CanGoPrevious)">
                             Předchozí
                         </button>
 
-                        <span class="muted">@($"Strana: {page} / {TotalPages}")</span>
+                        <span class="muted">@($"Strana: {page} / {model.TotalPages}")</span>
 
-                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || page >= TotalPages)">
+                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || !model.CanGoNext)">
                             Další
                         </button>
                     </div>
                 </div>
             }
         </div>
+    </div>
 }
 
 @code {
     [Parameter, SupplyParameterFromQuery(Name = "hairdresserId")]
     public string? HairdresserIdQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "year")]
+    public int? YearQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "month")]
+    public int? MonthQuery { get; set; }
 
     private PagedResult<HairdresserTimeOffDto> model = new();
     private List<GetLookUpHairdressers> hairdressers = new();
@@ -215,13 +244,9 @@ else
     private int? year;
     private int? month;
 
-    private int TotalPages => model is null || model.TotalItemsCount <= 0 ? 1 : (int)Math.Ceiling(model.TotalItemsCount / (double)pageSize);
-
     private string? search;
     private string sortBy = "startdate";
     private bool desc;
-
-    private string isActiveFilter = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -252,6 +277,9 @@ else
                 hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
                 hairdresserId = HairdresserIdQuery;
             }
+
+            month = MonthQuery;
+            year = YearQuery;
 
             await LoadAsync();
         }
@@ -291,6 +319,8 @@ else
             };
 
             model = await TimeOffService.GetAllAsync(req, CancellationToken.None);
+            page = model.Page;
+            pageSize = model.PageSize;
         }
         catch (ApiRequestException ex)
         {
@@ -318,16 +348,16 @@ else
 
     private async Task PrevPageAsync()
     {
-        if (page <= 1)
+        if (!model.CanGoPrevious)
             return;
 
-        page--;
+        page = Math.Max(1, page - 1);
         await LoadAsync();
     }
 
     private async Task NextPageAsync()
     {
-        if (page >= TotalPages)
+        if (!model.CanGoNext)
             return;
 
         page++;
@@ -377,18 +407,25 @@ else
 
     private async Task OnFiltersChangedAsync()
     {
-        string qs = string.Empty;
+        List<string> qs = new();
 
         if (isAdmin)
         {
             if (!string.IsNullOrWhiteSpace(hairdresserId))
-                qs = $"?hairdresserId={hairdresserId}";
+                qs.Add($"hairdresserId={Uri.EscapeDataString(hairdresserId)}");
         }
 
-        var url = string.IsNullOrWhiteSpace(qs) ? "/time-off/list" : $"/time-off/list/{qs}";
+        if (year != null)
+            qs.Add($"year={year}");
+
+        if (month != null)
+            qs.Add($"month={month}");
+
+        var url = qs.Count == 0 ? "/time-off/list" : $"/time-off/list?{string.Join("&", qs)}";
 
         Nav.NavigateTo(url, replace: true);
 
+        page = 1;
         await LoadAsync();
     }
 }

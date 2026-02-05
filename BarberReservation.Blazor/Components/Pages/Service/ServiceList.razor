@@ -156,13 +156,13 @@ else
                     </div>
 
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || page <= 1)">
+                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || !model.CanGoPrevious)">
                             Předchozí
                         </button>
 
-                        <span class="muted">@($"Strana: {page} / {TotalPages}")</span>
+                        <span class="muted">@($"Strana: {page} / {model.TotalPages}")</span>
 
-                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || page >= TotalPages)">
+                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || !model.CanGoNext)">
                             Další
                         </button>
                     </div>
@@ -178,7 +178,7 @@ else
     private bool loaded;
     private CancellationTokenSource? searchCts;
 
-    private PagedResult<ServiceDto>? model;
+    private PagedResult<ServiceDto> model = new();
 
     private int page = 1;
     private int pageSize = 20;
@@ -189,8 +189,6 @@ else
 
 
     private string isActiveFilter = "";
-
-    private int TotalPages => model is null || model.TotalItemsCount <= 0 ? 1 : (int)Math.Ceiling(model.TotalItemsCount / (double)pageSize);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -274,7 +272,7 @@ else
 
     private async Task PrevPageAsync()
     {
-        if (page <= 1)
+        if (!model.CanGoPrevious)
             return;
 
         page--;
@@ -283,7 +281,7 @@ else
 
     private async Task NextPageAsync()
     {
-        if (page >= TotalPages)
+        if (!model.CanGoNext)
             return;
 
         page++;

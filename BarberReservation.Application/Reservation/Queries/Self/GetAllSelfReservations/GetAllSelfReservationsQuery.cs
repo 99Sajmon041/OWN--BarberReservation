@@ -3,12 +3,12 @@ using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Reservation.Common;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Self;
+using BarberReservation.Shared.Models.Reservation.Common;
 using MediatR;
 
 namespace BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
 
-public sealed class GetAllSelfReservationsQuery : PagedApiRequest, IReservationListFilter, IRequireActiveUser, IRequest<PagedResult<SelfReservationDto>>
+public sealed class GetAllSelfReservationsQuery : PagedApiRequest, IReservationListFilter, IRequireActiveUser, IRequest<PagedResult<ReservationDto>>
 {
     public int? ServiceId { get; init; }
     public string? HairdresserId { get; init; }

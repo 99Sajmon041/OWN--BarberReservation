@@ -15,7 +15,7 @@ public sealed class DeactivateAccountHandler(
     UserManager<ApplicationUser> userManager,
     IUnitOfWork unitOfWork) : IRequestHandler<DeactivateAccountCommand>
 {
-    public async Task<Unit> Handle(DeactivateAccountCommand request, CancellationToken ct)
+    public async Task Handle(DeactivateAccountCommand request, CancellationToken ct)
     {
         var appUser = currentAppUser.User;
 
@@ -45,7 +45,5 @@ public sealed class DeactivateAccountHandler(
         }
 
         logger.LogInformation("User with ID: {UserId} was deactivated successfully.", appUser.Id);
-
-        return Unit.Value;
     }
 }

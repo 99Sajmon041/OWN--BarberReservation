@@ -12,9 +12,9 @@ public sealed class RequireUserBehavior<TRequest, TResponse>(
     ILogger<RequireUserBehavior<TRequest, TResponse>> logger,
     IUserContext userContext,
     ICurrentAppUser currentAppUser,
-    UserManager<ApplicationUser> userManager) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+    UserManager<ApplicationUser> userManager) : IPipelineBehavior<TRequest, TResponse>where TRequest : notnull
 {
-    public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         if (request is not IRequireUser)
             return await next();

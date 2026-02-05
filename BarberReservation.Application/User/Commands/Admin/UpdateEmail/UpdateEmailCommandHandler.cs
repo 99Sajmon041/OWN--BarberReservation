@@ -13,7 +13,7 @@ public sealed class UpdateEmailCommandHandler(
     UserManager<ApplicationUser> userManager,
     ICurrentAppUser currentAppUser) : IRequestHandler<UpdateEmailCommand>
 {
-    public async Task<Unit> Handle(UpdateEmailCommand request, CancellationToken ct)
+    public async Task Handle(UpdateEmailCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -35,7 +35,7 @@ public sealed class UpdateEmailCommandHandler(
         if (string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase))
         {
             logger.LogInformation("Update email skipped. Email is already set for user {UserId}.", user.Id);
-            return Unit.Value;
+            return;
         }
 
         var existingUser = await userManager.FindByEmailAsync(newEmail);
@@ -75,6 +75,5 @@ public sealed class UpdateEmailCommandHandler(
         await userManager.UpdateSecurityStampAsync(user);
 
         logger.LogInformation("Email changed successfully for user {UserId} to {Email}.", user.Id, newEmail);
-        return Unit.Value;
     }
 }

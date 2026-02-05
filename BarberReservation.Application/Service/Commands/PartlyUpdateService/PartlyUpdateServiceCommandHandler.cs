@@ -11,7 +11,7 @@ public sealed class PartlyUpdateServiceCommandHandler(
     IUnitOfWork unitOfWork,
     IMapper mapper) : IRequestHandler<PartlyUpdateServiceCommand>
 {
-    public async Task<Unit> Handle(PartlyUpdateServiceCommand request, CancellationToken ct)
+    public async Task Handle(PartlyUpdateServiceCommand request, CancellationToken ct)
     {
         var service = await unitOfWork.ServiceRepository.GetByIdAsync(request.Id, ct);
         if (service is null)
@@ -25,7 +25,5 @@ public sealed class PartlyUpdateServiceCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Service with ID: {ServiceId} was updated by admin successfuly.", request.Id);
-
-        return Unit.Value;
     }
 }

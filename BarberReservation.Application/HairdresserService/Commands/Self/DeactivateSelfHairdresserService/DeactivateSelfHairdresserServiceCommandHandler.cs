@@ -11,7 +11,7 @@ public sealed class DeactivateSelfHairdresserServiceCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser) : IRequestHandler<DeactivateSelfHairdresserServiceCommand>
 {
-    public async Task<Unit> Handle(DeactivateSelfHairdresserServiceCommand request, CancellationToken ct)
+    public async Task Handle(DeactivateSelfHairdresserServiceCommand request, CancellationToken ct)
     {
         var hairdresserId = currentAppUser.User.Id;
 
@@ -23,12 +23,10 @@ public sealed class DeactivateSelfHairdresserServiceCommandHandler(
         }
 
         if (!unitOfWork.HairdresserServiceRepository.Deactivate(hairdresserService))
-            return Unit.Value;
+            return;
 
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Hairdresser service with ID {HairdresserServiceId} deactivated by hairdresser ID {HairdresserId}.", request.Id, hairdresserId);
-        
-        return Unit.Value;
     }
 }

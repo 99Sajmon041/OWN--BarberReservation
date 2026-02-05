@@ -3,12 +3,12 @@ using BarberReservation.Application.Common.PagedSettings;
 using BarberReservation.Application.Reservation.Common;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Admin;
+using BarberReservation.Shared.Models.Reservation.Common;
 using MediatR;
 
 namespace BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
 
-public sealed class GetAllAdminReservationsQuery : PagedApiRequest, IReservationListFilter, IRequest<PagedResult<AdminReservationDto>>
+public sealed class GetAllAdminReservationsQuery : PagedApiRequest, IReservationListFilter, IRequest<PagedResult<ReservationDto>>
 {
     public int? ServiceId { get; init; }
     public string? HairdresserId { get; init; }

@@ -9,7 +9,7 @@ public sealed class ActivateServiceCommandHandler(
     ILogger<ActivateServiceCommandHandler> logger,
     IUnitOfWork unitOfWork) : IRequestHandler<ActivateServiceCommand>
 {
-    public async Task<Unit> Handle(ActivateServiceCommand request, CancellationToken ct)
+    public async Task Handle(ActivateServiceCommand request, CancellationToken ct)
     {
         var service = await unitOfWork.ServiceRepository.GetByIdAsync(request.Id, ct);
         if (service is null)
@@ -19,14 +19,12 @@ public sealed class ActivateServiceCommandHandler(
         }
 
         if (service.IsActive)
-            return Unit.Value;
+            return;
 
         service.IsActive = true;
 
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Service with ID: {ServiceId} was activated.", request.Id);
-
-        return Unit.Value;
     }
 }

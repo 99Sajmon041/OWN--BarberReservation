@@ -1,0 +1,493 @@
+﻿@page "/reservation/list"
+
+@inject MessageService MessageService
+@inject IReservationService ReservationService
+@inject NavigationManager Nav
+@inject AuthState AuthState
+@inject ILookUpsService LookUpsService
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-head">
+            <div class="row-between" style="margin:0;">
+                <div>
+                    @if (isAdmin)
+                    {
+                        <h1 class="page-title">Přehled všech rezervací</h1>
+                        <p class="page-subtitle muted">Kompletní přehled a správa všech rezervací</p>
+                    }
+                    else
+                    {
+                        <h1 class="page-title">Moje rezervace</h1>
+                        <p class="page-subtitle muted">Kompletní přehled mých rezervací</p>
+                    }
+                </div>
+
+                <div class="header-actions">
+                    <a class="btn btn-primary" href="/reservation/create">
+                        + Vytvořit rezervaci
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="field">
+                <label class="label" for="search">Hledat</label>
+
+                <div class="input-row">
+                    <div class="input-wrap">
+                        <input id="search"
+                               class="input input-has-clear"
+                               value="@search"
+                               @oninput="OnSearchInput"
+                               placeholder="Služba, status..." />
+
+                        @if (!string.IsNullOrWhiteSpace(search))
+                        {
+                            <button type="button" class="input-clear" @onclick="ClearSearchAsync">×</button>
+                        }
+                    </div>
+
+                    <button class="btn btn-outline" type="button" @onclick="ApplyFiltersAsync" disabled="@isLoading">
+                        Filtrovat
+                    </button>
+                </div>
+            </div>
+
+            <div class="row-between filters-row" style="align-items:flex-end;">
+                @if (!isHairdresser)
+                {
+                    <div class="field" style="margin:0; min-width: 220px;">
+                        <label class="label">Kadeřník</label>
+                        <select class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="LoadAsync">
+                            <option value="">Všichni</option>
+                            @foreach (var hd in hairdressers)
+                            {
+                                <option value="@hd.Id">@hd.FullName</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Služba</label>
+                    <select class="input" disabled="@isLoading" @bind="serviceId" @bind:after="LoadAsync">
+                        <option value="">Všechny</option>
+                        @foreach (var s in services)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Status</label>
+                    <select class="input" disabled="@isLoading" @bind="status" @bind:after="LoadAsync">
+                        <option value="">Všechny</option>
+                        @foreach (var rs in reservationStatuses)
+                        {
+                            <option value="@rs.Value">@rs.LabelCs</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Zrušeno (kým)</label>
+                    <select class="input" disabled="@isLoading" @bind="canceledBy" @bind:after="LoadAsync">
+                        <option value="">Všichni</option>
+                        @foreach (var cb in canceledByOptions)
+                        {
+                            <option value="@cb.Value">@cb.LabelCs</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Důvod zrušení</label>
+                    <select class="input" disabled="@isLoading" @bind="canceledReason" @bind:after="LoadAsync">
+                        <option value="">Všechny</option>
+                        @foreach (var cr in canceledReasons)
+                        {
+                            <option value="@cr.Value">@cr.LabelCs</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Řazení</label>
+                    <select disabled="@isLoading" class="input" @bind="sortBy" @bind:after="LoadAsync">
+                        <option value="service">Služba</option>
+                        <option value="status">Status</option>
+                        <option value="createdat">Vytvořeno</option>
+                        <option value="startat">Začátek</option>
+                        <option value="canceledat">Zrušeno (kdy)</option>
+                        @if (!isHairdresser)
+                        {
+                            <option value="hairdresser">Kadeřník</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 160px;">
+                    <label class="label">Na stránku</label>
+                    <select class="input" @bind="pageSize" @bind:after="LoadAsync">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+
+                <div class="field" style="margin:0; min-width: 160px;">
+                    <label class="label">&nbsp;</label>
+                    <button class="btn btn-link" type="button" @onclick="ToggleSortAsync" disabled="@isLoading">
+                        @((desc ? "↓ Sestupně" : "↑ Vzestupně"))
+                    </button>
+                </div>
+            </div>
+
+            <div class="row-between filters-row" style="align-items:flex-end; margin-top:14px;">
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Vytvořeno od</label>
+                    <input type="date" class="input" @bind="createdFrom" @bind:after="LoadAsync" />
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Vytvořeno do</label>
+                    <input type="date" class="input" @bind="createdTo" @bind:after="LoadAsync" />
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Začátek od</label>
+                    <input type="date" class="input" @bind="startFrom" @bind:after="LoadAsync" />
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Začátek do</label>
+                    <input type="date" class="input" @bind="startTo" @bind:after="LoadAsync" />
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Zrušeno od</label>
+                    <input type="date" class="input" @bind="canceledFrom" @bind:after="LoadAsync" />
+                </div>
+
+                <div class="field" style="margin:0; min-width: 220px;">
+                    <label class="label">Zrušeno do</label>
+                    <input type="date" class="input" @bind="canceledTo" @bind:after="LoadAsync" />
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám rezervace...</div>
+            }
+            else if (!model.Items.Any())
+            {
+                <div class="muted center">Žádné rezervace nenalezeny.</div>
+            }
+            else
+            {
+                <div style="overflow:auto;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom:1px solid var(--line);">
+                                <th style="padding:10px 6px;">ID</th>
+
+                                @if (isAdmin)
+                                {
+                                    <th style="padding:10px 6px;">Kadeřník</th>
+                                    <th style="padding:10px 6px;">Klient</th>
+                                }
+                                else if (isHairdresser)
+                                {
+                                    <th style="padding:10px 6px;">Klient</th>
+                                }
+
+                                <th style="padding:10px 6px;">Služba</th>
+                                <th style="padding:10px 6px;">Začátek</th>
+                                <th style="padding:10px 6px;">Stav</th>
+                                <th style="padding:10px 6px;"></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var r in model.Items)
+                            {
+                                <tr style="border-bottom:1px solid var(--line);">
+                                    <td style="padding:10px 6px;">@r.Id</td>
+
+                                    @if (isAdmin)
+                                    {
+                                        <td style="padding:10px 6px;">
+                                            <span class="muted">@r.HairdresserFullName</span>
+                                        </td>
+
+                                        <td style="padding:10px 6px;">
+                                            <span>@(string.IsNullOrWhiteSpace(r.ClientFullName) ? "-" : r.ClientFullName)</span>
+                                            <div class="muted" style="font-size:12px;">
+                                                @(!string.IsNullOrWhiteSpace(r.ClientEmail) ? r.ClientEmail : "")
+                                                @if (!string.IsNullOrWhiteSpace(r.ClientEmail) && !string.IsNullOrWhiteSpace(r.ClientPhone))
+                                                {
+                                                    <br />
+                                                }
+                                                @(!string.IsNullOrWhiteSpace(r.ClientPhone) ? r.ClientPhone : "")
+                                                @if (string.IsNullOrWhiteSpace(r.ClientFullName) && string.IsNullOrWhiteSpace(r.ClientEmail) && string.IsNullOrWhiteSpace(r.ClientPhone))
+                                                {
+                                                    <br />
+                                                    <span class="muted">CustomerId: @r.CustomerId</span>
+                                                }
+                                            </div>
+                                        </td>
+                                    }
+                                    else if (isHairdresser)
+                                    {
+                                        <td style="padding:10px 6px;">
+                                            <span>@(string.IsNullOrWhiteSpace(r.ClientFullName) ? "-" : r.ClientFullName)</span>
+                                            <div class="muted" style="font-size:12px;">
+                                                @(!string.IsNullOrWhiteSpace(r.ClientEmail) ? r.ClientEmail : "")
+                                                @if (!string.IsNullOrWhiteSpace(r.ClientEmail) && !string.IsNullOrWhiteSpace(r.ClientPhone))
+                                                {
+                                                    <br />
+                                                }
+                                                @(!string.IsNullOrWhiteSpace(r.ClientPhone) ? r.ClientPhone : "")
+                                            </div>
+                                        </td>
+                                    }
+
+                                    <td style="padding:10px 6px;">
+                                        @r.ServiceName
+                                    </td>
+
+                                    <td style="padding:10px 6px;">
+                                        <span class="muted">@r.StartAt.ToString("dd.MM.yyyy HH:mm")</span>
+                                    </td>
+
+                                    <td style="padding:10px 6px;">
+                                        <span class="muted">@r.Status</span>
+                                    </td>
+
+                                    <td style="padding:10px 6px; text-align:right;">
+                                        <a class="btn btn-link" href="@($"/reservation/{r.Id}")">Detail</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="row-between" style="margin:0;">
+                    <div class="muted">Celkem: @model.TotalItemsCount</div>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || !model.CanGoPrevious)">
+                            Předchozí
+                        </button>
+
+                        <span class="muted">@($"{page} / {model.TotalPages}")</span>
+
+                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || !model.CanGoNext)">
+                            Další
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private PagedResult<ReservationDto> model = new();
+    private List<GetLookUpHairdressers> hairdressers = new();
+    private List<ServiceLookUpDto> services = new();
+    private List<EnumLookUpDto> reservationStatuses = new();
+    private List<EnumLookUpDto> canceledByOptions = new();
+    private List<EnumLookUpDto> canceledReasons = new();
+
+    private bool _checked;
+    private bool isLoading;
+    private bool loaded;
+    private CancellationTokenSource? searchCts;
+    private bool isAdmin;
+    private bool isHairdresser;
+
+    private int page = 1;
+    private int pageSize = 20;
+    private int? serviceId;
+    private string? hairdresserId;
+    private string? search;
+    private string sortBy = "id";
+    private bool desc;
+    private ReservationStatus? status;
+    private ReservationCanceledBy? canceledBy;
+    private CanceledReason? canceledReason;
+    private DateTime? createdFrom;
+    private DateTime? createdTo;
+    private DateTime? startFrom;
+    private DateTime? startTo;
+    private DateTime? canceledFrom;
+    private DateTime? canceledTo;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.IsAuthenticated)
+            {
+                _checked = true;
+                Nav.NavigateTo("/", replace: true);
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+
+            isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+            isHairdresser = AuthState.Roles.Contains(nameof(UserRoles.Hairdresser));
+
+            services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
+            reservationStatuses = await LookUpsService.GetAllReservationStatusesAsync(CancellationToken.None);
+            canceledByOptions = await LookUpsService.GetAllCanceledByOptionsAsync(CancellationToken.None);
+            canceledReasons = await LookUpsService.GetAllCanceledReasonsAsync(CancellationToken.None);
+
+            if (!isHairdresser)
+                hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch (Exception ex)
+        {
+            _checked = true;
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            var req = new ReservationPagedRequest
+            {
+                Page = page,
+                PageSize = pageSize,
+                Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                SortBy = sortBy,
+                Desc = desc,
+                ServiceId = serviceId,
+                HairdresserId = !isHairdresser ? hairdresserId : null,
+                Status = status,
+                CanceledBy = canceledBy,
+                CanceledReason = canceledReason,
+                CreatedFrom = createdFrom,
+                CreatedTo = createdTo,
+                StartFrom = startFrom,
+                StartTo = startTo,
+                CanceledFrom = canceledFrom,
+                CanceledTo = canceledTo
+            };
+
+            model = await ReservationService.GetAllAsync(req, CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task ToggleSortAsync()
+    {
+        desc = !desc;
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task PrevPageAsync()
+    {
+        if (!model.CanGoPrevious)
+            return;
+
+        page--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (!model.CanGoNext)
+            return;
+
+        page++;
+        await LoadAsync();
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = null;
+
+        search = null;
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        search = e.Value?.ToString() ?? "";
+        page = 1;
+
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(350, searchCts.Token);
+            await LoadAsync();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+}

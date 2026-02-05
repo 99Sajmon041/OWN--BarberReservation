@@ -3,11 +3,11 @@ using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Reservation.Common;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation.Common;
 using MediatR;
 namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 
-public sealed class GetAllHairdresserReservationsQuery : PagedApiRequest, IRequireActiveUser, IReservationListFilter, IRequest<PagedResult<HairdresserReservationDto>>
+public sealed class GetAllHairdresserReservationsQuery : PagedApiRequest, IRequireActiveUser, IReservationListFilter, IRequest<PagedResult<ReservationDto>>
 {
     public int? ServiceId { get; init; }
     public ReservationStatus? Status { get; init; }
@@ -19,4 +19,5 @@ public sealed class GetAllHairdresserReservationsQuery : PagedApiRequest, IRequi
     public DateTime? StartTo { get; init; }
     public DateTime? CanceledFrom { get; init; }
     public DateTime? CanceledTo { get; init; }
+    public string? HairdresserId { get; set; }
 }

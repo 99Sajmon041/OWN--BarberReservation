@@ -43,7 +43,7 @@ public sealed class HairdresserService(IApiClient api, AuthState authState) : IH
         var qs = string.Join("&", parts);
         string? url;
 
-        if(authState.Roles.Contains(nameof(UserRoles.Admin)))
+        if (authState.Roles.Contains(nameof(UserRoles.Admin)))
         {
             url = $"api/admin/hairdresser-services?{qs}";
         }

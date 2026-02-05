@@ -17,6 +17,10 @@ public abstract class ReservationListQueryValidatorBase<T> : AbstractValidator<T
             .GreaterThan(0)
             .When(x => x.ServiceId is not null);
 
+        RuleFor(x => x.HairdresserId)
+            .MaximumLength(120)
+            .WithMessage("ID kadeřníka může mít maximálně 120 znaků.");
+
         RuleFor(x => x.CreatedTo)
             .GreaterThanOrEqualTo(x => x.CreatedFrom!.Value)
             .WithMessage("Vytvořeno do musí být větší nebo rovno vytvořeno od.")

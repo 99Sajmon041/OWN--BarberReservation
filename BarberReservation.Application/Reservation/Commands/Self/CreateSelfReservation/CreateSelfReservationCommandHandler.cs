@@ -17,7 +17,7 @@ public sealed class CreateSelfReservationCommandHandler(
     UserManager<ApplicationUser> userManager,
     IEmailService emailService) : IRequestHandler<CreateSelfReservationCommand>
 {
-    public async Task<Unit> Handle(CreateSelfReservationCommand request, CancellationToken ct)
+    public async Task Handle(CreateSelfReservationCommand request, CancellationToken ct)
     {
         var maxReservationDate = ReservationDateHelper.GetMaxReservationDate();
 
@@ -149,7 +149,5 @@ public sealed class CreateSelfReservationCommandHandler(
             request.HairdresserId,
             reservation.CustomerName,
             reservation.StartAt);
-
-        return Unit.Value;
     }
 }

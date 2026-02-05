@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using BarberReservation.Application.Exceptions;
 using BarberReservation.Application.UserIdentity;
-using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -14,7 +13,7 @@ public sealed class UpdateSelfTimeOffCommandHandler(
     IMapper mapper,
     IUnitOfWork unitOfWork) : IRequestHandler<UpdateSelfTimeOffCommand>
 {
-    public async Task<Unit> Handle(UpdateSelfTimeOffCommand request, CancellationToken ct)
+    public async Task Handle(UpdateSelfTimeOffCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -118,7 +117,5 @@ public sealed class UpdateSelfTimeOffCommandHandler(
         mapper.Map(request, free);
 
         await unitOfWork.SaveChangesAsync(ct);
-
-        return Unit.Value;
     }
 }

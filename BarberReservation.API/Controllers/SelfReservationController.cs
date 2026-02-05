@@ -4,6 +4,7 @@ using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservati
 using BarberReservation.Application.Reservation.Queries.Self.GetSelfReservation;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
+using BarberReservation.Shared.Models.Reservation.Common;
 using BarberReservation.Shared.Models.Reservation.Self;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,7 @@ namespace BarberReservation.API.Controllers
     {
         [HttpGet]
         [Authorize(Roles = nameof(UserRoles.Customer))]
-        public async Task<ActionResult<PagedResult<SelfReservationDto>>> GetAll([FromQuery] GetAllSelfReservationsQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<ReservationDto>>> GetAll([FromQuery] GetAllSelfReservationsQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);
@@ -26,7 +27,7 @@ namespace BarberReservation.API.Controllers
 
         [HttpGet("{id:int}")]
         [Authorize(Roles = nameof(UserRoles.Customer))]
-        public async Task<ActionResult<SelfReservationDto>> GetById(int id, CancellationToken ct)
+        public async Task<ActionResult<ReservationDto>> GetById(int id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetSelfReservationQuery(id), ct);
             return Ok(result);

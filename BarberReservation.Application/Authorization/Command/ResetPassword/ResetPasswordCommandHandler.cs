@@ -11,7 +11,7 @@ public sealed class ResetPasswordCommandHandler(
     ILogger<ResetPasswordCommandHandler> logger,
     UserManager<ApplicationUser> userManager) : IRequestHandler<ResetPasswordCommand>
 {
-    public async Task<Unit> Handle(ResetPasswordCommand request, CancellationToken ct)
+    public async Task Handle(ResetPasswordCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -20,7 +20,7 @@ public sealed class ResetPasswordCommandHandler(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
-            return Unit.Value;
+            return;
         }
 
         var token = request.Token;
@@ -46,7 +46,5 @@ public sealed class ResetPasswordCommandHandler(
         }
 
         logger.LogInformation("Password reset succeeded for user {UserId} ({Email}).", user.Id, user.Email);
-
-        return Unit.Value;
     }
 }

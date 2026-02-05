@@ -2,7 +2,7 @@
 using BarberReservation.Application.Exceptions;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.Reservation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -12,9 +12,9 @@ public sealed class GetHairDresserReservationQueryHandler(
     ILogger<GetHairDresserReservationQueryHandler> logger,
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser,
-    IMapper mapper) : IRequestHandler<GetHairDresserReservationQuery, HairdresserReservationDto>
+    IMapper mapper) : IRequestHandler<GetHairDresserReservationQuery, ReservationDto>
 {
-    public async  Task<HairdresserReservationDto> Handle(GetHairDresserReservationQuery request, CancellationToken ct)
+    public async  Task<ReservationDto> Handle(GetHairDresserReservationQuery request, CancellationToken ct)
     {
         var reservation = await unitOfWork.ReservationRepository.GetForHairdresserAsync(request.Id, currentAppUser.User.Id, ct);
         if (reservation is null)
@@ -23,7 +23,7 @@ public sealed class GetHairDresserReservationQueryHandler(
             throw new NotFoundException("Reservation not found");
         }
 
-        var reservationDto = mapper.Map<HairdresserReservationDto>(reservation);
+        var reservationDto = mapper.Map<ReservationDto>(reservation);
 
         logger.LogInformation("Retrieved reservation with id {ReservationId} for hairdresser {HairdresserId}", request.Id, currentAppUser.User.Id);
 

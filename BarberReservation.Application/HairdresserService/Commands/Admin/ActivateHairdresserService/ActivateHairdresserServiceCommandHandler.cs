@@ -9,7 +9,7 @@ public sealed class ActivateHairdresserServiceCommandHandler(
     ILogger<ActivateHairdresserServiceCommandHandler> logger,
     IUnitOfWork unitOfWork) : IRequestHandler<ActivateHairdresserServiceCommand>
 {
-    public async Task<Unit> Handle(ActivateHairdresserServiceCommand request, CancellationToken ct)
+    public async Task Handle(ActivateHairdresserServiceCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -21,14 +21,12 @@ public sealed class ActivateHairdresserServiceCommandHandler(
         }
 
         if (hairdresserService.IsActive)
-            return Unit.Value;
+            return;
 
         hairdresserService.IsActive = true;
 
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Hairdresser service with ID: {HairdresserServiceId} was reactivated.", request.Id);
-
-        return Unit.Value;
     }
 }

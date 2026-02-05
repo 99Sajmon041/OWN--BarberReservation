@@ -12,7 +12,7 @@ public sealed class ChangePasswordCommandHandler(
     UserManager<ApplicationUser> userManager,
     ICurrentAppUser currentAppUser) : IRequestHandler<ChangePasswordCommand>
 {
-    public async Task<Unit> Handle(ChangePasswordCommand request, CancellationToken ct)
+    public async Task Handle(ChangePasswordCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -33,7 +33,5 @@ public sealed class ChangePasswordCommandHandler(
             current.MustChangePassword = false;
             await userManager.UpdateAsync(current);
         }
-
-        return Unit.Value;
     }
 }

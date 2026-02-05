@@ -19,14 +19,14 @@ namespace BarberReservation.API.Controllers
     public class HairdressersHairdresserReservationController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<HairdresserReservationDto>>> GetAll([FromQuery] GetAllHairdresserReservationsQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<ReservationDto>>> GetAll([FromQuery] GetAllHairdresserReservationsQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<HairdresserReservationDto>> GetById(int id, CancellationToken ct)
+        public async Task<ActionResult<ReservationDto>> GetById(int id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetHairDresserReservationQuery(id), ct);
             return Ok(result);
@@ -49,7 +49,7 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpGet("daily")]
-        public async Task<ActionResult<List<HairdresserReservationDto>>> GetMyDailyReservations([FromQuery]DateOnly day, CancellationToken ct)
+        public async Task<ActionResult<List<ReservationDto>>> GetMyDailyReservations([FromQuery]DateOnly day, CancellationToken ct)
         {
             var result = await mediator.Send(new GetHairdresserReservationByDayQuery(day), ct);
             return Ok(result);

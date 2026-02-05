@@ -22,7 +22,7 @@ public static class ServiceCollectionExtensions
 
         services.AddValidatorsFromAssembly(typeof(LoginCommandValidator).Assembly);
 
-        services.AddMediatR(typeof(LoginCommandHandler).Assembly);
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(LoginCommandHandler).Assembly));
 
         return services;
     }

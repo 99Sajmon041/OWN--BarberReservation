@@ -1,16 +1,14 @@
 ﻿using BarberReservation.Domain.Entities;
 using BarberReservation.Shared.Models.Reservation.Common;
-using BarberReservation.Shared.Models.Reservation.Hairdresser;
-using BarberReservation.Shared.Models.Reservation.Self;
 
 namespace BarberReservation.Domain.Interfaces;
 
 public interface IReservationRepository
 {
     Task<bool> ExistsByHairDresserServiceIdAsync(int hairDresserServiceid, CancellationToken ct);
-    Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(AdminReservationPagedRequest request, CancellationToken ct);
-    Task<(IReadOnlyList<Reservation>, int)> GetPagedForHairdresserAsync(HairdresserReservationPagedRequest request, string hairDresserId, CancellationToken ct);
-    Task<(IReadOnlyList<Reservation>, int)> GetPagedForClientAsync(SelfReservationPagedRequest request, string userId, CancellationToken ct);
+    Task<(IReadOnlyList<Reservation>, int)> GetPagedForAdminAsync(ReservationPagedRequest request, CancellationToken ct);
+    Task<(IReadOnlyList<Reservation>, int)> GetPagedForHairdresserAsync(ReservationPagedRequest request, string hairDresserId, CancellationToken ct);
+    Task<(IReadOnlyList<Reservation>, int)> GetPagedForClientAsync(ReservationPagedRequest request, string userId, CancellationToken ct);
     Task<Reservation?> GetForAdminAsync(int id, CancellationToken ct);
     Task<Reservation?> GetForHairdresserAsync(int id, string hairDresserId, CancellationToken ct);
     Task<Reservation?> GetForClientAsync(int id, string userId, CancellationToken ct);

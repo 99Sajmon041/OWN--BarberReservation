@@ -14,7 +14,7 @@ public sealed class CreateSelfTimeOffCommandHandler(
     IMapper mapper,
     IUnitOfWork unitOfWork) : IRequestHandler<CreateSelfTimeOffCommand>
 {
-    public async Task<Unit> Handle(CreateSelfTimeOffCommand request, CancellationToken ct)
+    public async Task Handle(CreateSelfTimeOffCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -104,7 +104,5 @@ public sealed class CreateSelfTimeOffCommandHandler(
         unitOfWork.HairdresserTimeOffRepository.Add(timeOff);
 
         await unitOfWork.SaveChangesAsync(ct);
-
-        return Unit.Value;
     }
 }

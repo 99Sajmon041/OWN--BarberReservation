@@ -5,6 +5,7 @@ namespace BarberReservation.Application.Reservation.Common;
 public interface IReservationListFilter
 {
     int? ServiceId { get; }
+    string? HairdresserId { get; }
     ReservationStatus? Status { get; }
     ReservationCanceledBy? CanceledBy { get; }
     CanceledReason? CanceledReason { get; }

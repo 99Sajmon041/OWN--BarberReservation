@@ -16,7 +16,7 @@ public sealed class CreateUserCommandHandler(
     IEmailService emailService,
     IMapper mapper) : IRequestHandler<CreateUserCommand>
 {
-    public async Task<Unit> Handle(CreateUserCommand request, CancellationToken ct)
+    public async Task Handle(CreateUserCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -60,7 +60,7 @@ public sealed class CreateUserCommandHandler(
 
         logger.LogInformation("User {UserId} ({Email}) created. Reset email sent.", user.Id, user.Email);
 
-        return Unit.Value;
+        return;
     }
 
     private static string GenerateTemporaryPassword(int length = 16)

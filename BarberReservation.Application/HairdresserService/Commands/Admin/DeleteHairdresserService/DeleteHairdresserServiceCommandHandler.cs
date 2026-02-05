@@ -9,7 +9,7 @@ public sealed class DeleteHairdresserServiceCommandHandler(
     ILogger<DeleteHairdresserServiceCommandHandler> logger,
     IUnitOfWork unitOfWork) : IRequestHandler<DeleteHairdresserServiceCommand>
 {
-    public async Task<Unit> Handle(DeleteHairdresserServiceCommand request, CancellationToken ct)
+    public async Task Handle(DeleteHairdresserServiceCommand request, CancellationToken ct)
     {
         var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForAdminAsync(request.Id, ct);
         if (hairdresserService is null)
@@ -29,7 +29,5 @@ public sealed class DeleteHairdresserServiceCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Admin deleted hairdresser service with ID: {HairdresserServiceId}.", request.Id);
-
-        return Unit.Value;
     }
 }

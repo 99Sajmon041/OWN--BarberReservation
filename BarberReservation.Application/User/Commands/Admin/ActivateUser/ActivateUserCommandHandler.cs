@@ -10,7 +10,7 @@ public sealed class ActivateUserCommandHandler(
     ILogger<ActivateUserCommandHandler> logger,
     UserManager<ApplicationUser> userManager) : IRequestHandler<ActivateUserCommand>
 {
-    public async Task<Unit> Handle(ActivateUserCommand request, CancellationToken ct)
+    public async Task Handle(ActivateUserCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -22,7 +22,7 @@ public sealed class ActivateUserCommandHandler(
         }
 
         if (user.IsActive)
-            return Unit.Value;
+            return;
 
         user.IsActive = true;
 
@@ -36,7 +36,5 @@ public sealed class ActivateUserCommandHandler(
 
         await userManager.UpdateSecurityStampAsync(user);
         logger.LogInformation("User with ID: {UserId} was activated.", user.Id);
-
-        return Unit.Value;
     }
 }

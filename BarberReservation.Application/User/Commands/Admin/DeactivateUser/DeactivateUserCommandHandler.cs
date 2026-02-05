@@ -15,7 +15,7 @@ public sealed class DeactivateUserCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser) : IRequestHandler<DeactivateUserCommand>
 {
-    public async Task<Unit> Handle(DeactivateUserCommand request, CancellationToken ct)
+    public async Task Handle(DeactivateUserCommand request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -35,7 +35,7 @@ public sealed class DeactivateUserCommandHandler(
         if (!user.IsActive)
         {
             logger.LogInformation("User with ID: {UserId} is already deactivated.", request.Id);
-            return Unit.Value;
+            return;
         }
 
         if (await userManager.IsInRoleAsync(user, nameof(UserRoles.Admin)))
@@ -64,7 +64,5 @@ public sealed class DeactivateUserCommandHandler(
 
         await userManager.UpdateSecurityStampAsync(user);
         logger.LogInformation("User with ID: {UserId} was deactivated.", request.Id);
-
-        return Unit.Value;
     }
 }

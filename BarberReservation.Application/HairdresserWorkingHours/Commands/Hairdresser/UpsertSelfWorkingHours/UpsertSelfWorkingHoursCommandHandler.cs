@@ -12,7 +12,7 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
     ICurrentAppUser currentAppUser,
     IUnitOfWork unitOfWork) : IRequestHandler<UpsertSelfWorkingHoursCommand>
 {
-    public async Task<Unit> Handle(UpsertSelfWorkingHoursCommand request, CancellationToken ct)
+    public async Task Handle(UpsertSelfWorkingHoursCommand request, CancellationToken ct)
     {
         var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
         var hairdresser = currentAppUser.User;
@@ -136,7 +136,5 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
-
-        return Unit.Value;
     }
 }

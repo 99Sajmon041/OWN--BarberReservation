@@ -17,14 +17,14 @@ namespace BarberReservation.API.Controllers
     public class AdminReservationController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PagedResult<AdminReservationDto>>> GetAll([FromQuery] GetAllAdminReservationsQuery query, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<ReservationDto>>> GetAll([FromQuery] GetAllAdminReservationsQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
             return Ok(result);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<AdminReservationDto>> GetById(int id, CancellationToken ct)
+        public async Task<ActionResult<ReservationDto>> GetById(int id, CancellationToken ct)
         {
             var result = await mediator.Send(new GetAdminReservationQuery(id), ct);
             return Ok(result);

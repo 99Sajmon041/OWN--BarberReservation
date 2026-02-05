@@ -12,7 +12,7 @@ public sealed class SelfCancelReservationCommandHandler(
     ICurrentAppUser currentAppUser,
     IUnitOfWork unitOfWork) : IRequestHandler<SelfCancelReservationCommand>
 {
-    public async Task<Unit> Handle(SelfCancelReservationCommand request, CancellationToken ct)
+    public async Task Handle(SelfCancelReservationCommand request, CancellationToken ct)
     {
         var reservation = await unitOfWork.ReservationRepository.GetForClientAsync(request.Id, currentAppUser.User.Id, ct);
         if(reservation is null)
@@ -60,7 +60,5 @@ public sealed class SelfCancelReservationCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Reservation with id {ReservationId} for user {UserId} has been canceled by the customer.", request.Id, currentAppUser.User.Id);
-
-        return Unit.Value;
     }
 }

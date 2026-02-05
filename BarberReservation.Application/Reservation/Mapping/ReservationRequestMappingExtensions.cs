@@ -11,9 +11,9 @@ namespace BarberReservation.Application.Reservation.Mapping;
 
 public static class ReservationRequestMappingExtensions
 {
-    public static AdminReservationPagedRequest ToAdminReservationPagedRequest(this GetAllAdminReservationsQuery query)
+    public static ReservationPagedRequest ToAdminReservationPagedRequest(this GetAllAdminReservationsQuery query)
     {
-        return new AdminReservationPagedRequest
+        return new ReservationPagedRequest
         {
             Page = query.Page,
             PageSize = query.PageSize,
@@ -34,9 +34,9 @@ public static class ReservationRequestMappingExtensions
         };
     }
 
-    public static HairdresserReservationPagedRequest ToHairDresserReservationPagedRequest(this GetAllHairdresserReservationsQuery query)
+    public static ReservationPagedRequest ToHairDresserReservationPagedRequest(this GetAllHairdresserReservationsQuery query)
     {
-        return new HairdresserReservationPagedRequest
+        return new ReservationPagedRequest
         {
             Page = query.Page,
             PageSize = query.PageSize,
@@ -69,9 +69,9 @@ public static class ReservationRequestMappingExtensions
         };
     }
 
-    public static SelfReservationPagedRequest ToSelfReservationPagedRequest(this GetAllSelfReservationsQuery query)
+    public static ReservationPagedRequest ToSelfReservationPagedRequest(this GetAllSelfReservationsQuery query)
     {
-        return new SelfReservationPagedRequest
+        return new ReservationPagedRequest
         {
             Page = query.Page,
             PageSize = query.PageSize,

@@ -2,7 +2,7 @@
 using BarberReservation.Application.Exceptions;
 using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Interfaces;
-using BarberReservation.Shared.Models.Reservation.Self;
+using BarberReservation.Shared.Models.Reservation.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -12,9 +12,9 @@ public sealed class GetSelfReservationQueryHandler(
     ILogger<GetSelfReservationQueryHandler> logger,
     ICurrentAppUser currentAppUser,
     IUnitOfWork unitOfWork,
-    IMapper mapper) : IRequestHandler<GetSelfReservationQuery, SelfReservationDto>
+    IMapper mapper) : IRequestHandler<GetSelfReservationQuery, ReservationDto>
 {
-    public async Task<SelfReservationDto> Handle(GetSelfReservationQuery request, CancellationToken ct)
+    public async Task<ReservationDto> Handle(GetSelfReservationQuery request, CancellationToken ct)
     {
         var userId = currentAppUser.User.Id;
 
@@ -25,7 +25,7 @@ public sealed class GetSelfReservationQueryHandler(
             throw new NotFoundException("Rezervace nebyla nalezena.");
         }   
 
-        var reservationDto = mapper.Map<SelfReservationDto>(reservation);
+        var reservationDto = mapper.Map<ReservationDto>(reservation);
 
         logger.LogInformation("Reservation with id {ReservationId} for user {UserId} retrieved successfully.", request.Id, userId);
 

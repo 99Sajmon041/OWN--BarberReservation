@@ -7,7 +7,7 @@ namespace BarberReservation.Application.Behaviors;
 
 public sealed class RequirePasswordChangeBehavior<TRequest, TResponse>(ICurrentAppUser currentAppUser) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
-    public async Task<TResponse> Handle(TRequest request, CancellationToken ct, RequestHandlerDelegate<TResponse> next)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         if (request is not IRequireUser)
             return await next();
@@ -17,7 +17,7 @@ public sealed class RequirePasswordChangeBehavior<TRequest, TResponse>(ICurrentA
 
         var user = currentAppUser.User;
 
-        if(user.MustChangePassword)
+        if (user.MustChangePassword)
             throw new ForbiddenException("Nejprve si musíte změnit heslo.");
 
         return await next();

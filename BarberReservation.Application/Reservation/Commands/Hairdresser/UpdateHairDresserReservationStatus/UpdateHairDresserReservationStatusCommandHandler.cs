@@ -12,7 +12,7 @@ public sealed class UpdateHairDresserReservationStatusCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser) : IRequestHandler<UpdateHairDresserReservationStatusCommand>
 {
-    public async Task<Unit> Handle(UpdateHairDresserReservationStatusCommand request, CancellationToken ct)
+    public async Task Handle(UpdateHairDresserReservationStatusCommand request, CancellationToken ct)
     {
         var reservation = await unitOfWork.ReservationRepository.GetForHairdresserAsync(request.Id, currentAppUser.User.Id, ct);
         if(reservation is null)
@@ -45,7 +45,5 @@ public sealed class UpdateHairDresserReservationStatusCommandHandler(
             currentAppUser.User.Id,
             request.Id,
             request.NewReservationStatus);
-
-        return Unit.Value;
     }
 }

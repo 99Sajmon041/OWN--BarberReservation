@@ -9,7 +9,7 @@ public sealed class DeactivateServiceCommandHandler(
     ILogger<DeactivateServiceCommandHandler> logger,
     IUnitOfWork unitOfWork) : IRequestHandler<DeactivateServiceCommand>
 {
-    public async Task<Unit> Handle(DeactivateServiceCommand request, CancellationToken ct)
+    public async Task Handle(DeactivateServiceCommand request, CancellationToken ct)
     {
         var service = await unitOfWork.ServiceRepository.GetByIdAsync(request.Id, ct);
         if (service is null)
@@ -19,7 +19,7 @@ public sealed class DeactivateServiceCommandHandler(
         }
 
         bool existsByService = await unitOfWork.HairdresserServiceRepository.ExistsByServiceIdAsync(request.Id, ct);
-        if(existsByService)
+        if (existsByService)
         {
             logger.LogWarning("Failed to deactivate service with ID: {ServiceId}, is in use by hairdressers.", request.Id);
             throw new ConflictException("Služba nelze deaktivovat, je využívaná kadeřníky.");
@@ -31,7 +31,5 @@ public sealed class DeactivateServiceCommandHandler(
             await unitOfWork.SaveChangesAsync(ct);
             logger.LogInformation("Service with ID: {ServiceId} was deactivated.", request.Id);
         }
-
-        return Unit.Value;
     }
 }
