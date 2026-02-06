@@ -19,6 +19,7 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
 
         bool isHairdresser = authState.Roles.Contains(nameof(UserRoles.Hairdresser));
         bool isAdmin = authState.Roles.Contains(nameof(UserRoles.Admin));
+        bool isCustomer = authState.Roles.Contains(nameof(UserRoles.Customer));
 
         var parts = new List<string>()
         {
@@ -38,11 +39,11 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
         if (request.ServiceId is not null)
             parts.Add($"serviceId={request.ServiceId}");
 
-        if (!isHairdresser)
-        {
-            if (!string.IsNullOrWhiteSpace(request.HairdresserId))
-                parts.Add($"hairdresserId={Uri.EscapeDataString(request.HairdresserId.Trim())}");
-        }
+        if ((isAdmin || isCustomer) && !string.IsNullOrWhiteSpace(request.HairdresserId))
+            parts.Add($"hairdresserId={Uri.EscapeDataString(request.HairdresserId.Trim())}");
+
+        if (isAdmin && !string.IsNullOrWhiteSpace(request.CustomerId))
+            parts.Add($"customerId={Uri.EscapeDataString(request.CustomerId.Trim())}");
 
         if (request.Status is not null)
             parts.Add($"status={request.Status}");
@@ -88,5 +89,27 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
         }
 
         return await api.GetAsync<PagedResult<ReservationDto>>(url, ct);
+    }
+
+    public async Task UpdateStatusAsync(int id, UpdateReservationRequest request, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        if (authState.Roles.Contains(nameof(UserRoles.Admin)))
+            await api.SendAsync(HttpMethod.Patch, $"api/admin/reservations/{id}/status", request, ct);
+        else if (authState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            await api.SendAsync(HttpMethod.Patch, $"api/hairdresser/reservations/{id}/status", request, ct);
+        else
+            throw new ApiRequestException("Uživatel nemá právo měnit status rezervace.", StatusCodes.Status403Forbidden);
+    }
+
+    public async Task CancelReservationByClientAsync(int id, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        if (authState.Roles.Contains(nameof(UserRoles.Customer)))
+            await api.SendAsync(HttpMethod.Patch, $"api/me/reservations/{id}/cancel", null, ct);
+        else
+            throw new ApiRequestException("Nemáte oprávnění zrušit rezervaci.", StatusCodes.Status403Forbidden);
     }
 }

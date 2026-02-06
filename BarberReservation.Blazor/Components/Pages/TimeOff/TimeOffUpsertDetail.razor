@@ -6,6 +6,7 @@
 @inject MessageService MessageService
 @inject AuthState AuthState
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <div class="container">
     <div class="page-head">
@@ -112,7 +113,7 @@
                             }
                         </div>
 
-                        <div class="gcal-canvas">
+                        <div class="gcal-canvas" @ref="CanvasRef" @ondblclick="OnCanvasDblClick">
                             @foreach (var t in TimelineSlots)
                             {
                                 <div class="gcal-rowline @(t.Minute == 0 ? "hour" : "half")"></div>
@@ -126,6 +127,7 @@
                                 SelectedDay.ToDateTime(nw.To));
 
                                 <div class="gcal-event nonwork"
+                                     @ondblclick:stopPropagation="true"
                                      style="@($"top:{top}px; height:{height}px")">
                                     <div class="evt-row">
                                         <span class="evt-chip">Není pracovní doba</span>
@@ -146,6 +148,7 @@
                                         style="@($"top:{top}px; height:{height}px")"
                                         @onclick="() => SelectTimeOff(item)"
                                         @ondblclick="() => OpenEditFromItem(item)"
+                                        @ondblclick:stopPropagation="true"
                                         disabled="@(!CanEditDay)">
 
                                     <div class="evt-row">
@@ -164,6 +167,7 @@
                                 var height = ToHeightPx(r.StartAt, r.EndAt);
 
                                 <div class="gcal-event reservation success"
+                                     @ondblclick:stopPropagation="true"
                                      style="@($"top:{top}px; height:{height}px")"
                                      title="@($"{r.ServiceName} • {r.ClientFullName} ({r.ClientEmail}, {r.ClientPhone})")">
 
@@ -285,6 +289,9 @@
     private bool loaded;
     private bool IsLoading;
     private bool IsSaving;
+
+    private ElementReference CanvasRef;
+    private const int SnapMinutes = 15;
 
     private DateOnly MinAllowedDay => DateOnly.FromDateTime(DateTime.Today);
     private DateOnly SelectedDay = DateOnly.FromDateTime(DateTime.Today);
@@ -748,4 +755,89 @@
     {
         return timeOff.StartAt > DateTime.UtcNow.AddHours(1);
     }
+
+    private TimeOnly SnapToMinutes(TimeOnly t, int minutes)
+    {
+        var total = (int)t.ToTimeSpan().TotalMinutes;
+        var snapped = (total / minutes) * minutes;
+        return TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(snapped));
+    }
+
+    private TimeOnly MinutesFromTimelineStart(int minutesFromStart)
+    {
+        return TimelineStart.AddMinutes(minutesFromStart);
+    }
+
+    private bool IsInWorkingHours(TimeOnly t)
+    {
+        if (WorkingHours is null)
+            return false;
+
+        if (!WorkingHours.IsWorkingDay)
+            return false;
+
+        return t >= WorkingHours.WorkFrom && t < WorkingHours.WorkTo;
+    }
+
+    private void OpenCreateAt(TimeOnly start)
+    {
+        FormError = null;
+        FormReasonError = null;
+
+        ModalMode = ModalModeEnum.Create;
+        ModalTitle = "Vytvořit volno";
+
+        var snappedStart = SnapToMinutes(start, SnapMinutes);
+        var end = snappedStart.AddMinutes(SnapMinutes);
+
+        if (WorkingHours is not null && WorkingHours.IsWorkingDay && end > WorkingHours.WorkTo)
+            end = WorkingHours.WorkTo;
+
+        if (end <= snappedStart)
+            end = snappedStart.AddMinutes(SnapMinutes);
+
+        FormStartTimeText = snappedStart.ToString("HH:mm");
+        FormEndTimeText = end.ToString("HH:mm");
+
+        FormReason = "";
+        ModalOpen = true;
+    }
+
+    private async Task OnCanvasDblClick(MouseEventArgs e)
+    {
+        if (!CanEditDay || IsLoading || IsSaving)
+            return;
+
+        if (WorkingHours is null || !WorkingHours.IsWorkingDay)
+            return;
+
+        var y = await JS.InvokeAsync<double>("brUi.getRelativeY", CanvasRef, e.ClientY);
+
+        var totalPx = TimelineSlots.Count * SlotHeightPx;
+        if (totalPx <= 0)
+            return;
+
+        if (y < 0) y = 0;
+        if (y > totalPx) y = totalPx;
+
+        var minutesFromStart = (int)Math.Floor((y / SlotHeightPx) * SlotMinutes);
+
+        var raw = MinutesFromTimelineStart(minutesFromStart);
+
+        var snapped = SnapToMinutes(raw, SnapMinutes);
+
+
+        if (snapped < TimelineStart || snapped >= TimelineEnd)
+            return;
+
+        if (!IsInWorkingHours(snapped))
+        {
+            MessageService.ShowWarning("Klikli jste mimo pracovní dobu – zde nelze vytvořit volno.");
+            return;
+        }
+
+        OpenCreateAt(snapped);
+        await InvokeAsync(StateHasChanged);
+    }
+
 }

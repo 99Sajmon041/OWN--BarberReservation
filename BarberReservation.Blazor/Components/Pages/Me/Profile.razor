@@ -59,20 +59,26 @@ else
 
                 <div class="divider"></div>
 
-                <div class="row-between" style="margin:0;">
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <a class="btn btn-outline" href="/">Domů</a>
-                        <a class="btn btn-primary" href="/profile/update">Upravit profil</a>
-                        <a class="btn btn-primary" href="/change-password">Změnit heslo</a>
-                    </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin:0;">
+                    <a class="btn btn-outline" href="/">Domů</a>
+                    <a class="btn btn-primary" href="/profile/update">Upravit profil</a>
+                    <a class="btn btn-primary" href="/change-password">Změnit heslo</a>
+                </div>
 
-                    @if (AuthState.Roles.Contains(nameof(UserRoles.Customer)))
-                    {
-                        <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@isSubmitting">
+                @if (AuthState.Roles.Contains(nameof(UserRoles.Customer)))
+                {
+                    <div class="divider"></div>
+
+                    <div style="display:flex; justify-content:center; margin:0;">
+                        <button type="button"
+                                class="btn btn-danger"
+                                @onclick="DeactivateAsync"
+                                disabled="@isSubmitting"
+                                style="white-space:nowrap;">
                             @(isSubmitting ? "Provádím..." : "Deaktivovat účet")
                         </button>
-                    }
-                </div>
+                    </div>
+                }
             }
         </div>
     </div>

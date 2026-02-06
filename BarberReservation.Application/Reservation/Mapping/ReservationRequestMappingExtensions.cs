@@ -18,6 +18,7 @@ public static class ReservationRequestMappingExtensions
             Page = query.Page,
             PageSize = query.PageSize,
             HairdresserId = query.HairdresserId,
+            CustomerId = query.CustomerId,
             ServiceId = query.ServiceId,
             Status = query.Status,
             CanceledBy = query.CanceledBy,

@@ -1,10 +1,11 @@
-﻿@page "/reservation/list"
+﻿@page "/reservations/list"
 
 @inject MessageService MessageService
 @inject IReservationService ReservationService
 @inject NavigationManager Nav
 @inject AuthState AuthState
 @inject ILookUpsService LookUpsService
+@inject IJSRuntime JS
 
 @if (!_checked)
 {
@@ -68,7 +69,7 @@ else
                 {
                     <div class="field" style="margin:0; min-width: 220px;">
                         <label class="label">Kadeřník</label>
-                        <select class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="LoadAsync">
+                        <select class="input" disabled="@isLoading" @bind="hairdresserId" @bind:after="OnFiltersChangedAsync">
                             <option value="">Všichni</option>
                             @foreach (var hd in hairdressers)
                             {
@@ -80,7 +81,7 @@ else
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Služba</label>
-                    <select class="input" disabled="@isLoading" @bind="serviceId" @bind:after="LoadAsync">
+                    <select class="input" disabled="@isLoading" @bind="serviceId" @bind:after="OnFiltersChangedAsync">
                         <option value="">Všechny</option>
                         @foreach (var s in services)
                         {
@@ -102,7 +103,7 @@ else
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Zrušeno (kým)</label>
-                    <select class="input" disabled="@(!cancelFiltersEnabled || isLoading)" @bind="canceledBy" @bind:after="LoadAsync">
+                    <select class="input" disabled="@(!cancelFiltersEnabled || isLoading)" @bind="canceledBy" @bind:after="OnFiltersChangedAsync">
                         <option value="">Všichni</option>
                         @foreach (var cb in canceledByOptions)
                         {
@@ -113,7 +114,7 @@ else
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Důvod zrušení</label>
-                    <select class="input" disabled="@(!cancelFiltersEnabled || isLoading)" @bind="canceledReason" @bind:after="LoadAsync">
+                    <select class="input" disabled="@(!cancelFiltersEnabled || isLoading)" @bind="canceledReason" @bind:after="OnFiltersChangedAsync">
                         <option value="">Všechny</option>
                         @foreach (var cr in canceledReasons)
                         {
@@ -124,7 +125,7 @@ else
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Řazení</label>
-                    <select disabled="@isLoading" class="input" @bind="sortBy" @bind:after="LoadAsync">
+                    <select disabled="@isLoading" class="input" @bind="sortBy" @bind:after="OnFiltersChangedAsync">
                         <option value="">Vyberte možnost</option>
                         <option value="service">Služba</option>
                         <option value="status">Status</option>
@@ -140,7 +141,7 @@ else
 
                 <div class="field" style="margin:0; min-width: 160px;">
                     <label class="label">Na stránku</label>
-                    <select class="input" @bind="pageSize" @bind:after="LoadAsync">
+                    <select class="input" @bind="pageSize" @bind:after="OnFiltersChangedAsync">
                         <option value="10">10</option>
                         <option value="20">20</option>
                         <option value="50">50</option>
@@ -158,22 +159,22 @@ else
             <div class="row-between filters-row" style="align-items:flex-end; margin-top:14px;">
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Vytvořeno od</label>
-                    <input type="date" class="input" @bind="createdFrom" @bind:after="LoadAsync" />
+                    <input type="date" class="input" @bind="createdFrom" @bind:after="OnFiltersChangedAsync" />
                 </div>
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Vytvořeno do</label>
-                    <input type="date" class="input" @bind="createdTo" @bind:after="LoadAsync" />
+                    <input type="date" class="input" @bind="createdTo" @bind:after="OnFiltersChangedAsync" />
                 </div>
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Začátek od</label>
-                    <input type="date" class="input" @bind="startFrom" @bind:after="LoadAsync" />
+                    <input type="date" class="input" @bind="startFrom" @bind:after="OnFiltersChangedAsync" />
                 </div>
 
                 <div class="field" style="margin:0; min-width: 220px;">
                     <label class="label">Začátek do</label>
-                    <input type="date" class="input" @bind="startTo" @bind:after="LoadAsync" />
+                    <input type="date" class="input" @bind="startTo" @bind:after="OnFiltersChangedAsync" />
                 </div>
 
                 <div class="field" style="margin:0; min-width: 220px; flex:0 0 220px;">
@@ -247,6 +248,7 @@ else
 
                                 <th style="padding:10px 6px;">Služba</th>
                                 <th style="padding:10px 6px;">Začátek</th>
+                                <th style="padding:10px 6px;">Délka (minuty)</th>
                                 <th style="padding:10px 6px;">Stav</th>
                                 <th style="padding:10px 6px;"></th>
                             </tr>
@@ -309,13 +311,34 @@ else
                                     <td style="padding:10px 6px;">
                                         <span class="muted">@r.StartAt.ToString("dd.MM.yyyy HH:mm")</span>
                                     </td>
+                                    <td style="padding:10px 6px;">
+                                        <span class="muted">@r.DurationMinutes</span>
+                                    </td>
 
                                     <td style="padding:10px 6px;">
-                                        <span class="muted">@EnumTranslator.GetCzechreservationStatus(r.Status)</span>
+                                        <span class="muted">@Translator.GetCzechreservationStatus(r.Status)</span>
                                     </td>
 
                                     <td style="padding:10px 6px; text-align:right;">
-                                        <a class="btn btn-link" href="@($"/reservation/{r.Id}")">Detail</a>
+                                        <div class="table-actions">
+                                            <a class="btn btn-link btn-mini" href="@($"/reservation/{r.Id}")">Detail</a>
+
+                                            @if (isAdmin || isHairdresser)
+                                            {
+                                                <button class="btn btn-mini btn-ghost" 
+                                                    type="button"
+                                                    disabled="@(r.Status == ReservationStatus.Canceled)"
+                                                    @onclick="() => ChangeReservationStatusAsync(r.Id)">
+                                                        Změnit status
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-mini btn-ghost" type="button" @onclick="() => CancelReservationAsync(r.Id)">
+                                                    Zrušit rezervaci
+                                                </button>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -344,7 +367,64 @@ else
     </div>
 }
 
+<UiModal @bind-Open="showStatusModal"
+         Title="Změna stavu rezervace"
+         Subtitle="@statusModalSubtitle">
+
+    <div class="field">
+        <label class="label">Aktuální stav</label>
+        <div class="input input-readonly">
+            @Translator.GetCzechreservationStatus(statusModalCurrentStatus)
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label">Nový stav</label>
+        <select class="input" disabled="@isLoading" @bind="statusModalNewStatus">
+            <option value="@ReservationStatus.Paid">Zaplaceno</option>
+            <option value="@ReservationStatus.NoShow">Klient se neukázal</option>
+            <option value="@ReservationStatus.Canceled">Zrušeno</option>
+        </select>
+    </div>
+
+    @if (statusModalNewStatus == ReservationStatus.Canceled)
+    {
+        <div class="field">
+            <label class="label">Důvod zrušení</label>
+            <select class="input" disabled="@isLoading" @bind="statusModalCanceledReason">
+                <option value="">Vyberte důvod</option>
+                @foreach (var cr in canceledReasons)
+                {
+                    <option value="@((CanceledReason)cr.Value)">@cr.LabelCs</option>
+                }
+            </select>
+
+            @if (statusReasonError is not null)
+            {
+                <div class="field-error">@statusReasonError</div>
+            }
+        </div>
+    }
+
+    <div class="ui-modal-foot">
+        <button type="button" class="btn btn-outline" @onclick="CloseStatusModal" disabled="@isLoading">
+            Zrušit
+        </button>
+
+        <button type="button" class="btn btn-primary" @onclick="ConfirmStatusChangeAsync" disabled="@isLoading">
+            Uložit
+        </button>
+    </div>
+</UiModal>
+
+
 @code {
+    [Parameter, SupplyParameterFromQuery(Name = "hairdresserId")]
+    public string? HairdresserIdFromQuery { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "customerId")]
+    public string? CustomerIdFromQuery { get; set; }
+
     private PagedResult<ReservationDto> model = new();
     private List<GetLookUpHairdressers> hairdressers = new();
     private List<ServiceLookUpDto> services = new();
@@ -369,6 +449,7 @@ else
     private int pageSize = 20;
     private int? serviceId;
     private string? hairdresserId;
+    private string? customerId;
     private string? search;
     private string sortBy = "id";
     private bool desc;
@@ -381,6 +462,16 @@ else
     private DateTime? startTo;
     private DateTime? canceledFrom;
     private DateTime? canceledTo;
+
+    private bool showStatusModal;
+
+    private int statusModalReservationId;
+    private ReservationStatus statusModalCurrentStatus;
+    private ReservationStatus statusModalNewStatus = ReservationStatus.Paid;
+    private CanceledReason? statusModalCanceledReason;
+
+    private string? statusReasonError;
+    private string statusModalSubtitle => statusModalReservationId > 0 ? $"Rezervace ID: {statusModalReservationId}" : "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -416,7 +507,20 @@ else
             if (isAdmin || isCustomer)
                 hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
 
-            ApplyDefaultDates();
+            if (isAdmin && !string.IsNullOrWhiteSpace(HairdresserIdFromQuery))
+            {
+                hairdresserId = HairdresserIdFromQuery;
+                customerId = null;
+            }
+            else if (isAdmin && !string.IsNullOrWhiteSpace(CustomerIdFromQuery))
+            {
+                customerId = CustomerIdFromQuery;
+                hairdresserId = null;
+            }
+            else
+            {
+                ApplyDefaultDates();
+            }
 
             await LoadAsync();
         }
@@ -454,6 +558,7 @@ else
                 Desc = desc,
                 ServiceId = serviceId,
                 HairdresserId = (isAdmin || isCustomer) ? hairdresserId : null,
+                CustomerId = isAdmin ? customerId : null,
                 Status = status,
                 CanceledBy = canceledBy,
                 CanceledReason = canceledReason,
@@ -615,6 +720,7 @@ else
 
         serviceId = null;
         hairdresserId = null;
+        customerId = null;
         status = null;
         canceledBy = null;
         canceledReason = null;
@@ -624,5 +730,105 @@ else
         search = null;
 
         await LoadAsync();
+    }
+
+    private async Task OnFiltersChangedAsync()
+    {
+        page = 1;
+        await LoadAsync();
+    }
+
+    private async Task CancelReservationAsync(int id)
+    {
+        var ok = await JS.ConfirmAction($"Opravdu chcete zrušit rezervaci {id} ?");
+
+        if (!ok)
+            return;
+
+        isLoading = true;
+
+        try
+        {
+            await ReservationService.CancelReservationByClientAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task ChangeReservationStatusAsync(int id)
+    {
+        var row = model.Items.FirstOrDefault(x => x.Id == id);
+        if (row is null)
+            return Task.CompletedTask;
+
+        statusModalReservationId = id;
+        statusModalCurrentStatus = row.Status;
+
+        statusModalNewStatus = ReservationStatus.Paid;
+        statusModalCanceledReason = null;
+
+        statusReasonError = null;
+        showStatusModal = true;
+
+        return Task.CompletedTask;
+    }
+
+    private void CloseStatusModal()
+    {
+        showStatusModal = false;
+        statusReasonError = null;
+    }
+
+    private async Task ConfirmStatusChangeAsync()
+    {
+        statusReasonError = null;
+
+        if (statusModalNewStatus == ReservationStatus.Canceled && statusModalCanceledReason is null)
+        {
+            statusReasonError = "Vyberte důvod zrušení.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        var ok = await JS.ConfirmAction($"Opravdu chcete změnit stav rezervace {statusModalReservationId} na '{Translator.GetCzechreservationStatus(statusModalNewStatus)}'?");
+
+        if (!ok)
+            return;
+
+        isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var req = new UpdateReservationRequest
+            {
+                NewReservationStatus = statusModalNewStatus,
+                CanceledReason = statusModalNewStatus == ReservationStatus.Canceled ? statusModalCanceledReason : null
+            };
+
+            await ReservationService.UpdateStatusAsync(statusModalReservationId, req, CancellationToken.None);
+
+            MessageService.ShowSuccess("Stav rezervace byl změněn.");
+            showStatusModal = false;
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }

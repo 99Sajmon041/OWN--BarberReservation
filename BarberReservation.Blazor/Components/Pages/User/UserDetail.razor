@@ -78,29 +78,28 @@ else
                         Upravit e-mail
                     </button>
 
-                    @if (model.Roles.Contains(nameof(UserRoles.Admin)))
+                    @if (model.Roles.Contains(nameof(UserRoles.Admin)) || model.Roles.Contains(nameof(UserRoles.Hairdresser)))
                     {
-                        <a class="btn btn-outline" href="@($"/reservations/list?hairdresserId={model.Id}")">
-                            Zobrazit rezervace
+                        <a class="btn btn-outline" href="@($"/hairdresser-services/list?hairdresserId={model.Id}")">
+                            Zobrazit Služby
                         </a>
-                    }
-                    else if (model.Roles.Contains(nameof(UserRoles.Customer)))
-                    {
-                        <a class="btn btn-outline" href="@($"/reservations/list?customerId={model.Id}")">
+
+                        <a class="btn btn-outline" href="@($"/calendar?hairdresserId={model.Id}")">
+                            Kalendář
+                        </a>
+
+                        <a class="btn btn-outline" href="@($"/working-hours?hairdresserId={model.Id}")">
+                            Pracovní doba
+                        </a>
+
+                        <a class="btn btn-outline" href="@($"/reservations/list?hairdresserId={model.Id}")">
                             Zobrazit rezervace
                         </a>
                     }
                     else
                     {
-                        <a class="btn btn-outline" href="@($"/reservations/list?hairdresserId={model.Id}")">
+                        <a class="btn btn-outline" href="@($"/reservations/list?customerId={model.Id}")">
                             Zobrazit rezervace
-                        </a>
-                    }
-
-                    @if (model.Roles.Contains(nameof(UserRoles.Admin)) || model.Roles.Contains(nameof(UserRoles.Hairdresser)))
-                    {
-                        <a class="btn btn-outline" href="@($"/hairdresser-services/list?hairdresserId={model.Id}")">
-                            Zobrazit Služby
                         </a>
                     }
 

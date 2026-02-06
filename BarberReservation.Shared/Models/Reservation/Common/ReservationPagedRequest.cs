@@ -12,6 +12,9 @@ public class ReservationPagedRequest : PagedRequest
     [StringLength(120, ErrorMessage = "ID kadeřníka může mít maximálně 120 znaků.")]
     public string? HairdresserId { get; set; }
 
+    [StringLength(120, ErrorMessage = "ID zákazníka může mít maximálně 120 znaků.")]
+    public string? CustomerId { get; set; }
+
     public ReservationStatus? Status { get; set; }
     public ReservationCanceledBy? CanceledBy { get; set; }
     public CanceledReason? CanceledReason { get; set; }

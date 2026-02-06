@@ -2,7 +2,7 @@
 
 namespace BarberReservation.Blazor.Utils;
 
-public static class EnumTranslator
+public static class Translator
 {
     public static string GetCzechreservationStatus(ReservationStatus status)
     {
@@ -13,6 +13,17 @@ public static class EnumTranslator
             ReservationStatus.NoShow => "Nedostaveno",
             ReservationStatus.Paid => "Zaplaceno",
             _ => "Neznámý stav"
+        };
+    }
+
+    public static string GetCzechRoleName(string role)
+    {
+        return role switch
+        { 
+            "Admin" => "Administrátor",
+            "Hairdresser" => "Kadeřník",
+            "Customer" => "Zákazník",
+            _ => "Neznámá role"
         };
     }
 }

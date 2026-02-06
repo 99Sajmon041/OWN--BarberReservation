@@ -28,7 +28,7 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
     public async Task<Reservation?> GetForHairdresserAsync(int id, string hairDresserId, CancellationToken ct)
     {
         return await _context.Reservations
-            .Include(x => x.HairdresserId)
+            .Include(x => x.Hairdresser)
             .Include(x => x.HairdresserService)
             .ThenInclude(x => x.Service)
             .FirstOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairDresserId, ct);
@@ -52,12 +52,17 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
     {
         return await _context.Reservations
             .AsNoTracking()
-            .AnyAsync(x => x.HairdresserId == hairdresserId && x.Status != ReservationStatus.Canceled && (x.StartAt < endAt && x.EndAt > startAt), ct);
+            .AnyAsync(x => x.HairdresserId == hairdresserId
+                           && x.Status != ReservationStatus.Canceled
+                           && (x.StartAt < endAt && x.EndAt > startAt), ct);
     }
 
     public async Task<bool> ExistAnyUpComingReservationForClientAsync(string userId, CancellationToken ct)
     {
-        return await _context.Reservations.AnyAsync(x => x.CustomerId == userId && x.Status != ReservationStatus.Canceled && x.StartAt >= DateTime.UtcNow, ct);
+        return await _context.Reservations
+            .AnyAsync(x => x.CustomerId == userId
+                           && x.Status != ReservationStatus.Canceled
+                           && x.StartAt >= DateTime.UtcNow, ct);
     }
 
     public async Task<bool> ExistAnyUpComingReservationForHairdresserAsync(string hairdresserId, CancellationToken ct)
@@ -90,7 +95,10 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         if (!string.IsNullOrWhiteSpace(request.HairdresserId))
             query = query.Where(x => x.HairdresserId == request.HairdresserId);
 
-        if(request.ServiceId.HasValue)
+        if (!string.IsNullOrWhiteSpace(request.CustomerId))
+            query = query.Where(x => x.CustomerId == request.CustomerId);
+
+        if (request.ServiceId.HasValue)
             query = query.Where(x => x.HairdresserService.ServiceId == request.ServiceId.Value);
 
         if (request.Status.HasValue)
@@ -106,19 +114,20 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             query = query.Where(x => x.CreatedAt >= request.CreatedFrom.Value);
 
         if (request.CreatedTo.HasValue)
-            query = query.Where(x => x.CreatedAt <= request.CreatedTo.Value);
+            query = query.Where(x => x.CreatedAt < request.CreatedTo.Value.AddDays(1));
 
         if (request.StartFrom.HasValue)
             query = query.Where(x => x.StartAt >= request.StartFrom.Value);
 
         if (request.StartTo.HasValue)
-            query = query.Where(x => x.StartAt <= request.StartTo.Value);
+            query = query.Where(x => x.StartAt < request.StartTo.Value.AddDays(1));
 
         if (request.CanceledFrom.HasValue)
             query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value >= request.CanceledFrom.Value);
 
         if (request.CanceledTo.HasValue)
-            query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value <= request.CanceledTo.Value);
+            query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value < request.CanceledTo.Value.AddDays(1));
+
 
         var total = await query.CountAsync(ct);
 
@@ -176,7 +185,7 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             query = query.Where(x =>
                 x.HairdresserService.Service.Name.Contains(term) ||
                 x.CustomerEmail != null && x.CustomerEmail.Contains(term) ||
-                x.CustomerPhone != null &&  x.CustomerPhone.Contains(term) ||
+                x.CustomerPhone != null && x.CustomerPhone.Contains(term) ||
                 x.CustomerName != null && x.CustomerName.Contains(term));
         }
 
@@ -196,19 +205,20 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             query = query.Where(x => x.CreatedAt >= request.CreatedFrom.Value);
 
         if (request.CreatedTo.HasValue)
-            query = query.Where(x => x.CreatedAt <= request.CreatedTo.Value);
+            query = query.Where(x => x.CreatedAt < request.CreatedTo.Value.AddDays(1));
 
         if (request.StartFrom.HasValue)
             query = query.Where(x => x.StartAt >= request.StartFrom.Value);
 
         if (request.StartTo.HasValue)
-            query = query.Where(x => x.StartAt <= request.StartTo.Value);
+            query = query.Where(x => x.StartAt < request.StartTo.Value.AddDays(1));
 
         if (request.CanceledFrom.HasValue)
             query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value >= request.CanceledFrom.Value);
 
         if (request.CanceledTo.HasValue)
-            query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value <= request.CanceledTo.Value);
+            query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value < request.CanceledTo.Value.AddDays(1));
+
 
         var total = await query.CountAsync(ct);
 
@@ -283,19 +293,20 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             query = query.Where(x => x.CreatedAt >= request.CreatedFrom.Value);
 
         if (request.CreatedTo.HasValue)
-            query = query.Where(x => x.CreatedAt <= request.CreatedTo.Value);
+            query = query.Where(x => x.CreatedAt < request.CreatedTo.Value.AddDays(1));
 
         if (request.StartFrom.HasValue)
             query = query.Where(x => x.StartAt >= request.StartFrom.Value);
 
         if (request.StartTo.HasValue)
-            query = query.Where(x => x.StartAt <= request.StartTo.Value);
+            query = query.Where(x => x.StartAt < request.StartTo.Value.AddDays(1));
 
         if (request.CanceledFrom.HasValue)
             query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value >= request.CanceledFrom.Value);
 
         if (request.CanceledTo.HasValue)
-            query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value <= request.CanceledTo.Value);
+            query = query.Where(x => x.CanceledAt.HasValue && x.CanceledAt.Value < request.CanceledTo.Value.AddDays(1));
+
 
         var total = await query.CountAsync(ct);
 

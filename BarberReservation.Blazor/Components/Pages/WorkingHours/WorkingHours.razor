@@ -159,6 +159,9 @@ else
 }
 
 @code {
+    [Parameter, SupplyParameterFromQuery(Name = "hairdresserId")]
+    public string? HairdresserId { get; set; }
+
     private bool _checked;
     private bool isLoading;
     private bool loaded;
@@ -193,13 +196,18 @@ else
             }
 
             isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+
             selectedHairdresserId = AuthState.UserId;
 
             if (isAdmin)
             {
                 Hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
 
-                if (Hairdressers.Count > 0 && !Hairdressers.Any(x => x.Id == selectedHairdresserId))
+                if (!string.IsNullOrWhiteSpace(HairdresserId))
+                {
+                    selectedHairdresserId = HairdresserId;
+                }
+                else if (Hairdressers.Count > 0 && !Hairdressers.Any(x => x.Id == selectedHairdresserId))
                 {
                     selectedHairdresserId = Hairdressers[0].Id;
                 }

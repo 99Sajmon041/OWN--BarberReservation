@@ -1459,13 +1459,11 @@ select.input {
 
 @media (min-width: 1241px) {
 
-    /* zruš horizontální scroll v topbaru */
     .nav-scroll,
     .nav-scroll-inner {
         overflow: visible !important;
     }
 
-    /* dovol zalomení menu (žádný divný horizontální scrollbar) */
     .nav-links {
         flex-wrap: wrap !important;
         white-space: normal !important;
@@ -1473,15 +1471,56 @@ select.input {
         row-gap: 8px;
     }
 
-    /* topbar už nemusí mít fixní výšku */
     .topbar-inner {
         height: auto !important;
         padding-block: 10px;
         align-items: center;
     }
 
-    /* dropdown vždy nad vším */
     .nav-dropdown-menu {
         z-index: 9999 !important;
     }
 }
+
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.btn-mini {
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.btn-ghost {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.14);
+    color: rgba(231,237,245,.92);
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+    .btn-ghost:hover {
+        background: rgba(255,255,255,.06);
+        border-color: rgba(255,255,255,.22);
+    }
+
+.btn-link.btn-mini {
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.22);
+    border-radius: 10px;
+}
+
+    .btn-link.btn-mini:hover {
+        background: rgba(0,0,0,.36);
+        border-color: rgba(255,255,255,.18);
+    }

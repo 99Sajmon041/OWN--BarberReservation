@@ -12,6 +12,7 @@ public sealed class GetAllAdminReservationsQuery : PagedApiRequest, IReservation
 {
     public int? ServiceId { get; init; }
     public string? HairdresserId { get; init; }
+    public string? CustomerId { get; init; }
     public ReservationStatus? Status { get; init; }
     public ReservationCanceledBy? CanceledBy { get; init; }
     public CanceledReason? CanceledReason { get; init; }

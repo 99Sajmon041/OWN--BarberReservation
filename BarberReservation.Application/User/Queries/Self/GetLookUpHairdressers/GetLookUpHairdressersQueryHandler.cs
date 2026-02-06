@@ -25,7 +25,7 @@ public sealed class GetLookUpHairdressersQueryHandler(
 
         var hairdresserLookUpDtos = mapper.Map<IEnumerable<Shared.Models.LookUpModels.GetLookUpHairdressers>>(filteredHairdressers);
 
-        logger.LogInformation("Retrieved {Count} active hairdressers for lookup.", hairdresserLookUpDtos.Count());
+        logger.LogInformation("Retrieved {Count} active hairdressers for lookup.", hairdresserLookUpDtos.ToList().Count);
 
         return hairdresserLookUpDtos;
     }

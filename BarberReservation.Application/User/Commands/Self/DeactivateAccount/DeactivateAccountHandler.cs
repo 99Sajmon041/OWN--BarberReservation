@@ -44,6 +44,6 @@ public sealed class DeactivateAccountHandler(
             throw new ValidationException("Chyba: " + error);
         }
 
-        logger.LogInformation("User with ID: {UserId} was deactivated successfully.", appUser.Id);
+        logger.LogInformation("User with ID: {UserId} was self deactivated successfully.", appUser.Id);
     }
 }

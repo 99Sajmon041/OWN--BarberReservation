@@ -20,23 +20,28 @@ public sealed class UpdateAdminReservationStatusCommandHandler(
             throw new NotFoundException("Rezervace nebyla nalezena.");
         }
 
-        if (reservation.Status is ReservationStatus.Canceled or ReservationStatus.Paid or ReservationStatus.NoShow)
+        if (reservation.Status is ReservationStatus.Canceled)
         {
-            logger.LogWarning("Admin attempted to change reservation status but it is already Canceled / Paid / NoShow. ReservationId: {ReservationId}, RequestedStatus:{RequestedStatus}.",
+            logger.LogWarning("Admin attempted to change reservation status but it is already Canceled. ReservationId: {ReservationId}, RequestedStatus:{RequestedStatus}.",
                 request.Id,
                 request.NewReservationStatus);
 
-            throw new DomainException("Rezervaci ve stavu zrušeno / zaplaceno / klient se neukázal nelze měnit.");
+            throw new DomainException("Rezervaci ve stavu zrušeno nelze měnit.");
         }
 
         reservation.Status = request.NewReservationStatus;
-        
 
         if (request.NewReservationStatus == ReservationStatus.Canceled)
         {
             reservation.CanceledBy = ReservationCanceledBy.Admin;
             reservation.CanceledAt = DateTime.UtcNow;
             reservation.CanceledReason = request.CanceledReason;
+        }
+        else
+        {
+            reservation.CanceledBy = null;
+            reservation.CanceledAt = null;
+            reservation.CanceledReason = null;
         }
 
         await unitOfWork.SaveChangesAsync(ct);

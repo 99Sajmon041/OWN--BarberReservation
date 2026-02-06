@@ -76,8 +76,8 @@
                                 @if (_reservationMenuOpen)
                                 {
                                     <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
-                                        <a class="nav-dropdown-item" href="/reservation/list" @onclick="CloseAll">Zobrazit rezervace</a>
-                                        <a class="nav-dropdown-item" href="/reservation/create" @onclick="CloseAll">Vytvořit rezervaci</a>
+                                        <a class="nav-dropdown-item" href="/reservations/list" @onclick="CloseAll">Zobrazit rezervace</a>
+                                        <a class="nav-dropdown-item" href="/reservations/create" @onclick="CloseAll">Vytvořit rezervaci</a>
                                     </div>
                                 }
                             </div>
@@ -102,7 +102,7 @@
                         <button type="button" class="btn btn-link" @onclick="LogoutAsync">Odhlásit</button>
                     </div>
 
-                    <span class="user-pill">@AuthState.FullName · @AuthState.Role</span>
+                    <span class="user-pill">@AuthState.FullName · @Translator.GetCzechRoleName(AuthState.Role)</span>
                 </div>
             }
         </div>
@@ -155,8 +155,8 @@
                         @if (_reservationMenuOpen)
                         {
                             <div class="mobile-submenu">
-                                <a class="mobile-link" href="/reservation/list" @onclick="CloseAll">Zobrazit rezervace</a>
-                                <a class="mobile-link" href="/reservation/create" @onclick="CloseAll">Vytvořit rezervaci</a>
+                                <a class="mobile-link" href="/reservations/list" @onclick="CloseAll">Zobrazit rezervace</a>
+                                <a class="mobile-link" href="/reservations/create" @onclick="CloseAll">Vytvořit rezervaci</a>
                             </div>
                         }
                     }
