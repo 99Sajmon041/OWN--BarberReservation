@@ -1,6 +1,7 @@
 ﻿using BarberReservation.Blazor.Common;
 using BarberReservation.Blazor.Services.Interfaces;
 using BarberReservation.Shared.Models.Common;
+using BarberReservation.Shared.Models.LookUpModels;
 using BarberReservation.Shared.Models.User.Admin;
 using BarberReservation.Shared.Models.User.Common;
 
@@ -65,5 +66,10 @@ public class UserService(IApiClient api) : IUserService
     public async Task UpdateEmailAsync(string id, UpdateUserEmailRequest request, CancellationToken ct)
     {
         await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/update-email", request, ct);
+    }
+
+    public async Task<List<GetLookUpHairdressers>> GetAvailableHairdressersAsync(int reservationId, CancellationToken ct)
+    {
+        return await api.GetAsync<List<GetLookUpHairdressers>>($"api/users/available-hairdressers?reservationId={reservationId}", ct);
     }
 }

@@ -27,7 +27,7 @@ public sealed class CreateUserRequest
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!EnumHelper.AllowedRoleValues.Contains(Role))
+        if (!Helper.AllowedRoleValues.Contains(Role))
             yield return new ValidationResult("Neplatná role,", new[] { nameof(Role) });
     }
 }

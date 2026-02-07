@@ -1,13 +1,14 @@
 ﻿using BarberReservation.API.Mappings;
-using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
+using BarberReservation.Application.Reservation.Commands.Admin.ChangeReservationHairdresser;
 using BarberReservation.Application.Reservation.Queries.Admin.GetAdminReservation;
+using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Reservation.Admin;
+using BarberReservation.Shared.Models.Reservation.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BarberReservation.Shared.Models.Reservation.Common;
 
 namespace BarberReservation.API.Controllers
 {
@@ -28,6 +29,13 @@ namespace BarberReservation.API.Controllers
         {
             var result = await mediator.Send(new GetAdminReservationQuery(id), ct);
             return Ok(result);
+        }
+
+        [HttpPut("{reservationId:int}/hairdresser")]
+        public async Task<IActionResult> ChangeReservationHairdresser([FromRoute] int reservationId, [FromQuery] string hairdresserId, CancellationToken ct)
+        {
+            await mediator.Send(new ChangeReservationHairdresserCommand(reservationId, hairdresserId), ct);
+            return NoContent();
         }
 
         [HttpPatch("{id:int}/status")]

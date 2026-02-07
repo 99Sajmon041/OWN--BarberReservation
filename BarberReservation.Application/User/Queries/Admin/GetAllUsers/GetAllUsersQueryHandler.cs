@@ -35,10 +35,10 @@ public sealed class GetAllUsersQueryHandler(
         {
             var s = request.Search.Trim();
             query = query.Where(u =>
-                u.FirstName.Contains(s) ||
-                u.LastName.Contains(s) ||
-                u.Email!.Contains(s) ||
-                u.PhoneNumber!.Contains(s));
+                (u.FirstName ?? "").Contains(s) ||
+                (u.LastName ?? "").Contains(s) ||
+                (u.Email ?? "").Contains(s) ||
+                (u.PhoneNumber ?? "").Contains(s));
         }
 
         query = ApplySort(query, request.SortBy, request.Desc);
@@ -51,6 +51,22 @@ public sealed class GetAllUsersQueryHandler(
             .ToListAsync(ct);
 
         var usersDtos = mapper.Map<List<UserDto>>(users);
+
+        var rolesTasks = users.Select(async u => new
+        {
+            u.Id,
+            Roles = await userManager.GetRolesAsync(u)
+        });
+
+        var dtoById = usersDtos.ToDictionary(u => u.Id);
+
+        foreach(var u in users)
+        {
+            var roles = await userManager.GetRolesAsync(u);
+
+            if (dtoById.TryGetValue(u.Id, out var dto))
+                dto.Roles = roles.ToList();
+        }
 
         logger.LogInformation("Admin fetched all filtered users to list - {CountOfUsers} records", totalItemsCount);
 

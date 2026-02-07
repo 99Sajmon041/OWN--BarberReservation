@@ -1,5 +1,7 @@
 ﻿@page "/users/{Id}"
 
+<PageTitle>Detail uživatele</PageTitle>
+
 @inject AuthState AuthState
 @inject IUserService UserService
 @inject MessageService MessageService
@@ -90,6 +92,10 @@ else
 
                         <a class="btn btn-outline" href="@($"/working-hours?hairdresserId={model.Id}")">
                             Pracovní doba
+                        </a>
+
+                        <a class="btn btn-outline" href="@($"/time-off/list?hairdresserId={model.Id}")">
+                            Zobrazit volna
                         </a>
 
                         <a class="btn btn-outline" href="@($"/reservations/list?hairdresserId={model.Id}")">
@@ -277,7 +283,7 @@ else
         }
     }
 
-    private string Roles => string.Join(", ", model.Roles.Select(x => EnumHelper.GetCzechNameOfRole(x)));
+    private string Roles => string.Join(", ", model.Roles.Select(x => Helper.GetCzechRoleName(x)));
 
 
     //Two different ways how to do that: -----------------------------------------------------------------------

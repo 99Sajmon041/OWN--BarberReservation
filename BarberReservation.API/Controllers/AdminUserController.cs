@@ -2,9 +2,11 @@
 using BarberReservation.Application.User.Commands.Admin.ActivateUser;
 using BarberReservation.Application.User.Commands.Admin.DeactivateUser;
 using BarberReservation.Application.User.Queries.Admin.GetAllUsers;
+using BarberReservation.Application.User.Queries.Admin.GetAvailableHairdressersForReservation;
 using BarberReservation.Application.User.Queries.Admin.GetUserById;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
+using BarberReservation.Shared.Models.LookUpModels;
 using BarberReservation.Shared.Models.User.Admin;
 using BarberReservation.Shared.Models.User.Common;
 using MediatR;
@@ -22,6 +24,13 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] GetAllUsersQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
+            return Ok(result);
+        }
+
+        [HttpGet("available-hairdressers")]
+        public async Task<ActionResult<List<GetLookUpHairdressers>>> GetAvailableHairdressers([FromQuery] int reservationId, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetAvailableHairdressersForReservationQuery(reservationId), ct);
             return Ok(result);
         }
 

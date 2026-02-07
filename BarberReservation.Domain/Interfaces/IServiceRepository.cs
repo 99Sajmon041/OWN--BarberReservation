@@ -11,4 +11,5 @@ public interface IServiceRepository
     Task<IReadOnlyList<Service>> GetAllLookUpAsync(CancellationToken ct);
     bool Deactivate(Service service);
     Task<bool> ExistsAsync(int id, CancellationToken ct);
+    Task<List<Service>> GetAllForHomePageAsync(CancellationToken ct);
  }

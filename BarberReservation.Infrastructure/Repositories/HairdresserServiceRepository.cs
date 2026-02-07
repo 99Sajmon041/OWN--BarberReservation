@@ -70,7 +70,6 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
     {
         return await _context.HairdresserServices.AnyAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive, ct);
     }
-
     public async Task<(IReadOnlyList<HairdresserService>, int)> GetAllPagedForAdminAsync(CommonHairdresserServicePagedRequest request, CancellationToken ct)
     {
         var query = _context.HairdresserServices
@@ -159,5 +158,13 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
         return await _context.HairdresserServices
             .AsNoTracking()
             .AnyAsync(x => x.HairdresserId == hairdresserId && x.IsActive, ct);
+    }
+
+    public async Task<int?> GetActiveHairdresserServiceIdAsync(string hairdresserId, int serviceId, CancellationToken ct)
+    {
+        return await _context.HairdresserServices
+            .Where(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive)
+            .Select(x => (int?)x.Id)
+            .FirstOrDefaultAsync(ct);
     }
 }

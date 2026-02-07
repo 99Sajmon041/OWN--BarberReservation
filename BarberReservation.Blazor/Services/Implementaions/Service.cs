@@ -57,4 +57,9 @@ public sealed class Service(IApiClient api) : IService
     {
         await api.SendAsync(HttpMethod.Put, $"api/services/{id}", request, ct);
     }
+
+    public async Task<List<ServiceDto>> GetHomePageServicesAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<List<ServiceDto>>("api/services/home-page", ct);
+    }
 }

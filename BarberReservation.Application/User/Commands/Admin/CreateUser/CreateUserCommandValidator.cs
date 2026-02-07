@@ -26,6 +26,6 @@ public sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCom
 
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("Role je povinná.")
-            .Must(x => EnumHelper.AllowedRoleValues.Contains(x)).WithMessage("Neplatná role.");
+            .Must(x => Helper.AllowedRoleValues.Contains(x)).WithMessage("Neplatná role.");
     }
 }

@@ -1,5 +1,7 @@
 ﻿@page "/users/list"
 
+<PageTitle>Seznam uživatelů</PageTitle>
+
 @inject AuthState AuthState
 @inject MessageService MessageService
 @inject IUserService UserService
@@ -81,7 +83,7 @@ else
                     <label class="label" for="role">Role</label>
                     <select id="role" disabled="@isLoading" class="input" @bind="role" @bind:after="OnFiltersChangedAsync">
                         <option value="">Všechny</option>
-                        @foreach (var opt in EnumHelper.RoleOptions)
+                        @foreach (var opt in Helper.RoleOptions)
                         {
                             <option value="@opt.Value">@opt.Text</option>
                         }
@@ -124,6 +126,7 @@ else
                                 <th style="padding: 10px 6px;">Jméno</th>
                                 <th style="padding: 10px 6px;">E-mail</th>
                                 <th style="padding: 10px 6px;">Telefon</th>
+                                <th style="padding: 10px 6px;">Role</th>
                                 <th style="padding: 10px 6px;">Aktivní</th>
                                 <th style="padding: 10px 6px;"></th>
                             </tr>
@@ -140,6 +143,9 @@ else
                                     </td>
                                     <td style="padding: 10px 6px;">
                                         <span class="muted">@u.PhoneNumber</span>
+                                    </td>
+                                    <td style="padding: 10px 6px;">
+                                        <span class="muted">@string.Join(", ", u.Roles.Select(x => Helper.GetCzechRoleName(x)))</span>
                                     </td>
                                     <td style="padding: 10px 6px;">
                                         @if (u.IsActive)
@@ -168,13 +174,13 @@ else
                     </div>
 
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || model.CanGoPrevious)">
+                        <button class="btn btn-outline" type="button" @onclick="PrevPageAsync" disabled="@(isLoading || !model.CanGoPrevious)">
                             Předchozí
                         </button>
 
                         <span class="muted">@($"Strana: {page} / {model.TotalPages}")</span>
 
-                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || model.CanGoNext)">
+                        <button class="btn btn-outline" type="button" @onclick="NextPageAsync" disabled="@(isLoading || !model.CanGoNext)">
                             Další
                         </button>
                     </div>
@@ -291,16 +297,16 @@ else
 
     private async Task PrevPageAsync()
     {
-        if (model is null || model.CanGoPrevious)
+        if (!model.CanGoPrevious)
             return;
 
-        page = Math.Max(1, page - 1);
+        page--;
         await LoadAsync();
     }
 
     private async Task NextPageAsync()
     {
-        if (model is null || model.CanGoNext)
+        if (!model.CanGoNext)
             return;
 
         page++;

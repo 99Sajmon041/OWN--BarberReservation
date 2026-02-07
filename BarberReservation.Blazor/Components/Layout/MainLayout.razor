@@ -102,7 +102,7 @@
                         <button type="button" class="btn btn-link" @onclick="LogoutAsync">Odhlásit</button>
                     </div>
 
-                    <span class="user-pill">@AuthState.FullName · @Translator.GetCzechRoleName(AuthState.Role)</span>
+                    <span class="user-pill">@AuthState.FullName · @Helper.GetCzechRoleName(AuthState.Role)</span>
                 </div>
             }
         </div>

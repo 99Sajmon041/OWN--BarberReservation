@@ -112,4 +112,25 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
         else
             throw new ApiRequestException("Nemáte oprávnění zrušit rezervaci.", StatusCodes.Status403Forbidden);
     }
+
+    public async Task<ReservationDto> GetByIdAsync(int id, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        string url = authState.Roles switch
+        {
+            var r when r.Contains(nameof(UserRoles.Admin)) => $"api/admin/reservations/{id}",
+            var r when r.Contains(nameof(UserRoles.Hairdresser)) => $"api/hairdresser/reservations/{id}",
+            var r when r.Contains(nameof(UserRoles.Customer)) => $"api/me/reservations/{id}",
+            _ => throw new ApiRequestException("Nemáte oprávnění zobrazit rezervaci.", StatusCodes.Status403Forbidden)
+        };
+
+        return await api.GetAsync<ReservationDto>(url, ct);
+    }
+
+    public async Task ChangeReservationHairdresserAsync(int reservationId, string hairdresserId, CancellationToken ct)
+    {
+        var encoded = Uri.EscapeDataString(hairdresserId.Trim());
+        await api.SendAsync(HttpMethod.Put, $"api/admin/reservations/{reservationId}/hairdresser?hairdresserId={encoded}", null, ct);
+    }
 }

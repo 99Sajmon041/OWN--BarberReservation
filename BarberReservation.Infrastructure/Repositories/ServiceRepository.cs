@@ -72,4 +72,14 @@ public sealed class ServiceRepository(BarberDbContext context) : BaseRepository,
             .OrderBy(x => x.Name)
             .ToListAsync(ct);
     }
+
+    public async Task<List<Service>> GetAllForHomePageAsync(CancellationToken ct)
+    {
+        return await _context
+            .Services
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.Name)
+            .ToListAsync(ct);
+    }
 }

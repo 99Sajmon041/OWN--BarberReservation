@@ -1,0 +1,372 @@
+﻿@page "/reservations/{id:int}"
+
+<PageTitle>Deatil rezervace</PageTitle>
+
+@inject AuthState AuthState
+@inject IReservationService ReservationService
+@inject IUserService UserService
+@inject MessageService MessageService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="profile-wrap">
+        <div class="page-head page-head-center">
+            <h1 class="page-title">Detail rezervace@(isLoading ? "" : $" - služba: {model.ServiceName}")</h1>
+            <p class="page-subtitle muted">Detailní specifikace</p>
+        </div>
+
+        <div class="card card-md">
+            @if (isLoading)
+            {
+                <div class="muted center">Načítám rezervaci...</div>
+            }
+            else
+            {
+                <div class="field">
+                    <label class="label">ID</label>
+                    <div class="input input-readonly">
+                        @model.Id
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Název služby</label>
+                    <div class="input input-readonly">
+                        @model.ServiceName
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Vytvořeno</label>
+                    <div class="input input-readonly">
+                        @model.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Začátek</label>
+                    <div class="input input-readonly">
+                        @model.StartAt.ToString("dd.MM.yyyy HH:mm")
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Konec</label>
+                    <div class="input input-readonly">
+                        @model.EndAt.ToString("dd.MM.yyyy HH:mm")
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Trvání (minuty)</label>
+                    <div class="input input-readonly">
+                        @model.DurationMinutes
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Cena</label>
+                    <div class="input input-readonly">
+                        @model.Price.ToString("C2")
+                    </div>
+                </div>
+
+                @if (isAdmin)
+                {
+                    <div class="field">
+                        <label class="label">Kadeřník</label>
+                        <div class="input input-readonly">
+                            <a href="/users/@model.HairdresserId">@model.HairdresserFullName</a>
+                        </div>
+                    </div>
+                }
+                @if (isCustomer)
+                {
+                    <div class="field">
+                        <label class="label">Kadeřník</label>
+                        <div class="input input-readonly">
+                            @model.HairdresserFullName
+                        </div>
+                    </div>
+                }
+
+                <div class="field">
+                    <label class="label">Stav</label>
+                    <div class="input input-readonly">
+                        @Helper.GetCzechreservationStatus(model.Status)
+                    </div>
+                </div>
+
+                @if (model.Status == ReservationStatus.Canceled)
+                {
+                    <div class="field">
+                        <label class="label">Zrušeno (kdy)</label>
+                        <div class="input input-readonly">
+                            @model.CanceledAt?.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Zrušeno (kým)</label>
+                        <div class="input input-readonly">
+                            @Helper.GetCzechRoleName(model.CanceledBy?.ToString() ?? "")
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Důvod zrušení</label>
+                        <div class="input input-readonly">
+                            @Helper.GetCzechCanceledReason(model.CanceledReason?.ToString() ?? "")
+                        </div>
+                    </div>
+                }
+
+                @if (isHairdresserOrAdmin)
+                {
+                    <div class="field">
+                        <label class="label">Jméno zákazníka</label>
+                        <div class="input input-readonly">
+                            @if (!string.IsNullOrWhiteSpace(model.CustomerId) && isAdmin)
+                            {
+                                <a class="link-chip" href="/users/@model.CustomerId">
+                                    @model.ClientFullName
+                                    <span class="link-chip-icon">↗</span>
+                                </a>
+                            }
+                            else
+                            {
+                                @model.ClientFullName
+                            }
+ 
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">E-mail zákazníka</label>
+                        <div class="input input-readonly">
+                            @model.ClientEmail
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Telefon zákazníka</label>
+                        <div class="input input-readonly">
+                            @model.ClientPhone
+                        </div>
+                    </div>
+                }
+
+                <div class="divider"></div>
+
+                <div class="detail-actions">
+
+                    @if (isAdmin && model.Status == ReservationStatus.Booked && model.StartAt > Now)
+                    {
+                        <button type="button" class="btn btn-primary" @onclick="OpenChangeHairdresserModalAsync">
+                            Změnit kadeřníka této rezervace
+                        </button>
+                    }
+
+                    <a class="btn btn-outline" href="/reservations/list">
+                        Zpět na seznam
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<UiModal @bind-Open="showChangeHairdresserModal"
+         Title="Změna kadeřníka"
+         Subtitle="@($"Rezervace ID: {model.Id}")">
+
+    @if (isLoadingCandidates)
+    {
+        <div class="muted center">Načítám dostupné kadeřníky...</div>
+    }
+    else if (availableHairdressers.Count == 0)
+    {
+        <div class="muted center">Pro tento termín nebyl nalezen žádný dostupný kadeřník.</div>
+    }
+    else
+    {
+        <div class="field">
+            <label class="label">Nový kadeřník</label>
+            <select class="input" disabled="@isSubmittingChange" @bind="selectedHairdresserId">
+                <option value="">Vyberte kadeřníka</option>
+                @foreach (var hd in availableHairdressers)
+                {
+                    <option value="@hd.Id">@hd.FullName</option>
+                }
+            </select>
+
+            @if (!string.IsNullOrWhiteSpace(changeHairdresserError))
+            {
+                <div class="field-error">@changeHairdresserError</div>
+            }
+        </div>
+    }
+
+    <div class="ui-modal-foot">
+        <button type="button" class="btn btn-outline" @onclick="CloseChangeHairdresserModal" disabled="@isSubmittingChange">
+            Zrušit
+        </button>
+
+        <button type="button"
+                class="btn btn-primary"
+                @onclick="ConfirmChangeHairdresserAsync"
+                disabled="@(isSubmittingChange || isLoadingCandidates || availableHairdressers.Count == 0)">
+            Uložit
+        </button>
+    </div>
+</UiModal>
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ReservationDto model = new();
+    private bool isAdmin;
+    private bool isHairdresser;
+    private bool isCustomer;
+    private bool isHairdresserOrAdmin;
+
+    private DateTime Now => DateTime.UtcNow;
+
+    private bool isLoading;
+    private bool loaded;
+    private bool _checked;
+
+    private bool showChangeHairdresserModal;
+    private bool isLoadingCandidates;
+    private bool isSubmittingChange;
+
+    private List<GetLookUpHairdressers> availableHairdressers = new();
+    private string? selectedHairdresserId;
+    private string? changeHairdresserError;
+
+    protected override async Task OnAfterRenderAsync(bool firstrender)
+    {
+        if (!firstrender || loaded)
+            return;
+
+        loaded = true;
+        isLoading = true;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.IsAuthenticated)
+            {
+                StateHasChanged();
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+            isHairdresser = AuthState.Roles.Contains(nameof(UserRoles.Hairdresser));
+            isCustomer = AuthState.Roles.Contains(nameof(UserRoles.Customer));
+            isHairdresserOrAdmin = isHairdresser || isAdmin;
+
+            model = await ReservationService.GetByIdAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+            Nav.NavigateTo("/reservations/list", replace: true);
+        }
+        finally
+        {
+            isLoading = false;
+            _checked = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OpenChangeHairdresserModalAsync()
+    {
+        changeHairdresserError = null;
+        selectedHairdresserId = null;
+        availableHairdressers = new();
+        showChangeHairdresserModal = true;
+
+        isLoadingCandidates = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var list = await UserService.GetAvailableHairdressersAsync(model.Id, CancellationToken.None);
+
+            availableHairdressers = list
+                .Where(x => !string.Equals(x.Id, model.HairdresserId, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        catch (ApiRequestException ex)
+        {
+            changeHairdresserError = ex.Message;
+            availableHairdressers = new();
+        }
+        finally
+        {
+            isLoadingCandidates = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void CloseChangeHairdresserModal()
+    {
+        showChangeHairdresserModal = false;
+        changeHairdresserError = null;
+        selectedHairdresserId = null;
+    }
+
+    private async Task ConfirmChangeHairdresserAsync()
+    {
+        changeHairdresserError = null;
+
+        if (string.IsNullOrWhiteSpace(selectedHairdresserId))
+        {
+            changeHairdresserError = "Vyberte kadeřníka.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        var ok = await JS.ConfirmAction("Opravdu chcete změnit kadeřníka této rezervace?");
+        if (!ok)
+            return;
+
+        isSubmittingChange = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await ReservationService.ChangeReservationHairdresserAsync(model.Id, selectedHairdresserId, CancellationToken.None);
+
+            MessageService.ShowSuccess("Kadeřník rezervace byl změněn.");
+
+            model = await ReservationService.GetByIdAsync(Id, CancellationToken.None);
+
+            showChangeHairdresserModal = false;
+        }
+        catch (ApiRequestException ex)
+        {
+            changeHairdresserError = ex.Message;
+        }
+        finally
+        {
+            isSubmittingChange = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

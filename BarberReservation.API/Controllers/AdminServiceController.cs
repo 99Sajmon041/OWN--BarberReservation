@@ -1,6 +1,7 @@
 ﻿using BarberReservation.API.Mappings;
 using BarberReservation.Application.Service.Commands.ActivateService;
 using BarberReservation.Application.Service.Commands.DeactivateService;
+using BarberReservation.Application.Service.Queries.GetAllForHomePage;
 using BarberReservation.Application.Service.Queries.GetAllServices;
 using BarberReservation.Application.Service.Queries.GetServiceById;
 using BarberReservation.Shared.Enums;
@@ -21,6 +22,14 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll([FromQuery] GetAllServicesQuery query, CancellationToken ct)
         {
             var result = await mediator.Send(query, ct);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("home-page")]
+        public async Task<ActionResult<ServiceDto>> GetAllForHomePage(CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetAllForHomePageQuery(), ct);
             return Ok(result);
         }
 

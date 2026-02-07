@@ -1,5 +1,7 @@
 ﻿@page "/time-off/detail"
 
+<PageTitle>Úprava volna</PageTitle>
+
 @inject ITimeOffService TimeOffService
 @inject IWorkingHoursService WorkingHoursService
 @inject IReservationService ReservationService
@@ -383,7 +385,7 @@
                 SelectedDay = coerced;
 
                 if (showWeekendInfo)
-                    MessageService.ShowInfo("O víkendu nelze nastavit volno – přesouvám na nejbližší pracovní den.");
+                    MessageService.ShowInfo("O víkendu nelze nastavit volno – přesunuto na nejbližší pracovní den.");
             }
 
             IsLoading = true;

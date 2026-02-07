@@ -1,5 +1,8 @@
 ﻿@page "/"
 
+@inject MessageService MessageService
+@inject IService Service
+
 <PageTitle>Domů</PageTitle>
 
 <section class="hero hero-full">
@@ -7,7 +10,7 @@
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
-        <h1>Zarezervuj si svůj střih!</h1>
+        <h1>Zarezervujte si svůj střih!</h1>
         <p>Jednoduchá rezervace a profesionální přístup kadeřníků.</p>
 
         <div class="hero-actions">
@@ -15,3 +18,66 @@
         </div>
     </div>
 </section>
+
+<section class="home-section">
+    <div class="container">
+        <div class="page-head page-head-center">
+            <h2 class="page-title">Naše služby</h2>
+            <p class="page-subtitle muted">
+                Přehled služeb, které si u nás můžete rezervovat. Rezervaci vytvoříte přes tlačítko výše.
+            </p>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="muted center" style="padding:16px 0;">Načítám služby...</div>
+        }
+        else if (services is null || services.Count == 0)
+        {
+            <div class="muted center" style="padding:16px 0;">Aktuálně nejsou dostupné žádné služby.</div>
+        }
+        else
+        {
+            <div class="services-grid">
+                @foreach (var s in services)
+                {
+                    <article class="service-card">
+                        <div class="service-card-head">
+                            <div class="service-title">@s.Name</div>
+                        </div>
+
+                        <div class="service-desc muted">
+                            @s.Description
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private bool isLoading = true;
+    private List<ServiceDto> services = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            services = await Service.GetHomePageServicesAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        catch (Exception)
+        {
+            MessageService.ShowError("Nepodařilo se načíst služby.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
