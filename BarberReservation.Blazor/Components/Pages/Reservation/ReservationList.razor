@@ -2,6 +2,7 @@
 
 <PageTitle>Seznam rezervací</PageTitle>
 
+@implements IDisposable
 @inject MessageService MessageService
 @inject IReservationService ReservationService
 @inject NavigationManager Nav
@@ -323,23 +324,22 @@ else
 
                                     <td style="padding:10px 6px; text-align:right;">
                                         <div class="table-actions">
-                                            <a class="btn btn-link btn-mini" href="@($"/reservations/{r.Id}")">Detail</a>
-
                                             @if (isAdmin || isHairdresser)
                                             {
-                                                <button class="btn btn-mini btn-ghost" 
-                                                    type="button"
-                                                    disabled="@(r.Status == ReservationStatus.Canceled)"
-                                                    @onclick="() => ChangeReservationStatusAsync(r.Id)">
-                                                        Změnit status
+                                                <button class="btn btn-mini btn-ghost"
+                                                        type="button"
+                                                        disabled="@(r.Status == ReservationStatus.Canceled)"
+                                                        @onclick="() => ChangeReservationStatusAsync(r.Id)">
+                                                    Změnit status
                                                 </button>
                                             }
-                                            else
+                                            @if (isCustomer && r.Status is not (ReservationStatus.Canceled or ReservationStatus.Paid or ReservationStatus.NoShow) && r.StartAt > DateTime.UtcNow.AddHours(24))
                                             {
                                                 <button class="btn btn-mini btn-ghost" type="button" @onclick="() => CancelReservationAsync(r.Id)">
                                                     Zrušit rezervaci
                                                 </button>
                                             }
+                                            <a class="btn btn-link btn-mini" href="@($"/reservations/{r.Id}?returnUrl={Uri.EscapeDataString(BuildListUri())}")">Detail</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -383,9 +383,13 @@ else
     <div class="field">
         <label class="label">Nový stav</label>
         <select class="input" disabled="@isLoading" @bind="statusModalNewStatus">
-            <option value="@ReservationStatus.Paid">Zaplaceno</option>
-            <option value="@ReservationStatus.NoShow">Klient se neukázal</option>
-            <option value="@ReservationStatus.Canceled">Zrušeno</option>
+            @if (!isInFuture)
+            {
+                <option value="@ReservationStatus.Paid" disabled="@(statusModalCurrentStatus == ReservationStatus.Paid)">Zaplaceno</option>
+                <option value="@ReservationStatus.NoShow" disabled="@(statusModalCurrentStatus == ReservationStatus.NoShow)">Klient se neukázal</option>
+            }
+            <option value="@ReservationStatus.Canceled" disabled="@(statusModalCurrentStatus == ReservationStatus.Canceled)">Zrušeno</option>
+
         </select>
     </div>
 
@@ -413,7 +417,7 @@ else
             Zrušit
         </button>
 
-        <button type="button" class="btn btn-primary" @onclick="ConfirmStatusChangeAsync" disabled="@isLoading">
+        <button type="button" class="btn btn-primary" @onclick="ConfirmStatusChangeAsync" disabled="@(isLoading || statusModalNewStatus == statusModalCurrentStatus)">
             Uložit
         </button>
     </div>
@@ -437,11 +441,13 @@ else
     private bool _checked;
     private bool isLoading;
     private bool loaded;
+    private bool locationSubscribed;
     private CancellationTokenSource? searchCts;
     private bool isAdmin;
     private bool isHairdresser;
     private bool isCustomer;
 
+    private bool lookupsLoaded;
     bool cancelFiltersEnabled;
 
     private int page = 1;
@@ -463,10 +469,11 @@ else
     private DateTime? canceledTo;
 
     private bool showStatusModal;
+    private bool isInFuture;
 
     private int statusModalReservationId;
     private ReservationStatus statusModalCurrentStatus;
-    private ReservationStatus statusModalNewStatus = ReservationStatus.Paid;
+    private ReservationStatus statusModalNewStatus;
     private CanceledReason? statusModalCanceledReason;
 
     private string? statusReasonError;
@@ -498,26 +505,16 @@ else
             isHairdresser = AuthState.Roles.Contains(nameof(UserRoles.Hairdresser));
             isCustomer = AuthState.Roles.Contains(nameof(UserRoles.Customer));
 
-            services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
-            reservationStatuses = await LookUpsService.GetAllReservationStatusesAsync(CancellationToken.None);
-            canceledByOptions = await LookUpsService.GetAllCanceledByOptionsAsync(CancellationToken.None);
-            canceledReasons = await LookUpsService.GetAllCanceledReasonsAsync(CancellationToken.None);
-
-            if (isAdmin || isCustomer)
-                hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
-
-            if (isAdmin && !string.IsNullOrWhiteSpace(HairdresserIdFromQuery))
+            if (!locationSubscribed)
             {
-                hairdresserId = HairdresserIdFromQuery;
-                customerId = null;
-            }
-            else if (isAdmin && !string.IsNullOrWhiteSpace(CustomerIdFromQuery))
-            {
-                customerId = CustomerIdFromQuery;
-                hairdresserId = null;
+                locationSubscribed = true;
+                Nav.LocationChanged += OnLocationChanged;
             }
 
-            ApplyDefaultDates();
+            await EnsureLookupsAsync();
+
+            ApplyQueryFromUrl();
+            EnsureDefaultsIfMissing();
 
             await LoadAsync();
         }
@@ -536,6 +533,251 @@ else
         {
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task EnsureLookupsAsync()
+    {
+        if (lookupsLoaded)
+            return;
+
+        services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
+        reservationStatuses = await LookUpsService.GetAllReservationStatusesAsync(CancellationToken.None);
+        canceledByOptions = await LookUpsService.GetAllCanceledByOptionsAsync(CancellationToken.None);
+        canceledReasons = await LookUpsService.GetAllCanceledReasonsAsync(CancellationToken.None);
+
+        if (isAdmin || isCustomer)
+            hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+        lookupsLoaded = true;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!_checked)
+            return;
+
+        await InvokeAsync(async () =>
+        {
+            await EnsureLookupsAsync();
+            ApplyQueryFromUrl();
+            EnsureDefaultsIfMissing();
+            await LoadAsync();
+        });
+    }
+
+    private void ApplyQueryFromUrl()
+    {
+        var uri = new Uri(Nav.Uri);
+        var q = QueryHelpers.ParseQuery(uri.Query);
+
+        if (q.TryGetValue("page", out var qp) && int.TryParse(qp.ToString(), out var p) && p > 0)
+            page = p;
+
+        if (q.TryGetValue("pageSize", out var qps) && int.TryParse(qps.ToString(), out var ps) && ps > 0) 
+            pageSize = ps;
+
+        if (q.TryGetValue("search", out var qs)) 
+            search = string.IsNullOrWhiteSpace(qs.ToString()) ? null : qs.ToString();
+
+        if (q.TryGetValue("sortBy", out var qsb) && !string.IsNullOrWhiteSpace(qsb.ToString()))
+            sortBy = qsb.ToString();
+
+        if (q.TryGetValue("desc", out var qd) && bool.TryParse(qd.ToString(), out var d)) 
+            desc = d;
+
+        if (q.TryGetValue("serviceId", out var qsid) && int.TryParse(qsid.ToString(), out var sid)) 
+            serviceId = sid;
+        else 
+            serviceId = null;
+
+        if (q.TryGetValue("hairdresserId", out var qhid))
+            hairdresserId = string.IsNullOrWhiteSpace(qhid.ToString()) ? null : qhid.ToString();
+
+        if (q.TryGetValue("customerId", out var qcid))
+            customerId = string.IsNullOrWhiteSpace(qcid.ToString()) ? null : qcid.ToString();
+
+        if (q.TryGetValue("status", out var qst) && Enum.TryParse<ReservationStatus>(qst.ToString(), true, out var st)) 
+            status = st;
+        else 
+            status = null;
+
+        if (q.TryGetValue("canceledBy", out var qcb) && Enum.TryParse<ReservationCanceledBy>(qcb.ToString(), true, out var cb)) 
+            canceledBy = cb;
+        else 
+            canceledBy = null;
+
+        if (q.TryGetValue("canceledReason", out var qcr) && Enum.TryParse<CanceledReason>(qcr.ToString(), true, out var cr))
+            canceledReason = cr;
+        else 
+            canceledReason = null;
+
+        createdFrom = ParseDateFromInput(q.TryGetValue("createdFrom", out var cf) ? cf.ToString() : null);
+        createdTo = ParseDateFromInput(q.TryGetValue("createdTo", out var ct) ? ct.ToString() : null);
+        startFrom = ParseDateFromInput(q.TryGetValue("startFrom", out var sf) ? sf.ToString() : null);
+        startTo = ParseDateFromInput(q.TryGetValue("startTo", out var stt) ? stt.ToString() : null);
+        canceledFrom = ParseDateFromInput(q.TryGetValue("canceledFrom", out var caf) ? caf.ToString() : null);
+        canceledTo = ParseDateFromInput(q.TryGetValue("canceledTo", out var cat) ? cat.ToString() : null);
+
+        if (!isAdmin)
+            customerId = null;
+
+        if (!(isAdmin || isCustomer))
+            hairdresserId = null;
+
+        if (isAdmin && string.IsNullOrWhiteSpace(hairdresserId) && !string.IsNullOrWhiteSpace(HairdresserIdFromQuery))
+        {
+            hairdresserId = HairdresserIdFromQuery;
+            customerId = null;
+        }
+        else if (isAdmin && string.IsNullOrWhiteSpace(customerId) && !string.IsNullOrWhiteSpace(CustomerIdFromQuery))
+        {
+            customerId = CustomerIdFromQuery;
+            hairdresserId = null;
+        }
+
+        if (status != ReservationStatus.Canceled)
+        {
+            canceledBy = null;
+            canceledReason = null;
+            canceledFrom = null;
+            canceledTo = null;
+        }
+    }
+
+    private void EnsureDefaultsIfMissing()
+    {
+        if (createdFrom is null && createdTo is null && startFrom is null && startTo is null && canceledFrom is null && canceledTo is null)
+            ApplyDefaultDates();
+
+        if (string.IsNullOrWhiteSpace(sortBy))
+            sortBy = "id";
+
+        if (page <= 0)
+            page = 1;
+
+        if (pageSize <= 0)
+            pageSize = 20;
+    }
+
+    private string BuildListUri(
+        int? newPage = null,
+        int? newPageSize = null,
+        string? newSearch = null,
+        int? newServiceId = null,
+        string? newHairdresserId = null,
+        string? newCustomerId = null,
+        string? newSortBy = null,
+        bool? newDesc = null,
+        ReservationStatus? newStatus = null,
+        ReservationCanceledBy? newCanceledBy = null,
+        CanceledReason? newCanceledReason = null,
+        DateTime? newCreatedFrom = null,
+        DateTime? newCreatedTo = null,
+        DateTime? newStartFrom = null,
+        DateTime? newStartTo = null,
+        DateTime? newCanceledFrom = null,
+        DateTime? newCanceledTo = null)
+    {
+        var p = newPage ?? page;
+        var ps = newPageSize ?? pageSize;
+
+        var s = newSearch ?? search;
+        var sid = newServiceId ?? serviceId;
+        var hid = newHairdresserId ?? hairdresserId;
+        var cid = newCustomerId ?? customerId;
+        var sb = newSortBy ?? sortBy;
+        var d = newDesc ?? desc;
+
+        var st = newStatus ?? status;
+        var cb = newCanceledBy ?? canceledBy;
+        var cr = newCanceledReason ?? canceledReason;
+
+        var cf = newCreatedFrom ?? createdFrom;
+        var ct = newCreatedTo ?? createdTo;
+        var sf = newStartFrom ?? startFrom;
+        var stt = newStartTo ?? startTo;
+        var caf = newCanceledFrom ?? canceledFrom;
+        var cat = newCanceledTo ?? canceledTo;
+
+        var parts = new List<string>
+        {
+            $"page={p}",
+            $"pageSize={ps}",
+            $"sortBy={Uri.EscapeDataString(string.IsNullOrWhiteSpace(sb) ? "id" : sb)}",
+            $"desc={(d ? "true" : "false")}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(s))
+            parts.Add($"search={Uri.EscapeDataString(s.Trim())}");
+
+        if (sid is not null)
+            parts.Add($"serviceId={sid}");
+
+        if ((isAdmin || isCustomer) && !string.IsNullOrWhiteSpace(hid))
+            parts.Add($"hairdresserId={Uri.EscapeDataString(hid)}");
+
+        if (isAdmin && !string.IsNullOrWhiteSpace(cid))
+            parts.Add($"customerId={Uri.EscapeDataString(cid)}");
+
+        if (st is not null)
+            parts.Add($"status={Uri.EscapeDataString(st.ToString()!)}");
+
+        if (st == ReservationStatus.Canceled)
+        {
+            if (cb is not null)
+                parts.Add($"canceledBy={Uri.EscapeDataString(cb.ToString()!)}");
+
+            if (cr is not null)
+                parts.Add($"canceledReason={Uri.EscapeDataString(cr.ToString()!)}");
+
+            if (caf is not null)
+                parts.Add($"canceledFrom={Uri.EscapeDataString(caf.Value.ToString("yyyy-MM-dd"))}");
+
+            if (cat is not null)
+                parts.Add($"canceledTo={Uri.EscapeDataString(cat.Value.ToString("yyyy-MM-dd"))}");
+        }
+
+        if (cf is not null)
+            parts.Add($"createdFrom={Uri.EscapeDataString(cf.Value.ToString("yyyy-MM-dd"))}");
+
+        if (ct is not null)
+            parts.Add($"createdTo={Uri.EscapeDataString(ct.Value.ToString("yyyy-MM-dd"))}");
+
+        if (sf is not null)
+            parts.Add($"startFrom={Uri.EscapeDataString(sf.Value.ToString("yyyy-MM-dd"))}");
+
+        if (stt is not null)
+            parts.Add($"startTo={Uri.EscapeDataString(stt.Value.ToString("yyyy-MM-dd"))}");
+
+        return $"/reservations/list?{string.Join("&", parts)}";
+    }
+
+    private void NavigateToState(
+        int? newPage = null,
+        int? newPageSize = null,
+        string? newSearch = null,
+        int? newServiceId = null,
+        string? newHairdresserId = null,
+        string? newCustomerId = null,
+        string? newSortBy = null,
+        bool? newDesc = null,
+        ReservationStatus? newStatus = null,
+        ReservationCanceledBy? newCanceledBy = null,
+        CanceledReason? newCanceledReason = null,
+        DateTime? newCreatedFrom = null,
+        DateTime? newCreatedTo = null,
+        DateTime? newStartFrom = null,
+        DateTime? newStartTo = null,
+        DateTime? newCanceledFrom = null,
+        DateTime? newCanceledTo = null,
+        bool replace = true)
+    {
+        var url = BuildListUri(
+            newPage, newPageSize, newSearch, newServiceId, newHairdresserId, newCustomerId,
+            newSortBy, newDesc, newStatus, newCanceledBy, newCanceledReason,
+            newCreatedFrom, newCreatedTo, newStartFrom, newStartTo, newCanceledFrom, newCanceledTo);
+
+        Nav.NavigateTo(url, replace: replace);
     }
 
     private async Task LoadAsync()
@@ -568,6 +810,12 @@ else
             };
 
             model = await ReservationService.GetAllAsync(req, CancellationToken.None);
+
+            if (model is not null)
+            {
+                page = model.Page;
+                pageSize = model.PageSize;
+            }
         }
         catch (ApiRequestException ex)
         {
@@ -580,68 +828,91 @@ else
         }
     }
 
-    private async Task ApplyFiltersAsync()
+    private Task ApplyFiltersAsync()
     {
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task ToggleSortAsync()
+    private Task ToggleSortAsync()
     {
-        desc = !desc;
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, newDesc: !desc, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task PrevPageAsync()
+    private Task PrevPageAsync()
     {
         if (!model.CanGoPrevious)
-            return;
+            return Task.CompletedTask;
 
-        page--;
-        await LoadAsync();
+        NavigateToState(newPage: page - 1, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task NextPageAsync()
+    private Task NextPageAsync()
     {
         if (!model.CanGoNext)
-            return;
+            return Task.CompletedTask;
 
-        page++;
-        await LoadAsync();
+        NavigateToState(newPage: page + 1, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task ClearSearchAsync()
+    private Task ClearSearchAsync()
     {
         searchCts?.Cancel();
         searchCts?.Dispose();
         searchCts = null;
 
-        search = null;
-        page = 1;
-        await LoadAsync();
+        search = "";
+        NavigateToState(newPage: 1, newSearch: null, replace: true);
+        return Task.CompletedTask;
     }
 
     private async Task OnSearchInput(ChangeEventArgs e)
     {
-        search = e.Value?.ToString() ?? "";
+        var newValue = e.Value?.ToString() ?? "";
+        search = newValue;
         page = 1;
 
         searchCts?.Cancel();
         searchCts?.Dispose();
         searchCts = new CancellationTokenSource();
+        var token = searchCts.Token;
 
         try
         {
-            await Task.Delay(350, searchCts.Token);
-            await LoadAsync();
+            await Task.Delay(350, token);
+            if (token.IsCancellationRequested)
+                return;
+
+            var snapshot = newValue;
+
+            NavigateToState(
+                newPage: 1,
+                newSearch: string.IsNullOrWhiteSpace(snapshot) ? null : snapshot,
+                replace: true);
         }
         catch (TaskCanceledException)
         {
         }
     }
 
-    private async Task OnStatusChanged(ChangeEventArgs e)
+    private Task OnFiltersChangedAsync()
+    {
+        if (status != ReservationStatus.Canceled)
+        {
+            canceledBy = null;
+            canceledReason = null;
+            canceledFrom = null;
+            canceledTo = null;
+        }
+
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
+    }
+
+    private Task OnStatusChanged(ChangeEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
             status = null;
@@ -652,10 +923,12 @@ else
         {
             canceledBy = null;
             canceledReason = null;
+            canceledFrom = null;
+            canceledTo = null;
         }
 
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
     }
 
     private static string FormatDateForInput(DateTime? value)
@@ -663,18 +936,18 @@ else
         return value is null ? "" : value.Value.ToString("yyyy-MM-dd");
     }
 
-    private async Task OnCanceledFromChanged(ChangeEventArgs e)
+    private Task OnCanceledFromChanged(ChangeEventArgs e)
     {
         canceledFrom = ParseDateFromInput(e.Value?.ToString());
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task OnCanceledToChanged(ChangeEventArgs e)
+    private Task OnCanceledToChanged(ChangeEventArgs e)
     {
         canceledTo = ParseDateFromInput(e.Value?.ToString());
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
     }
 
     private static DateTime? ParseDateFromInput(string? value)
@@ -697,7 +970,7 @@ else
         canceledTo = to;
     }
 
-    private async Task ResetFiltersAsync()
+    private Task ResetFiltersAsync()
     {
         searchCts?.Cancel();
         searchCts?.Dispose();
@@ -718,15 +991,27 @@ else
         ApplyDefaultDates();
         search = null;
 
-        Nav.NavigateTo("/reservations/list", replace: true);
+        NavigateToState(
+            newPage: 1,
+            newPageSize: 20,
+            newSearch: null,
+            newServiceId: null,
+            newHairdresserId: null,
+            newCustomerId: null,
+            newSortBy: "id",
+            newDesc: false,
+            newStatus: null,
+            newCanceledBy: null,
+            newCanceledReason: null,
+            newCreatedFrom: createdFrom,
+            newCreatedTo: createdTo,
+            newStartFrom: startFrom,
+            newStartTo: startTo,
+            newCanceledFrom: null,
+            newCanceledTo: null,
+            replace: true);
 
-        await LoadAsync();
-    }
-
-    private async Task OnFiltersChangedAsync()
-    {
-        page = 1;
-        await LoadAsync();
+        return Task.CompletedTask;
     }
 
     private async Task CancelReservationAsync(int id)
@@ -760,12 +1045,24 @@ else
         if (row is null)
             return Task.CompletedTask;
 
+        isInFuture = row.StartAt > DateTime.UtcNow;
+
         statusModalReservationId = id;
         statusModalCurrentStatus = row.Status;
 
-        statusModalNewStatus = ReservationStatus.Paid;
-        statusModalCanceledReason = null;
+        if (isInFuture)
+        {
+            statusModalNewStatus = ReservationStatus.Canceled;
+        }
+        else
+        {
+            statusModalNewStatus =
+                statusModalCurrentStatus != ReservationStatus.Paid ? ReservationStatus.Paid :
+                statusModalCurrentStatus != ReservationStatus.NoShow ? ReservationStatus.NoShow :
+                ReservationStatus.Canceled;
+        }
 
+        statusModalCanceledReason = null;
         statusReasonError = null;
         showStatusModal = true;
 
@@ -821,5 +1118,18 @@ else
             isLoading = false;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    public void Dispose()
+    {
+        if (locationSubscribed)
+        {
+            locationSubscribed = false;
+            Nav.LocationChanged -= OnLocationChanged;
+        }
+
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = null;
     }
 }

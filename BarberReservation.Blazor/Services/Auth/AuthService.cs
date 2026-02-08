@@ -12,12 +12,19 @@ public sealed class AuthService(
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken ct)
     {
-        var result = await api.PostAsyncWithResponse<LoginRequest, LoginResponse>(HttpMethod.Post, "api/auth/login", request, ct);
+        var req = new LoginRequest
+        {
+            Email = request.Email,
+            Password = request.Password,
+            RememberMe = true
+        };
+
+        var result = await api.PostAsyncWithResponse<LoginRequest, LoginResponse>(HttpMethod.Post, "api/auth/login", req, ct);
 
         if (string.IsNullOrWhiteSpace(result.Token))
             throw new ApiRequestException("Server nevrátil token.", 500);
 
-        await authState.SetSessionAsync(result.Token, result.ExpiresAt, result.MustChangePassword, request.RememberMe);
+        await authState.SetSessionAsync(result.Token, result.ExpiresAt, result.MustChangePassword);
         (authStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
 
         return result;

@@ -8,7 +8,6 @@ namespace BarberReservation.Blazor.Auth;
 public sealed class AuthState
 {
     private const string StorageKey = "auth.session";
-    private readonly ProtectedSessionStorage _session;
     private readonly ProtectedLocalStorage _local;
     private string? _token;
     private ClaimsPrincipal? _principalCache;
@@ -20,9 +19,8 @@ public sealed class AuthState
 
     public event Action? OnChange;
 
-    public AuthState(ProtectedSessionStorage session, ProtectedLocalStorage local)
+    public AuthState(ProtectedLocalStorage local)
     {
-        _session = session;
         _local = local;
     }
 
@@ -94,11 +92,16 @@ public sealed class AuthState
     public async Task LoadAsync()
     {
         var local = await _local.GetAsync<AuthSession>(StorageKey);
-        var session = await _session.GetAsync<AuthSession>(StorageKey);
-
-        var data = local.Success ? local.Value : (session.Success ? session.Value : null);
-        if (data is null)
+        if (!local.Success || local.Value is null)
             return;
+
+        var data = local.Value;
+
+        if (data.ExpiresAt <= DateTime.UtcNow)
+        {
+            await _local.DeleteAsync(StorageKey);
+            return;
+        }
 
         _token = data.Token;
         ExpiresAt = data.ExpiresAt;
@@ -108,24 +111,14 @@ public sealed class AuthState
         OnChange?.Invoke();
     }
 
-    public async Task SetSessionAsync(string token, DateTime expiresAt, bool mustChangePassword, bool rememberMe)
+    public async Task SetSessionAsync(string token, DateTime expiresAt, bool mustChangePassword)
     {
         _token = token;
         ExpiresAt = expiresAt;
         MustChangePassword = mustChangePassword;
 
         var data = new AuthSession(token, expiresAt, mustChangePassword);
-
-        if (rememberMe)
-        {
-            await _local.SetAsync(StorageKey, data);
-            await _session.DeleteAsync(StorageKey);
-        }
-        else
-        {
-            await _session.SetAsync(StorageKey, data);
-            await _local.DeleteAsync(StorageKey);
-        }
+        await _local.SetAsync(StorageKey, data);
 
         _principalCache = null;
         OnChange?.Invoke();
@@ -135,13 +128,8 @@ public sealed class AuthState
     {
         MustChangePassword = false;
 
-        var rememberMe = (await _local.GetAsync<AuthSession>(StorageKey)).Success;
         if (_token is not null)
-        {
-            await SetSessionAsync(_token, ExpiresAt, MustChangePassword, rememberMe);
-        }
-
-        OnChange?.Invoke();
+            await SetSessionAsync(_token, ExpiresAt, MustChangePassword);
     }
 
     public async Task ClearAsync()
@@ -150,7 +138,6 @@ public sealed class AuthState
         ExpiresAt = default;
         MustChangePassword = false;
 
-        await _session.DeleteAsync(StorageKey);
         await _local.DeleteAsync(StorageKey);
 
         _principalCache = null;

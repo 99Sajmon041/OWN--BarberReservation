@@ -85,7 +85,10 @@ else
                     <div class="field">
                         <label class="label">Kadeřník</label>
                         <div class="input input-readonly">
-                            <a href="/users/@model.HairdresserId">@model.HairdresserFullName</a>
+                            <a class="link-chip" href="/users/@model.HairdresserId">
+                                @model.HairdresserFullName
+                                <span class="link-chip-icon">↗</span>
+                            </a>
                         </div>
                     </div>
                 }

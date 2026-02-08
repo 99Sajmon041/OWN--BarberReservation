@@ -14,6 +14,8 @@ public sealed class UpdateHairDresserReservationStatusCommandHandler(
 {
     public async Task Handle(UpdateHairDresserReservationStatusCommand request, CancellationToken ct)
     {
+        var now = DateTime.UtcNow;
+
         var reservation = await unitOfWork.ReservationRepository.GetForHairdresserAsync(request.Id, currentAppUser.User.Id, ct);
         if(reservation is null)
         {
@@ -30,12 +32,25 @@ public sealed class UpdateHairDresserReservationStatusCommandHandler(
             throw new DomainException("Rezervaci ve stavu zrušeno nelze měnit.");
         }
 
+        if (reservation.StartAt > now && (request.NewReservationStatus == ReservationStatus.NoShow || request.NewReservationStatus == ReservationStatus.Paid))
+        {
+            logger.LogWarning(
+                "Hairdresser attempted to set invalid status for future reservation. ReservationId: {ReservationId}, CurrentStatus: {CurrentStatus}, RequestedStatus: {RequestedStatus}, StartAt: {StartAt}, NowUtc: {NowUtc}.",
+                reservation.Id,
+                reservation.Status,
+                request.NewReservationStatus,
+                reservation.StartAt,
+                now);
+
+            throw new ConflictException("Rezervaci v budoucnu nelze nastavit na zaplaceno / zákazník se neukázal.");
+        }
+
         reservation.Status = request.NewReservationStatus;
 
         if (request.NewReservationStatus == ReservationStatus.Canceled)
         {
             reservation.CanceledBy = ReservationCanceledBy.Hairdresser;
-            reservation.CanceledAt = DateTime.UtcNow;
+            reservation.CanceledAt = now;
             reservation.CanceledReason = request.CanceledReason;
         }
         else

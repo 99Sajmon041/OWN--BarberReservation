@@ -2,6 +2,7 @@
 
 <PageTitle>Volna</PageTitle>
 
+@implements IDisposable
 @inject MessageService MessageService
 @inject ITimeOffService TimeOffService
 @inject NavigationManager Nav
@@ -237,8 +238,10 @@ else
     private bool _checked;
     private bool isLoading;
     private bool loaded;
+    private bool locationSubscribed;
     private CancellationTokenSource? searchCts;
     private bool isAdmin;
+    private bool lookupsLoaded;
 
     private int page = 1;
     private int pageSize = 20;
@@ -274,15 +277,15 @@ else
 
             isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
 
-            if (isAdmin)
+            if (!locationSubscribed)
             {
-                hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
-                hairdresserId = HairdresserIdQuery;
+                locationSubscribed = true;
+                Nav.LocationChanged += OnLocationChanged;
             }
 
-            month = MonthQuery;
-            year = YearQuery;
+            await EnsureLookupsAsync();
 
+            ApplyQueryFromUrl();
             await LoadAsync();
         }
         catch (ApiRequestException ex)
@@ -300,6 +303,131 @@ else
         {
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task EnsureLookupsAsync()
+    {
+        if (lookupsLoaded)
+            return;
+
+        if (isAdmin)
+            hairdressers = await LookUpsService.GetAllHairdressersAsync(CancellationToken.None);
+
+        lookupsLoaded = true;
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (!_checked)
+            return;
+
+        await InvokeAsync(async () =>
+        {
+            await EnsureLookupsAsync();
+            ApplyQueryFromUrl();
+            await LoadAsync();
+        });
+    }
+
+    private void ApplyQueryFromUrl()
+    {
+        var uri = new Uri(Nav.Uri);
+        var q = QueryHelpers.ParseQuery(uri.Query);
+
+        if (q.TryGetValue("page", out var qp) && int.TryParse(qp.ToString(), out var p) && p > 0)
+            page = p;
+
+        if (q.TryGetValue("pageSize", out var qps) && int.TryParse(qps.ToString(), out var ps) && ps > 0) 
+            pageSize = ps;
+
+        if (q.TryGetValue("search", out var qs)) 
+            search = string.IsNullOrWhiteSpace(qs.ToString()) ? null : qs.ToString();
+
+        if (q.TryGetValue("sortBy", out var qsb) && !string.IsNullOrWhiteSpace(qsb.ToString()))
+            sortBy = qsb.ToString();
+
+        if (q.TryGetValue("desc", out var qd) && bool.TryParse(qd.ToString(), out var d))
+            desc = d;
+
+        if (q.TryGetValue("year", out var qy) && int.TryParse(qy.ToString(), out var yy)) 
+            year = yy;
+        else year = YearQuery;
+
+        if (q.TryGetValue("month", out var qm) && int.TryParse(qm.ToString(), out var mm)) 
+            month = mm;
+        else month = MonthQuery;
+
+        if (year is null)
+            month = null;
+
+        if (isAdmin)
+        {
+            if (q.TryGetValue("hairdresserId", out var qhid))
+                hairdresserId = string.IsNullOrWhiteSpace(qhid.ToString()) ? null : qhid.ToString();
+            else
+                hairdresserId = HairdresserIdQuery;
+        }
+        else
+        {
+            hairdresserId = null;
+        }
+    }
+
+    private string BuildListUri(
+        int? newPage = null,
+        int? newPageSize = null,
+        string? newSearch = null,
+        string? newHairdresserId = null,
+        int? newYear = null,
+        int? newMonth = null,
+        string? newSortBy = null,
+        bool? newDesc = null)
+    {
+        var p = newPage ?? page;
+        var ps = newPageSize ?? pageSize;
+        var s = newSearch ?? search;
+        var hid = newHairdresserId ?? hairdresserId;
+        var y = newYear ?? year;
+        var m = newMonth ?? month;
+        var sb = newSortBy ?? sortBy;
+        var d = newDesc ?? desc;
+
+        var parts = new List<string>
+        {
+            $"page={p}",
+            $"pageSize={ps}",
+            $"sortBy={Uri.EscapeDataString(sb)}",
+            $"desc={(d ? "true" : "false")}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(s))
+            parts.Add($"search={Uri.EscapeDataString(s.Trim())}");
+
+        if (isAdmin && !string.IsNullOrWhiteSpace(hid))
+            parts.Add($"hairdresserId={Uri.EscapeDataString(hid)}");
+
+        if (y is not null)
+            parts.Add($"year={y}");
+
+        if (y is not null && m is not null)
+            parts.Add($"month={m}");
+
+        return $"/time-off/list?{string.Join("&", parts)}";
+    }
+
+    private void NavigateToState(
+        int? newPage = null,
+        int? newPageSize = null,
+        string? newSearch = null,
+        string? newHairdresserId = null,
+        int? newYear = null,
+        int? newMonth = null,
+        string? newSortBy = null,
+        bool? newDesc = null,
+        bool replace = true)
+    {
+        var url = BuildListUri(newPage, newPageSize, newSearch, newHairdresserId, newYear, newMonth, newSortBy, newDesc);
+        Nav.NavigateTo(url, replace: replace);
     }
 
     private async Task LoadAsync()
@@ -335,102 +463,95 @@ else
         }
     }
 
-    private async Task ApplyFiltersAsync()
+    private Task ApplyFiltersAsync()
     {
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task ToggleSortAsync()
+    private Task ToggleSortAsync()
     {
-        desc = !desc;
-        page = 1;
-        await LoadAsync();
+        NavigateToState(newPage: 1, newDesc: !desc, replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task PrevPageAsync()
+    private Task PrevPageAsync()
     {
         if (!model.CanGoPrevious)
-            return;
+            return Task.CompletedTask;
 
-        page = Math.Max(1, page - 1);
-        await LoadAsync();
+        NavigateToState(newPage: Math.Max(1, page - 1), replace: true);
+        return Task.CompletedTask;
     }
 
-    private async Task NextPageAsync()
+    private Task NextPageAsync()
     {
         if (!model.CanGoNext)
-            return;
+            return Task.CompletedTask;
 
-        page++;
-        await LoadAsync();
+        NavigateToState(newPage: page + 1, replace: true);
+        return Task.CompletedTask;
     }
 
-    private static bool? ParseNullableBool(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        if (bool.TryParse(value, out var b))
-            return b;
-
-        return null;
-    }
-
-    private async Task ClearSearchAsync()
+    private Task ClearSearchAsync()
     {
         searchCts?.Cancel();
         searchCts?.Dispose();
         searchCts = null;
 
-        search = null;
-        page = 1;
-        await LoadAsync();
+        search = "";
+        NavigateToState(newPage: 1, newSearch: null, replace: true);
+        return Task.CompletedTask;
     }
 
     private async Task OnSearchInput(ChangeEventArgs e)
     {
-        search = e.Value?.ToString() ?? "";
+        var newValue = e.Value?.ToString() ?? "";
+        search = newValue;
         page = 1;
 
         searchCts?.Cancel();
         searchCts?.Dispose();
         searchCts = new CancellationTokenSource();
+        var token = searchCts.Token;
 
         try
         {
-            await Task.Delay(350, searchCts.Token);
-            await LoadAsync();
+            await Task.Delay(350, token);
+            if (token.IsCancellationRequested)
+                return;
+
+            var snapshot = newValue;
+
+            NavigateToState(
+                newPage: 1,
+                newSearch: string.IsNullOrWhiteSpace(snapshot) ? null : snapshot,
+                replace: true);
         }
         catch (TaskCanceledException)
         {
         }
     }
 
-    private async Task OnFiltersChangedAsync()
+    private Task OnFiltersChangedAsync()
     {
         if (year is null)
             month = null;
 
-        List<string> qs = new();
+        NavigateToState(newPage: 1, replace: true);
+        return Task.CompletedTask;
+    }
 
-        if (isAdmin)
+    public void Dispose()
+    {
+        if (locationSubscribed)
         {
-            if (!string.IsNullOrWhiteSpace(hairdresserId))
-                qs.Add($"hairdresserId={Uri.EscapeDataString(hairdresserId)}");
+            locationSubscribed = false;
+            Nav.LocationChanged -= OnLocationChanged;
         }
 
-        if (year != null)
-            qs.Add($"year={year}");
-
-        if (month != null)
-            qs.Add($"month={month}");
-
-        var url = qs.Count == 0 ? "/time-off/list" : $"/time-off/list?{string.Join("&", qs)}";
-
-        Nav.NavigateTo(url, replace: true);
-
-        page = 1;
-        await LoadAsync();
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = null;
     }
 }
