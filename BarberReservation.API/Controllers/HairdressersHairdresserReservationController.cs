@@ -1,12 +1,10 @@
 ﻿using BarberReservation.API.Mappings;
-using BarberReservation.Application.Reservation.Mapping;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairDresserReservation;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairdresserReservationByDay;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Common;
-using BarberReservation.Shared.Models.Reservation.Hairdresser;
+using BarberReservation.Shared.Models.Reservation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,19 +31,11 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPatch("{id:int}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateReservationRequest request, CancellationToken ct)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateReservationStatusRequest request, CancellationToken ct)
         {
             var command = request.ToHairDresserUpdateReservationCommand(id);
             await mediator.Send(command, ct);
             return NoContent();
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<int>> Create([FromBody] CreateHairDresserReservationRequest request, CancellationToken ct)
-        {
-            var command = request.ToCreateHairDresserReservationCommand();
-            var reservationId = await mediator.Send(command, ct);
-            return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
         }
 
         [HttpGet("daily")]
@@ -53,6 +43,14 @@ namespace BarberReservation.API.Controllers
         {
             var result = await mediator.Send(new GetHairdresserReservationByDayQuery(day), ct);
             return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<int>> Create([FromBody] CreateReservationRequest request, CancellationToken ct)
+        {
+            var command = request.ToCreateHairDresserReservationCommand();
+            var reservationId = await mediator.Send(command, ct);
+            return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
         }
     }
 }

@@ -3,6 +3,7 @@ using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
 using BarberReservation.Infrastructure.Options;
+using BarberReservation.Infrastructure.Persistence.Repositories;
 using BarberReservation.Infrastructure.Repositories;
 using BarberReservation.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -72,6 +73,7 @@ public static class InfrastructureServiceRegistration
         });
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IReservationLookupsRepository, ReservationLookupsRepository>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<DefaultSeeder>();

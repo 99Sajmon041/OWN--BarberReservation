@@ -15,4 +15,5 @@ public interface IUserService
     Task CreateAsync(CreateUserRequest request, CancellationToken ct);
     Task UpdateAsync(string id, UpdateUserRequest request, CancellationToken ct);
     Task UpdateEmailAsync(string id, UpdateUserEmailRequest request, CancellationToken ct);
+    Task<UserDto> GetProfileAsync(CancellationToken ct);
 }

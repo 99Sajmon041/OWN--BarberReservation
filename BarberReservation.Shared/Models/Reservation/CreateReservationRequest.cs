@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.Reservation.Common;
+namespace BarberReservation.Shared.Models.Reservation;
 
-public class CreateReservationBaseRequest
+public class CreateReservationRequest
 {
     public int HairdresserServiceId { get; set; }
+    public string? HairdresserId { get; set; }
+    public string? CustomerId { get; set; }
     public DateTime StartAt { get; set; }
 
     [Required(ErrorMessage = "Celé jméno je povinné.")]

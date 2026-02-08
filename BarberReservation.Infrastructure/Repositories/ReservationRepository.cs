@@ -2,7 +2,7 @@
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Infrastructure.Database;
 using BarberReservation.Shared.Enums;
-using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarberReservation.Infrastructure.Repositories;

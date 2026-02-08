@@ -1575,3 +1575,47 @@ select.input {
         grid-template-columns: 1fr;
     }
 }
+
+.dropdown-wrap {
+    position: relative;
+}
+
+.dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,.45);
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    cursor: pointer;
+}
+
+    .dropdown-item:hover {
+        background: rgba(255,255,255,.06);
+    }
+
+    .dropdown-item + .dropdown-item {
+        border-top: 1px solid var(--line);
+    }
+
+.dropdown-item-title {
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.dropdown-item-sub {
+    font-size: 12px;
+    margin-top: 2px;
+}

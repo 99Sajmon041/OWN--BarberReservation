@@ -3,7 +3,7 @@ using BarberReservation.Blazor.Common;
 using BarberReservation.Blazor.Services.Interfaces;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation;
 
 namespace BarberReservation.Blazor.Services.Implementaions;
 
@@ -91,7 +91,7 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
         return await api.GetAsync<PagedResult<ReservationDto>>(url, ct);
     }
 
-    public async Task UpdateStatusAsync(int id, UpdateReservationRequest request, CancellationToken ct)
+    public async Task UpdateStatusAsync(int id, UpdateReservationStatusRequest request, CancellationToken ct)
     {
         await authState.LoadAsync();
 
@@ -132,5 +132,27 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
     {
         var encoded = Uri.EscapeDataString(hairdresserId.Trim());
         await api.SendAsync(HttpMethod.Put, $"api/admin/reservations/{reservationId}/hairdresser?hairdresserId={encoded}", null, ct);
+    }
+
+    public async Task<int> CreateReservationAsync(CreateReservationRequest request, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+        if (authState.Roles.Contains(nameof(UserRoles.Admin)))
+        {
+            return await api.PostAsyncWithResponse<CreateReservationRequest, int>(HttpMethod.Post, "api/admin/reservations", request, ct);
+        }
+        else if (authState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+        {
+            return await api.PostAsyncWithResponse<CreateReservationRequest, int>(HttpMethod.Post, "api/hairdresser/reservations", request, ct);
+        }
+        else
+        {
+            throw new ApiRequestException("Nemáte dostatečné práva pro tuto akci.", StatusCodes.Status403Forbidden);
+        }
+    }
+
+    public async Task CreateReservationAsCustomerAsync(CreateReservationRequest request, CancellationToken ct)
+    {
+        await api.SendAsync(HttpMethod.Post, "api/me/reservations", request, ct);
     }
 }

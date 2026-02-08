@@ -1,8 +1,8 @@
 ﻿using BarberReservation.Shared.Enums;
 
-namespace BarberReservation.Shared.Models.Reservation.Common;
+namespace BarberReservation.Shared.Models.Reservation;
 
-public sealed class UpdateReservationRequest
+public sealed class UpdateReservationStatusRequest
 {
     public ReservationStatus NewReservationStatus { get; set; }
     public CanceledReason? CanceledReason { get; set; }

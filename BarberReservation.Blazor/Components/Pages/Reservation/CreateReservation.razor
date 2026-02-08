@@ -1,9 +1,736 @@
 ﻿@page "/reservations/create"
 
-<PageTitle>Vytvořit rezervaci</PageTitle>
+@inject MessageService MessageService
+@inject IReservationService ReservationService
+@inject IUserService UserService
+@inject ILookUpsService LookUpsService
+@inject AuthState AuthState
+@inject NavigationManager Nav
 
-<h1 class="muted">Tady se vytvoří rezervace pro všechny role :-)</h1>
+<PageTitle>Vytvoření rezervace</PageTitle>
 
-@code {
+@if (!_checked)
+{
+    <div class="page-head page-head-center">
+        <h1 class="page-title">Načítám...</h1>
+        <p class="page-subtitle muted">Chvilku strpení.</p>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-head">
+            <h1 class="page-title">@pageTitle</h1>
+            <p class="page-subtitle muted">@pageSubtitle</p>
+        </div>
 
+        <div class="card">
+
+            <div class="field">
+                <label class="label">Služba</label>
+                <select class="input" @bind="selectedServiceId" @bind:after="OnServiceChangedAsync">
+                    <option value="">— Vyberte službu —</option>
+                    @foreach (var s in services)
+                    {
+                        <option value="@s.Id">@s.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label class="label">Kadeřník</label>
+
+                @if (isHairdresser)
+                {
+                    <input class="input" value="@hairdresserLabel" disabled />
+                    <div class="muted" style="margin-top:6px;">Jako kadeřník vytváříte rezervaci pouze sobě.</div>
+                }
+                else
+                {
+                    <select class="input" @bind="selectedHairdresserId" @bind:after="OnHairdresserChangedAsync" disabled="@(selectedServiceId is null)">
+                        <option value="">— Vyberte kadeřníka —</option>
+                        @foreach (var h in hairdressers)
+                        {
+                            <option value="@h.Id">@h.FullName</option>
+                        }
+                    </select>
+
+                    @if (selectedServiceId is null)
+                    {
+                        <div class="muted" style="margin-top:6px;">Nejdříve vyberte službu.</div>
+                    }
+                }
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row-between" style="margin:0;">
+                <div>
+                    <div style="font-weight:600;">Zákazník</div>
+                    <div class="muted">@customerSectionSubtitle</div>
+                </div>
+
+                @if (canLookupCustomers)
+                {
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-outline" @onclick="ToggleCustomerLookup">
+                            @(showCustomerLookup ? "Skrýt výběr zákazníka" : "Vybrat existujícího zákazníka")
+                        </button>
+
+                        <button type="button" class="btn btn-outline" @onclick="ClearSelectedCustomer"
+                                disabled="@(!HasSelectedCustomerFromLookup)">
+                            Odebrat zákazníka
+                        </button>
+                    </div>
+                }
+            </div>
+
+            @if (canLookupCustomers && showCustomerLookup)
+            {
+                <div class="field" style="margin-top:12px;">
+                    <label class="label">Vyhledat zákazníka</label>
+
+                    <div class="input-row">
+                        <div class="input-wrap">
+                            <input class="input input-has-clear"
+                                   placeholder="Zadejte min. 3 znaky (jméno, e-mail, telefon)…"
+                                   value="@customerSearch"
+                                   @oninput="OnCustomerSearchInput" />
+
+                            @if (!string.IsNullOrWhiteSpace(customerSearch))
+                            {
+                                <button type="button" class="input-clear" @onclick="ClearCustomerSearch" aria-label="Vyčistit hledání">
+                                    ×
+                                </button>
+                            }
+                        </div>
+
+                        <button class="btn btn-outline" type="button" @onclick="ClearCustomerSearch" disabled="@(string.IsNullOrWhiteSpace(customerSearch))">
+                            Zrušit
+                        </button>
+                    </div>
+
+                    @if (customerLookupLoading)
+                    {
+                        <div class="muted" style="margin-top:8px;">Načítám…</div>
+                    }
+                    else if (customerSearch.Trim().Length >= 3 && customerLookupResults.Count == 0)
+                    {
+                        <div class="muted" style="margin-top:8px;">Žádné výsledky.</div>
+                    }
+                    else if (customerLookupResults.Count > 0)
+                    {
+                        <div class="dropdown-wrap" style="margin-top:10px;">
+                            <div class="dropdown">
+                                @foreach (var c in customerLookupResults)
+                                {
+                                    <button type="button" class="dropdown-item" @onclick="() => SelectCustomer(c)">
+                                        <div class="dropdown-item-title">@c.CustomerName</div>
+                                        <div class="dropdown-item-sub muted">
+                                            @c.CustomerEmail
+                                            @if (!string.IsNullOrWhiteSpace(c.CustomerPhone))
+                                            {
+                                                <span> · @c.CustomerPhone</span>
+                                            }
+                                        </div>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="divider"></div>
+
+            <div class="field">
+                <label class="label">Celé jméno</label>
+                <input class="input" @bind="model.CustomerName" disabled="@customerFieldsLocked" />
+            </div>
+
+            <div class="field">
+                <label class="label">E-mail</label>
+                <input class="input" @bind="model.CustomerEmail" disabled="@customerFieldsLocked" />
+            </div>
+
+            <div class="field">
+                <label class="label">Telefon</label>
+                <input class="input" @bind="model.CustomerPhone" disabled="@customerFieldsLocked" />
+            </div>
+
+            @if (customerFieldsLocked)
+            {
+                <div class="muted" style="margin-top:6px;">Údaje zákazníka byly načteny automaticky.</div>
+            }
+
+            <div class="divider"></div>
+
+            <div class="field">
+                <label class="label">Datum</label>
+
+                <div class="input-row">
+                    <div class="input-wrap">
+                        <input type="date"
+                               class="input"
+                               value="@datePickerValue"
+                               @onchange="OnDatePicked" />
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline"
+                            disabled="@(!tableEnabled || !canGoBack)"
+                            @onclick="GoWeekBackAsync">
+                        &lt;
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline"
+                            disabled="@(!tableEnabled || !canGoForward)"
+                            @onclick="GoWeekForwardAsync">
+                        &gt;
+                    </button>
+                </div>
+
+                <div class="muted" style="margin-top:6px;">
+                    Minulost je zakázána. Víkend se automaticky posune na nejbližší pondělí.
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="overflow:auto;">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align:left; border-bottom: 1px solid var(--line);">
+                            @foreach (var d in workDays)
+                            {
+                                <th style="padding: 10px 6px; text-align:center;">
+                                    <div>@d.DayLabel</div>
+                                    <div class="muted">@d.DateLabel</div>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--line); vertical-align: bottom;">
+                            @foreach (var d in workDays)
+                            {
+                                <td style="padding: 10px 6px;">
+                                    @if (!tableEnabled)
+                                    {
+                                        <div class="muted small">@tableHint</div>
+                                    }
+                                    else if (slotsLoading)
+                                    {
+                                        <div class="muted small">Načítám termíny…</div>
+                                    }
+                                    else if (d.Slots.Count == 0)
+                                    {
+                                        <div class="muted small">Žádné volné termíny.</div>
+                                    }
+                                    else
+                                    {
+                                        <div style="display:flex; flex-direction:column; gap:10px;">
+                                            @foreach (var s in d.Slots)
+                                            {
+                                                <button type="button"
+                                                        class="btn btn-outline"
+                                                        @onclick="() => SelectSlot(s.StartAt, s.EndAt)">
+                                                    @($"{s.StartAt:HH:mm}–{s.EndAt:HH:mm}")
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            @if (selectedSlotLabel is not null)
+            {
+                <div class="divider"></div>
+                <div class="muted">Vybraný termín: <strong>@selectedSlotLabel</strong></div>
+            }
+
+            <div class="divider"></div>
+
+            <div class="row-between" style="margin:0;">
+                <button type="button" class="btn btn-link" @onclick="Cancel">
+                    Zrušit
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        disabled="@(!canSubmit)"
+                        @onclick="SubmitAsync">
+                    Vytvořit rezervaci
+                </button>
+            </div>
+
+        </div>
+    </div>
+}
+
+@code
+{
+    private CreateReservationRequest model = new();
+
+    private bool _checked;
+
+    private bool isAdmin;
+    private bool isHairdresser;
+    private bool isCustomer;
+    private bool isAnonymous;
+
+    private bool canLookupCustomers => isAdmin || isHairdresser;
+
+    private List<GetLookUpHairdressers> hairdressers = new();
+    private List<ServiceLookUpDto> services = new();
+
+    private int? selectedServiceId;
+    private string? selectedHairdresserId;
+
+    private string hairdresserLabel = "Můj účet";
+
+    private bool showCustomerLookup;
+    private bool customerLookupLoading;
+    private string customerSearch = string.Empty;
+    private List<ReservationClientLookUpDto> customerLookupResults = new();
+
+    private bool customerFieldsLocked;
+
+    private bool slotsLoading;
+    private DateTime weekStart;
+    private List<WorkDayDto> workDays = new();
+
+    private string? selectedSlotLabel;
+
+    private DateTime MinWeekStart => StartOfWorkWeek(Today);
+
+    private DateTime MaxWeekStart
+    {
+        get
+        {
+            var baseMonday = NextMonday(Today);
+            var limit = baseMonday.AddMonths(3);
+            return StartOfWorkWeek(limit);
+        }
+    }
+
+    private bool canGoForward => weekStart < MaxWeekStart;
+    private bool canGoBack => weekStart > MinWeekStart;
+
+    private string pageTitle = "Vytvoření rezervace";
+    private string pageSubtitle = "Vyberte službu, kadeřníka a termín. Poté doplňte údaje zákazníka a odešlete rezervaci.";
+    private string tableHint = "Vyberte službu a kadeřníka.";
+    private string customerSectionSubtitle = "Údaje se vyplní ručně nebo výběrem existujícího zákazníka.";
+
+    private CancellationTokenSource? customerSearchCts;
+
+    private DateTime Today => DateTime.Now.Date;
+
+    private bool tableEnabled => selectedServiceId.HasValue && !string.IsNullOrWhiteSpace(ResolveHairdresserId());
+
+    private string datePickerValue => weekStart.ToString("yyyy-MM-dd");
+
+    private bool canSubmit =>
+        tableEnabled
+        && model.HairdresserServiceId > 0
+        && model.StartAt != default
+        && !string.IsNullOrWhiteSpace(model.CustomerName)
+        && !string.IsNullOrWhiteSpace(model.CustomerEmail)
+        && !string.IsNullOrWhiteSpace(model.CustomerPhone);
+
+    private bool HasSelectedCustomerFromLookup =>
+        canLookupCustomers && !string.IsNullOrWhiteSpace(model.CustomerId);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await AuthState.LoadAsync();
+
+        isAnonymous = !AuthState.IsAuthenticated;
+        isAdmin = AuthState.Roles.Contains(nameof(BarberReservation.Shared.Enums.UserRoles.Admin));
+
+        isHairdresser = AuthState.Roles.Contains(nameof(BarberReservation.Shared.Enums.UserRoles.Hairdresser)) && !isAdmin;
+
+        isCustomer = AuthState.Roles.Contains(nameof(BarberReservation.Shared.Enums.UserRoles.Customer));
+
+        ApplyRoleTexts();
+
+        services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
+
+        InitWeekStartOnLoad();
+        BuildWorkDaysSkeleton();
+
+        if (isHairdresser)
+        {
+            selectedHairdresserId = AuthState.UserId;
+            model.HairdresserId = selectedHairdresserId;
+            hairdresserLabel = AuthState.FullName ?? "Můj účet";
+        }
+
+        if (isCustomer && !isAnonymous)
+        {
+            await PrefillCustomerFromProfileAsync();
+        }
+
+        _checked = true;
+        StateHasChanged();
+    }
+
+    private void ApplyRoleTexts()
+    {
+        if (isHairdresser)
+        {
+            pageSubtitle = "Vyberte službu, zákazníka a termín (rezervace pouze pro vás).";
+            tableHint = "Vyberte službu pro zobrazení volných termínů.";
+            customerSectionSubtitle = "Vyberte existujícího zákazníka nebo vyplňte údaje ručně.";
+        }
+        else if (isAdmin)
+        {
+            pageSubtitle = "Vyberte službu, kadeřníka a termín. Zákazníka můžete vybrat z existujících nebo vyplnit ručně.";
+            tableHint = "Vyberte službu a kadeřníka.";
+            customerSectionSubtitle = "Vyberte existujícího zákazníka nebo vyplňte údaje ručně.";
+        }
+        else if (isCustomer)
+        {
+            pageSubtitle = "Vyberte službu, kadeřníka a termín. Vaše údaje jsou předvyplněné.";
+            tableHint = "Vyberte službu a kadeřníka.";
+            customerSectionSubtitle = "Vaše kontaktní údaje jsou předvyplněné z profilu.";
+        }
+        else
+        {
+            pageSubtitle = "Vyberte službu, kadeřníka a termín. Následně vyplňte kontaktní údaje.";
+            tableHint = "Vyberte službu a kadeřníka.";
+            customerSectionSubtitle = "Vyplňte kontaktní údaje, ať vás může kadeřník případně kontaktovat.";
+        }
+    }
+
+    private void ClearCustomerSearch()
+    {
+        customerSearch = string.Empty;
+        customerLookupResults.Clear();
+        customerLookupLoading = false;
+    }
+
+    private void ClearSelectedCustomer()
+    {
+        if (!HasSelectedCustomerFromLookup)
+            return;
+
+        model.CustomerId = null;
+        model.CustomerName = string.Empty;
+        model.CustomerEmail = string.Empty;
+        model.CustomerPhone = string.Empty;
+
+        customerFieldsLocked = false;
+
+        ClearCustomerSearch();
+    }
+
+    private void ToggleCustomerLookup()
+    {
+        showCustomerLookup = !showCustomerLookup;
+
+        if (!showCustomerLookup)
+            ClearCustomerSearch();
+    }
+
+    private async Task LoadCustomerLookupAsync()
+    {
+        if (!canLookupCustomers)
+            return;
+
+        var term = (customerSearch ?? string.Empty).Trim();
+        if (term.Length < 3)
+        {
+            customerLookupResults.Clear();
+            return;
+        }
+
+        customerLookupLoading = true;
+        try
+        {
+            customerLookupResults = await LookUpsService.GetAllCustomersAsync(term, CancellationToken.None);
+        }
+        finally
+        {
+            customerLookupLoading = false;
+        }
+    }
+
+    private void SelectCustomer(ReservationClientLookUpDto customer)
+    {
+        model.CustomerId = customer.CustomerId;
+        model.CustomerName = customer.CustomerName;
+        model.CustomerEmail = customer.CustomerEmail;
+        model.CustomerPhone = customer.CustomerPhone;
+
+        customerFieldsLocked = true;
+        showCustomerLookup = false;
+
+        ClearCustomerSearch();
+    }
+
+    private async Task PrefillCustomerFromProfileAsync()
+    {
+        try
+        {
+            var profile = await UserService.GetProfileAsync(CancellationToken.None);
+
+            model.CustomerId = profile.Id;
+            model.CustomerName = $"{profile.FirstName} {profile.LastName}";
+            model.CustomerEmail = profile.Email;
+            model.CustomerPhone = profile.PhoneNumber;
+
+            customerFieldsLocked = true;
+        }
+        catch (ApiRequestException ex)
+        {
+            customerFieldsLocked = false;
+            MessageService.ShowError(ex.Message);
+        }
+    }
+
+    private void InitWeekStartOnLoad()
+    {
+        var today = Today;
+
+        if (today.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            weekStart = NextMonday(today);
+        else
+            weekStart = StartOfWorkWeek(today);
+    }
+
+    private async Task OnDatePicked(ChangeEventArgs e)
+    {
+        if (!DateTime.TryParse(e.Value?.ToString(), out var picked))
+            return;
+
+        picked = picked.Date;
+
+        if (picked < Today)
+            picked = Today;
+
+        if (picked.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            picked = NextMonday(picked);
+
+        weekStart = StartOfWorkWeek(picked);
+
+        if (weekStart < MinWeekStart)
+            weekStart = MinWeekStart;
+
+        if (weekStart > MaxWeekStart) 
+            weekStart = MaxWeekStart;
+
+        BuildWorkDaysSkeleton();
+
+        await RefreshSlotsAsync();
+    }
+
+    private void BuildWorkDaysSkeleton()
+    {
+        workDays = Enumerable.Range(0, 5)
+            .Select(i => new WorkDayDto(weekStart.AddDays(i)))
+            .ToList();
+    }
+
+    private async Task GoWeekBackAsync()
+    {
+        if (!canGoBack)
+            return;
+
+        weekStart = weekStart.AddDays(-7);
+        if (weekStart < MinWeekStart)
+            weekStart = MinWeekStart;
+
+        BuildWorkDaysSkeleton();
+        await RefreshSlotsAsync();
+    }
+
+    private async Task GoWeekForwardAsync()
+    {
+        if (!canGoForward)
+            return;
+
+        weekStart = weekStart.AddDays(7);
+        if (weekStart > MaxWeekStart)
+            weekStart = MaxWeekStart;
+
+        BuildWorkDaysSkeleton();
+        await RefreshSlotsAsync();
+    }
+
+    private string? ResolveHairdresserId()
+    {
+        if (isHairdresser)
+            return AuthState.UserId;
+
+        return selectedHairdresserId;
+    }
+
+    private async Task RefreshSlotsAsync()
+    {
+        model.HairdresserServiceId = selectedServiceId ?? 0;
+        model.HairdresserId = ResolveHairdresserId();
+
+        if (!tableEnabled)
+        {
+            ClearSlots();
+            return;
+        }
+
+        slotsLoading = true;
+        ClearSlots();
+
+        try
+        {
+            var hairdresserId = ResolveHairdresserId()!;
+            var serviceId = selectedServiceId!.Value;
+
+            foreach (var day in workDays)
+            {
+                // TODO: až bude endpoint hotový, tohle začne fungovat hned
+                // var slots = await ReservationService.GetFreeSlotsForDayAsync(day.Date, hairdresserId, serviceId, CancellationToken.None);
+
+                // day.Slots = slots
+                //     .Select(x => new SlotVm(x.StartAt, x.EndAt))
+                //     .ToList();
+            }
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+        finally
+        {
+            slotsLoading = false;
+        }
+    }
+
+    private void ClearSlots()
+    {
+        foreach (var d in workDays)
+            d.Slots = new List<SlotDto>();
+
+        model.StartAt = default;
+        selectedSlotLabel = null;
+    }
+
+    private void SelectSlot(DateTime startAt, DateTime endAt)
+    {
+        model.StartAt = startAt;
+        selectedSlotLabel = $"{startAt:dd.MM.yyyy} — {startAt:HH:mm}–{endAt:HH:mm}";
+    }
+
+    private async Task SubmitAsync()
+    {
+        int reservationId = 0;
+
+        try
+        {
+            if (isAnonymous || isCustomer)
+                await ReservationService.CreateReservationAsCustomerAsync(model, CancellationToken.None);
+            else
+                reservationId = await ReservationService.CreateReservationAsync(model, CancellationToken.None);
+
+            MessageService.ShowSuccess("Rezervace byla úspěšně vytvořena.");
+
+            if (isCustomer)
+                Nav.NavigateTo("/reservations/list");
+            else if (isAnonymous)
+                Nav.NavigateTo("/");
+            else
+                Nav.NavigateTo($"/reservations/{reservationId}");
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError(ex.Message);
+        }
+    }
+
+    private async Task Cancel()
+    {
+        await AuthState.LoadAsync();
+
+        if (!AuthState.IsAuthenticated)
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        Nav.NavigateTo("/reservations/list");
+    }
+
+    private static DateTime StartOfWorkWeek(DateTime date)
+    {
+        var diff = (7 + (int)date.DayOfWeek - (int)DayOfWeek.Monday) % 7;
+        return date.AddDays(-diff).Date;
+    }
+
+    private static DateTime NextMonday(DateTime date)
+    {
+        var d = date.Date;
+        var days = ((int)DayOfWeek.Monday - (int)d.DayOfWeek + 7) % 7;
+        if (days == 0)
+            days = 7;
+
+        return d.AddDays(days);
+    }
+
+    private async Task OnServiceChangedAsync()
+    {
+        model.HairdresserServiceId = selectedServiceId ?? 0;
+
+        selectedHairdresserId = null;
+        model.HairdresserId = null;
+
+        hairdressers.Clear();
+        ClearSlots();
+
+        if (selectedServiceId is not null && !isHairdresser)
+            hairdressers = await LookUpsService.GetAllHairdressersByServiceAsync(selectedServiceId.Value, CancellationToken.None);
+
+        await RefreshSlotsAsync();
+    }
+
+    private async Task OnHairdresserChangedAsync()
+    {
+        model.HairdresserId = ResolveHairdresserId();
+        ClearSlots();
+        await RefreshSlotsAsync();
+    }
+
+    private async Task OnCustomerSearchInput(ChangeEventArgs e)
+    {
+        customerSearch = (e.Value?.ToString() ?? string.Empty).Trim();
+
+        if (customerSearch.Length < 3)
+        {
+            customerLookupResults.Clear();
+            customerLookupLoading = false;
+            return;
+        }
+
+        customerSearchCts?.Cancel();
+        customerSearchCts = new CancellationTokenSource();
+
+        var token = customerSearchCts.Token;
+
+        try
+        {
+            await Task.Delay(300, token); 
+            await LoadCustomerLookupAsync();
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
 }

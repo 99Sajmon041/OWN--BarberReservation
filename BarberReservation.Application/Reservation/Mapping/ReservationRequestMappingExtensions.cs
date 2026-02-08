@@ -1,11 +1,7 @@
-﻿using BarberReservation.Application.Reservation.Commands.Hairdresser.CreateHairDresserReservation;
-using BarberReservation.Application.Reservation.Commands.Self.CreateSelfReservation;
-using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
+﻿using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
 using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
-using BarberReservation.Shared.Models.Reservation.Common;
-using BarberReservation.Shared.Models.Reservation.Hairdresser;
-using BarberReservation.Shared.Models.Reservation.Self;
+using BarberReservation.Shared.Models.Reservation;
 
 namespace BarberReservation.Application.Reservation.Mapping;
 
@@ -57,19 +53,6 @@ public static class ReservationRequestMappingExtensions
         };
     }
 
-    public static CreateHairDresserReservationCommand ToCreateHairDresserReservationCommand(this CreateHairDresserReservationRequest request)
-    {
-        return new CreateHairDresserReservationCommand
-        {
-            HairdresserServiceId = request.HairdresserServiceId,
-            StartAt = request.StartAt,
-            CustomerId = request.CustomerId,
-            CustomerName = request.CustomerName,
-            CustomerEmail = request.CustomerEmail,
-            CustomerPhone = request.CustomerPhone
-        };
-    }
-
     public static ReservationPagedRequest ToSelfReservationPagedRequest(this GetAllSelfReservationsQuery query)
     {
         return new ReservationPagedRequest
@@ -90,19 +73,6 @@ public static class ReservationRequestMappingExtensions
             Search = query.Search,
             SortBy = query.SortBy,
             Desc = query.Desc
-        };
-    }
-
-    public static CreateSelfReservationCommand ToCreateSelfReservationCommand(this CreateSelfReservationRequest request)
-    {
-        return new CreateSelfReservationCommand
-        {
-            HairdresserId = request.HairdresserId,
-            HairdresserServiceId = request.HairdresserServiceId,
-            StartAt = request.StartAt,
-            CustomerName = request.CustomerName,
-            CustomerEmail = request.CustomerEmail,
-            CustomerPhone = request.CustomerPhone
         };
     }
 }

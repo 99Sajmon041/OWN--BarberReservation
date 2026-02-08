@@ -1,5 +1,5 @@
 ﻿using BarberReservation.Domain.Entities;
-using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation;
 
 namespace BarberReservation.Domain.Interfaces;
 

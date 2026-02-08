@@ -4,8 +4,7 @@ using BarberReservation.Application.Reservation.Queries.Admin.GetAdminReservatio
 using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Admin;
-using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +38,7 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPatch("{id:int}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateReservationRequest request, CancellationToken ct)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateReservationStatusRequest request, CancellationToken ct)
         {
             var command = request.ToAdminUpdateReservationCommand(id);
             await mediator.Send(command, ct);
@@ -47,7 +46,7 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> Create([FromBody] CreateAdminReservationRequest request, CancellationToken ct)
+        public async Task<ActionResult<int>> Create([FromBody] CreateReservationRequest request, CancellationToken ct)
         {
             var command = request.ToCreateAdminReservationCommand();
             var reservationId = await mediator.Send(command, ct);

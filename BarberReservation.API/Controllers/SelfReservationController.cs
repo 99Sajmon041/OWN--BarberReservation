@@ -1,11 +1,10 @@
 ﻿using BarberReservation.Application.Reservation.Commands.Self.SelfCancelReservation;
-using BarberReservation.Application.Reservation.Mapping;
 using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
 using BarberReservation.Application.Reservation.Queries.Self.GetSelfReservation;
 using BarberReservation.Shared.Enums;
+using BarberReservation.API.Mappings;
 using BarberReservation.Shared.Models.Common;
-using BarberReservation.Shared.Models.Reservation.Common;
-using BarberReservation.Shared.Models.Reservation.Self;
+using BarberReservation.Shared.Models.Reservation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +42,7 @@ namespace BarberReservation.API.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Create([FromBody] CreateSelfReservationRequest request, CancellationToken ct)
+        public async Task<IActionResult> Create([FromBody] CreateReservationRequest request, CancellationToken ct)
         {
             var command = request.ToCreateSelfReservationCommand();
             await mediator.Send(command, ct);

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using BarberReservation.Shared.Models.Reservation.Common;
+using BarberReservation.Shared.Models.Reservation;
 
 namespace BarberReservation.Application.Reservation.Mapping;
 

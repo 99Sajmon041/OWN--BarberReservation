@@ -2,7 +2,7 @@
 using BarberReservation.Shared.Models.Common;
 using System.ComponentModel.DataAnnotations;
 
-namespace BarberReservation.Shared.Models.Reservation.Common;
+namespace BarberReservation.Shared.Models.Reservation;
 
 public class ReservationPagedRequest : PagedRequest
 {

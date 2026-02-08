@@ -1,4 +1,5 @@
-﻿using BarberReservation.Blazor.Common;
+﻿using BarberReservation.Blazor.Auth;
+using BarberReservation.Blazor.Common;
 using BarberReservation.Blazor.Services.Interfaces;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.LookUpModels;
@@ -7,7 +8,7 @@ using BarberReservation.Shared.Models.User.Common;
 
 namespace BarberReservation.Blazor.Services.Implementaions;
 
-public class UserService(IApiClient api) : IUserService
+public class UserService(IApiClient api, AuthState authState) : IUserService
 {
     public async Task<PagedResult<UserDto>> GetAllAsync(UserPageRequest request, CancellationToken ct)
     {
@@ -71,5 +72,15 @@ public class UserService(IApiClient api) : IUserService
     public async Task<List<GetLookUpHairdressers>> GetAvailableHairdressersAsync(int reservationId, CancellationToken ct)
     {
         return await api.GetAsync<List<GetLookUpHairdressers>>($"api/users/available-hairdressers?reservationId={reservationId}", ct);
+    }
+
+    public async Task<UserDto> GetProfileAsync(CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        if (!authState.IsAuthenticated)
+            throw new ApiRequestException("Uživatel není ověřen.", StatusCodes.Status401Unauthorized);
+
+        return await api.GetAsync<UserDto>("api/users/me", ct);
     }
 }
