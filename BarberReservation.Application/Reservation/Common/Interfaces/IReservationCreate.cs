@@ -1,4 +1,4 @@
-﻿namespace BarberReservation.Application.Reservation.Common;
+﻿namespace BarberReservation.Application.Reservation.Common.Interfaces;
 
 public interface IReservationCreate
 {

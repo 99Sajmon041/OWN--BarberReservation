@@ -9,6 +9,7 @@ public interface IHairdresserServiceRepository
     Task<HairdresserService?> GetByIdForAdminAsync(int id, CancellationToken ct);
     Task<HairdresserService?> GetByIdForCurrentUserAsync(int id, string hairdresserId, CancellationToken ct);
     Task<HairdresserService?> GetByIdForClientAsync(int id, string hairdresserId, CancellationToken ct);
+    Task<int> GetTimeDurationByHairdresserIdAndServiceIdAsync(int serviceId, string hairdresserId, CancellationToken ct);
     Task CreateAsync(HairdresserService hairdresserService, CancellationToken ct);
     Task<bool> ExistsActiveWithSameServiceAsync(string hairdresserId, int serviceId, CancellationToken ct);
     bool Deactivate(HairdresserService hairdresserService);

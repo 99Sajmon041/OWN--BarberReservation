@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Application.Common.Security;
 using BarberReservation.Application.Common.Validation.IdValidation;
-using BarberReservation.Application.Reservation.Common;
+using BarberReservation.Application.Reservation.Common.Interfaces;
 using BarberReservation.Shared.Enums;
 using MediatR;
 

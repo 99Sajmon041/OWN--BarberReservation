@@ -1,8 +1,9 @@
-﻿using BarberReservation.Application.Reservation.Commands.Self.SelfCancelReservation;
+﻿using BarberReservation.API.Mappings;
+using BarberReservation.Application.Reservation.Commands.Self.SelfCancelReservation;
+using BarberReservation.Application.Reservation.Common.GetAvailableSlotsForWeek;
 using BarberReservation.Application.Reservation.Queries.Self.GetAllSelfReservations;
 using BarberReservation.Application.Reservation.Queries.Self.GetSelfReservation;
 using BarberReservation.Shared.Enums;
-using BarberReservation.API.Mappings;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Reservation;
 using MediatR;
@@ -47,6 +48,18 @@ namespace BarberReservation.API.Controllers
             var command = request.ToCreateSelfReservationCommand();
             await mediator.Send(command, ct);
             return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpGet("available-slots")]
+        public async Task<ActionResult<IReadOnlyList<SlotDto>>> GetAvailableSlots(
+            [FromQuery] string hairdresserId,
+            [FromQuery] int serviceId,
+            [FromQuery] DateTime weekStartDate, 
+            CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetAvailableSlotsForWeekQuery(hairdresserId, weekStartDate, serviceId), ct);
+            return Ok(result);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Shared.Enums;
 
-namespace BarberReservation.Application.Reservation.Common;
+namespace BarberReservation.Application.Reservation.Common.Interfaces;
 
 public interface IReservationListFilter
 {

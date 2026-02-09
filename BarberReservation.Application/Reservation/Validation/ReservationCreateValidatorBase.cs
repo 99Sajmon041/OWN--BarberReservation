@@ -1,4 +1,4 @@
-﻿using BarberReservation.Application.Reservation.Common;
+﻿using BarberReservation.Application.Reservation.Common.Interfaces;
 using FluentValidation;
 
 namespace BarberReservation.Application.Reservation.Validation;

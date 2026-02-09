@@ -1,6 +1,6 @@
 ﻿using BarberReservation.Application.Common.Validation.PagingValidation;
 using BarberReservation.Application.Common.Validation.SearchValidation;
-using BarberReservation.Application.Reservation.Common;
+using BarberReservation.Application.Reservation.Common.Interfaces;
 using BarberReservation.Shared.Enums;
 using FluentValidation;
 

@@ -1,6 +1,6 @@
 ﻿
 using BarberReservation.Application.Common.PagedSettings;
-using BarberReservation.Application.Reservation.Common;
+using BarberReservation.Application.Reservation.Common.Interfaces;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Reservation;

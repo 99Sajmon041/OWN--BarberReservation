@@ -1,5 +1,5 @@
 ﻿using BarberReservation.Application.Common.Validation.IdValidation;
-using BarberReservation.Application.Reservation.Common;
+using BarberReservation.Application.Reservation.Common.Interfaces;
 using BarberReservation.Shared.Enums;
 using FluentValidation;
 

@@ -19,6 +19,6 @@ public sealed class WorkDayDto
             DayOfWeek.Friday => "PÁ",
             _ => date.ToString("ddd").ToUpperInvariant()
         };
-        DateLabel = date.ToString("MM.dd.yyyy");
+        DateLabel = date.ToString("dd.MM.yyyy");
     }
 }

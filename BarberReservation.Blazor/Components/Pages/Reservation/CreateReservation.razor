@@ -173,6 +173,8 @@ else
                         <input type="date"
                                class="input"
                                value="@datePickerValue"
+                               min="@Today.ToString("yyyy-MM-dd")"
+                               max="@MaxWeekStart.AddDays(4).ToString("yyyy-MM-dd")"
                                @onchange="OnDatePicked" />
                     </div>
 
@@ -539,6 +541,8 @@ else
         workDays = Enumerable.Range(0, 5)
             .Select(i => new WorkDayDto(weekStart.AddDays(i)))
             .ToList();
+
+        // načíst přes async metodu (bude samostatná) sloty za celý týden a tady je přiřadit
     }
 
     private async Task GoWeekBackAsync()

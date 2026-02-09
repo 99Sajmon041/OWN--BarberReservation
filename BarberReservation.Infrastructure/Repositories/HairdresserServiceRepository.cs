@@ -167,4 +167,12 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
             .Select(x => (int?)x.Id)
             .FirstOrDefaultAsync(ct);
     }
+
+    public async Task<int> GetTimeDurationByHairdresserIdAndServiceIdAsync(int serviceId, string hairdresserId, CancellationToken ct)
+    {
+        var hairdresserService =  await _context.HairdresserServices
+            .FirstOrDefaultAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId, ct);
+
+        return hairdresserService?.DurationMinutes ?? 0;
+    }
 }
