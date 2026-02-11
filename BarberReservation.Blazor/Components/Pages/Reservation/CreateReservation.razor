@@ -215,10 +215,10 @@ else
                     </thead>
 
                     <tbody>
-                        <tr style="border-bottom: 1px solid var(--line); vertical-align: bottom;">
+                        <tr style="border-bottom: 1px solid var(--line);">
                             @foreach (var d in workDays)
                             {
-                                <td style="padding: 10px 6px;">
+                                <td style="padding: 10px 6px; vertical-align: top;">
                                     @if (!tableEnabled)
                                     {
                                         <div class="muted small">@tableHint</div>
@@ -234,12 +234,12 @@ else
                                     else
                                     {
                                         <div style="display:flex; flex-direction:column; gap:10px;">
-                                            @foreach (var s in d.Slots)
+                                            @foreach (var s in d.Slots.OrderBy(x => x.StartAt))
                                             {
                                                 <button type="button"
                                                         class="btn btn-outline"
                                                         @onclick="() => SelectSlot(s.StartAt, s.EndAt)">
-                                                    @($"{s.StartAt:HH:mm}–{s.EndAt:HH:mm}")
+                                                    @($"{s.StartAt:HH:mm}")
                                                 </button>
                                             }
                                         </div>
@@ -336,11 +336,11 @@ else
 
     private bool tableEnabled => selectedServiceId.HasValue && !string.IsNullOrWhiteSpace(ResolveHairdresserId());
 
-    private string datePickerValue => weekStart.ToString("yyyy-MM-dd");
+    private string datePickerValue => DateTime.UtcNow.ToString("yyyy-MM-dd"); //weekStart.ToString("yyyy-MM-dd");
 
     private bool canSubmit =>
         tableEnabled
-        && model.HairdresserServiceId > 0
+        && model.ServiceId > 0
         && model.StartAt != default
         && !string.IsNullOrWhiteSpace(model.CustomerName)
         && !string.IsNullOrWhiteSpace(model.CustomerEmail)
@@ -541,8 +541,6 @@ else
         workDays = Enumerable.Range(0, 5)
             .Select(i => new WorkDayDto(weekStart.AddDays(i)))
             .ToList();
-
-        // načíst přes async metodu (bude samostatná) sloty za celý týden a tady je přiřadit
     }
 
     private async Task GoWeekBackAsync()
@@ -581,7 +579,7 @@ else
 
     private async Task RefreshSlotsAsync()
     {
-        model.HairdresserServiceId = selectedServiceId ?? 0;
+        model.ServiceId = selectedServiceId ?? 0;
         model.HairdresserId = ResolveHairdresserId();
 
         if (!tableEnabled)
@@ -598,15 +596,23 @@ else
             var hairdresserId = ResolveHairdresserId()!;
             var serviceId = selectedServiceId!.Value;
 
+            var slots = await ReservationService.GetFreeSlotsForWeekAsync(hairdresserId, weekStart, serviceId, CancellationToken.None);
+
+            var grouped = slots.GroupBy(x => x.StartAt.Date)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             foreach (var day in workDays)
             {
-                // TODO: až bude endpoint hotový, tohle začne fungovat hned
-                // var slots = await ReservationService.GetFreeSlotsForDayAsync(day.Date, hairdresserId, serviceId, CancellationToken.None);
-
-                // day.Slots = slots
-                //     .Select(x => new SlotVm(x.StartAt, x.EndAt))
-                //     .ToList();
+                if (grouped.TryGetValue(day.Date, out var daySlots))
+                    day.Slots.AddRange(daySlots);
             }
+
+            // for (int i = 0; i < workDays.Count; i++)
+            // {
+            //     var day = workDays[i].Date.Date;
+
+            //     workDays[i].Slots.AddRange(slots.Where(x => x.StartAt.Date == day));
+            // }
         }
         catch (ApiRequestException ex)
         {
@@ -690,7 +696,7 @@ else
 
     private async Task OnServiceChangedAsync()
     {
-        model.HairdresserServiceId = selectedServiceId ?? 0;
+        model.ServiceId = selectedServiceId ?? 0;
 
         selectedHairdresserId = null;
         model.HairdresserId = null;

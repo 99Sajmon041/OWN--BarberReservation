@@ -155,4 +155,13 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
     {
         await api.SendAsync(HttpMethod.Post, "api/me/reservations", request, ct);
     }
+
+    public async Task<List<SlotDto>> GetFreeSlotsForWeekAsync(string hairdresserId, DateTime weekStartDate, int serviceId, CancellationToken ct)
+    {
+        var url = $"hairdresserId={Uri.EscapeDataString(hairdresserId.Trim())}" +
+            $"&serviceId={Uri.EscapeDataString(serviceId.ToString())}" +
+            $"&weekStartDate={Uri.EscapeDataString(weekStartDate.ToString("yyyy-MM-dd"))}";
+
+        return await api.GetAsync<List<SlotDto>>($"api/me/reservations/available-slots?{url}", ct);
+    }
 }

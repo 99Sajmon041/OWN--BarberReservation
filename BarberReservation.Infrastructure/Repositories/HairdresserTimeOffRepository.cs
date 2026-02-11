@@ -141,4 +141,15 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
     {
         _context.HairdresserTimeOffs.Remove(hairdresserTimeOff);
     }
+
+    public async Task<IReadOnlyList<HairdresserTimeOff>> GetAllWeeklyAsync(string hairdresserId, DateTime weekStartDate, CancellationToken ct)
+    {
+        var weekStart = weekStartDate.Date;
+        var weekEndExclusive = weekStart.AddDays(5);
+
+        return await _context.HairdresserTimeOffs
+            .AsNoTracking()
+            .Where(x => x.HairdresserId == hairdresserId && x.StartAt < weekEndExclusive && x.EndAt > weekStart)
+            .ToListAsync(ct);
+    }
 }

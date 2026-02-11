@@ -24,7 +24,7 @@ public abstract class ReservationCreateValidatorBase<T> : AbstractValidator<T> w
             .Must(startAt => startAt > DateTime.UtcNow)
             .WithMessage("Datum a čas rezervace musí být v budoucnosti.");
 
-        RuleFor(x => x.HairdresserServiceId)
-            .GreaterThan(0).WithMessage("ID služby kadeřníka musí být větší než nula.");
+        RuleFor(x => x.ServiceId)
+            .GreaterThan(0).WithMessage("ID služby musí být větší než nula.");
     }
 }

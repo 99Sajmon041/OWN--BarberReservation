@@ -17,4 +17,5 @@ public interface IReservationRepository
     Task<bool> ExistAnyUpComingReservationForClientAsync(string userId, CancellationToken ct);
     Task<bool> ExistAnyUpComingReservationForHairdresserAsync(string hairdresserId, CancellationToken ct);
     Task<List<Reservation>> GetForHairdresserDailyAsync(string hairdresserId, DateOnly day, CancellationToken ct);
+    Task<IReadOnlyList<Reservation>> GetAllWeeklyAsync(string hairdresserId, DateTime WeekStartDate, CancellationToken ct);
 }

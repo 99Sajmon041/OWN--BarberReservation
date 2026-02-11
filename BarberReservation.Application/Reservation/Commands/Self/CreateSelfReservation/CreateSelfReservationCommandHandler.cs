@@ -44,10 +44,10 @@ public sealed class CreateSelfReservationCommandHandler(
             throw new NotFoundException("Kadeřník nenalezen.");
         }
 
-        var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByIdForClientAsync(request.HairdresserServiceId, request.HairdresserId, ct);
-        if (hairdresserService is null || !hairdresserService.IsActive)
+        var hairdresserService = await unitOfWork.HairdresserServiceRepository.GetByHairdresserAndServiceAsync(request.HairdresserId, request.ServiceId, ct);
+        if (hairdresserService is null)
         {
-            logger.LogWarning("Hairdresser service with ID {HairdresserServiceId} not found or inactive.", request.HairdresserServiceId);
+            logger.LogWarning("Hairdresser service with ID {ServiceId} not found or inactive.", request.ServiceId);
             throw new NotFoundException("Služba kadeřníka nenalezena.");
         }
 
@@ -121,7 +121,7 @@ public sealed class CreateSelfReservationCommandHandler(
         var reservation = new BarberReservation.Domain.Entities.Reservation
         {
             HairdresserId = request.HairdresserId,
-            HairdresserServiceId = request.HairdresserServiceId,
+            HairdresserServiceId = hairdresserService.Id,
             StartAt = startAt,
             EndAt = endAt,
             Status = ReservationStatus.Booked,

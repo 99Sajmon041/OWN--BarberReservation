@@ -175,4 +175,11 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
 
         return hairdresserService?.DurationMinutes ?? 0;
     }
+
+    public async Task<HairdresserService?> GetByHairdresserAndServiceAsync(string hairdresserId, int serviceId, CancellationToken ct)
+    {
+        return await _context.HairdresserServices
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive, ct);
+    }
 }

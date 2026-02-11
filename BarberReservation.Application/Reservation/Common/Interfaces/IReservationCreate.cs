@@ -2,7 +2,7 @@
 
 public interface IReservationCreate
 {
-    public int HairdresserServiceId { get; }
+    public int ServiceId { get; }
     public DateTime StartAt { get; }
     public string CustomerName { get; }
     public string CustomerEmail { get; }

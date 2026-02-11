@@ -6,7 +6,7 @@ namespace BarberReservation.Application.Reservation.Commands.Self.CreateSelfRese
 public sealed class CreateSelfReservationCommand : IReservationCreate, IRequest
 {
     public string HairdresserId { get; set; } = default!;
-    public int HairdresserServiceId { get; set; }
+    public int ServiceId { get; set; }
     public DateTime StartAt { get; set; }
     public string CustomerName { get; set; } = default!;
     public string CustomerEmail { get; set; } = default!;

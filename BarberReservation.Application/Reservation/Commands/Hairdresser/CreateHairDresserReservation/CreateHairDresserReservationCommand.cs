@@ -5,7 +5,7 @@ namespace BarberReservation.Application.Reservation.Commands.Hairdresser.CreateH
 
 public sealed class CreateHairDresserReservationCommand : IReservationCreate, IRequest<int>
 {
-    public int HairdresserServiceId { get; set; }
+    public int ServiceId { get; set; }
     public DateTime StartAt { get; set; }
     public string? CustomerId { get; set; }
     public string CustomerName { get; set; } = default!;

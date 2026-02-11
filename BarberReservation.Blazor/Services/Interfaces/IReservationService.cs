@@ -14,4 +14,5 @@ public interface IReservationService
     Task ChangeReservationHairdresserAsync(int reservationId, string hairdresserId, CancellationToken ct);
     Task<int> CreateReservationAsync(CreateReservationRequest request, CancellationToken ct);
     Task CreateReservationAsCustomerAsync(CreateReservationRequest request, CancellationToken ct);
+    Task<List<SlotDto>> GetFreeSlotsForWeekAsync(string hairdresserId, DateTime weekStartDate, int serviceId, CancellationToken ct);
 }

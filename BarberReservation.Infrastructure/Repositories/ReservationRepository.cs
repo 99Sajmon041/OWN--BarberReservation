@@ -374,4 +374,15 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
             .OrderBy(x => x.StartAt)
             .ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<Reservation>> GetAllWeeklyAsync(string hairdresserId, DateTime WeekStartDate, CancellationToken ct)
+    {
+        var weekStart = WeekStartDate.Date;
+        var weekEndExclusive = weekStart.AddDays(5);
+
+        return await _context.Reservations
+            .AsNoTracking()
+            .Where(x => x.HairdresserId == hairdresserId && x.Status != ReservationStatus.Canceled && x.StartAt < weekEndExclusive && x.EndAt > weekStart)
+            .ToListAsync(ct);
+    }
 }

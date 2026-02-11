@@ -4,7 +4,7 @@ namespace BarberReservation.Shared.Models.Reservation;
 
 public class CreateReservationRequest
 {
-    public int HairdresserServiceId { get; set; }
+    public int ServiceId { get; set; }
     public string? HairdresserId { get; set; }
     public string? CustomerId { get; set; }
     public DateTime StartAt { get; set; }

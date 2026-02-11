@@ -22,4 +22,5 @@ public interface IHairdresserServiceRepository
     Task<IReadOnlyList<string>> GetActiveHairdresserIdsByServiceIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsAnyByHairdresserAsync(string hairdresserId, CancellationToken ct);
     Task<int?> GetActiveHairdresserServiceIdAsync(string hairdresserId, int serviceId, CancellationToken ct);
+    Task<HairdresserService?> GetByHairdresserAndServiceAsync(string hairdresserId, int serviceId, CancellationToken ct);
 }

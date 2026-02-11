@@ -24,7 +24,7 @@ namespace BarberReservation.API.Mappings
             return new CreateAdminReservationCommand
             {
                 HairdresserId = request.HairdresserId ?? "",
-                HairdresserServiceId = request.HairdresserServiceId,
+                ServiceId = request.ServiceId,
                 StartAt = request.StartAt,
                 CustomerId = request.CustomerId,
                 CustomerName = request.CustomerName,
@@ -47,7 +47,7 @@ namespace BarberReservation.API.Mappings
         {
             return new CreateHairDresserReservationCommand
             {
-                HairdresserServiceId = request.HairdresserServiceId,
+                ServiceId = request.ServiceId,
                 StartAt = request.StartAt,
                 CustomerId = request.CustomerId,
                 CustomerName = request.CustomerName,
@@ -60,7 +60,7 @@ namespace BarberReservation.API.Mappings
             return new CreateSelfReservationCommand
             {
                 HairdresserId = request.HairdresserId ?? "",
-                HairdresserServiceId = request.HairdresserServiceId,
+                ServiceId = request.ServiceId,
                 StartAt = request.StartAt,
                 CustomerName = request.CustomerName,
                 CustomerEmail = request.CustomerEmail,
