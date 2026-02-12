@@ -125,7 +125,7 @@ public sealed class CreateSelfReservationCommandHandler(
             StartAt = startAt,
             EndAt = endAt,
             Status = ReservationStatus.Booked,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
             CustomerId = customerId,
             CustomerName = customerName,
             CustomerEmail = customerEmail,

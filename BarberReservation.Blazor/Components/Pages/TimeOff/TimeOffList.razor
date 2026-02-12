@@ -87,7 +87,7 @@ else
                     <label class="label" for="year">Rok</label>
                     <select id="year" class="input" disabled="@isLoading" @bind="year" @bind:after="OnFiltersChangedAsync">
                         <option value="">Všechny</option>
-                        @for (int i = 2026; i <= 2046; i++)
+                        @for (int i = CurrentYear; i <= CurrentYear + 20; i++)
                         {
                             <option value="@i">@i</option>
                         }
@@ -253,6 +253,8 @@ else
     private string sortBy = "startdate";
     private bool desc;
 
+    private int CurrentYear => DateTime.Today.Year;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || loaded)
@@ -337,10 +339,10 @@ else
         if (q.TryGetValue("page", out var qp) && int.TryParse(qp.ToString(), out var p) && p > 0)
             page = p;
 
-        if (q.TryGetValue("pageSize", out var qps) && int.TryParse(qps.ToString(), out var ps) && ps > 0) 
+        if (q.TryGetValue("pageSize", out var qps) && int.TryParse(qps.ToString(), out var ps) && ps > 0)
             pageSize = ps;
 
-        if (q.TryGetValue("search", out var qs)) 
+        if (q.TryGetValue("search", out var qs))
             search = string.IsNullOrWhiteSpace(qs.ToString()) ? null : qs.ToString();
 
         if (q.TryGetValue("sortBy", out var qsb) && !string.IsNullOrWhiteSpace(qsb.ToString()))
@@ -349,11 +351,11 @@ else
         if (q.TryGetValue("desc", out var qd) && bool.TryParse(qd.ToString(), out var d))
             desc = d;
 
-        if (q.TryGetValue("year", out var qy) && int.TryParse(qy.ToString(), out var yy)) 
+        if (q.TryGetValue("year", out var qy) && int.TryParse(qy.ToString(), out var yy))
             year = yy;
         else year = YearQuery;
 
-        if (q.TryGetValue("month", out var qm) && int.TryParse(qm.ToString(), out var mm)) 
+        if (q.TryGetValue("month", out var qm) && int.TryParse(qm.ToString(), out var mm))
             month = mm;
         else month = MonthQuery;
 

@@ -15,7 +15,7 @@ public sealed class GetWorkingHoursForHairdresserQueryHandler(
 {
     public async Task<HairdresserWorkingHoursDto> Handle(GetWorkingHoursForHairdresserQuery request, CancellationToken ct)
     {
-        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var currentDate = DateOnly.FromDateTime(DateTime.Now);
 
         var response = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
             request.HairdresserId,

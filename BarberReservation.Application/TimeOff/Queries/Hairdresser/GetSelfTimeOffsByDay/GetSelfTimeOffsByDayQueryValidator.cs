@@ -9,7 +9,7 @@ public sealed class GetSelfTimeOffsByDayQueryValidator : AbstractValidator<GetSe
         RuleFor(x => x.Day)
             .NotEmpty()
             .WithMessage("Den je povinný parametr.")
-            .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
+            .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.Now))
             .WithMessage("Datum nesmí být v minulosti.");
     }
 }

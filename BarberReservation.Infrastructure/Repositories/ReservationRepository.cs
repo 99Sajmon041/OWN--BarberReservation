@@ -62,12 +62,12 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
         return await _context.Reservations
             .AnyAsync(x => x.CustomerId == userId
                            && x.Status != ReservationStatus.Canceled
-                           && x.StartAt >= DateTime.UtcNow, ct);
+                           && x.StartAt >= DateTime.Now, ct);
     }
 
     public async Task<bool> ExistAnyUpComingReservationForHairdresserAsync(string hairdresserId, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
 
         return await _context.Reservations.AnyAsync(
             x => x.HairdresserId == hairdresserId

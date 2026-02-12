@@ -14,7 +14,7 @@ public sealed class GetSelfWorkingHoursQueryHandler(
 {
     public async Task<HairdresserWorkingHoursDto> Handle(GetSelfWorkingHoursQuery request, CancellationToken ct)
     {
-        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var currentDate = DateOnly.FromDateTime(DateTime.Now);
 
         var response = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
             currentAppUser.User.Id,

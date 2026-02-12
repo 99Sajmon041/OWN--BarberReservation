@@ -14,7 +14,8 @@ public sealed class CreateHairDresserReservationCommandHandler(
     ILogger<CreateHairDresserReservationCommandHandler> logger,
     IUnitOfWork unitOfWork,
     ICurrentAppUser currentAppUser,
-    UserManager<ApplicationUser> userManager) : IRequestHandler<CreateHairDresserReservationCommand, int>
+    UserManager<ApplicationUser> userManager,
+    IEmailService emailService) : IRequestHandler<CreateHairDresserReservationCommand, int>
 {
     public async Task<int> Handle(CreateHairDresserReservationCommand request, CancellationToken ct)
     {
@@ -116,7 +117,7 @@ public sealed class CreateHairDresserReservationCommandHandler(
             StartAt = request.StartAt,
             EndAt = endAt,
             Status = ReservationStatus.Booked,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
             CustomerId = customerId,
             CustomerName = customerName,
             CustomerEmail = customerEmail,
@@ -125,6 +126,14 @@ public sealed class CreateHairDresserReservationCommandHandler(
 
         await unitOfWork.ReservationRepository.CreateAsync(reservation, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        await emailService.SendReservationConfirmationEmailAsync(customerEmail,
+            startAt,
+            customerName,
+            hairdresserService.Service.Name,
+            hairdresserService.Price,
+            hairdresserService.DurationMinutes,
+            ct);
 
         logger.LogInformation(
             "Reservation with ID {ReservationId} created by hairdresser. HairdresserId: {HairdresserId}, CustomerName: {CustomerName}, StartAt: {StartAt}.",

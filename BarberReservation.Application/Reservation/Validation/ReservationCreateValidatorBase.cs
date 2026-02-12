@@ -21,7 +21,7 @@ public abstract class ReservationCreateValidatorBase<T> : AbstractValidator<T> w
             .WithMessage("Telefonní číslo musí být ve formátu +420123456789 (8–15 číslic, volitelně s +).");
          
         RuleFor(x => x.StartAt)
-            .Must(startAt => startAt > DateTime.UtcNow)
+            .Must(startAt => startAt > DateTime.Now)
             .WithMessage("Datum a čas rezervace musí být v budoucnosti.");
 
         RuleFor(x => x.ServiceId)

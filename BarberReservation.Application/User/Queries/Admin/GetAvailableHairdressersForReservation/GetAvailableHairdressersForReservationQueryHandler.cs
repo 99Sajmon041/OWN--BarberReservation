@@ -29,7 +29,7 @@ public sealed class GetAvailableHairdressersForReservationQueryHandler(
             throw new ConflictException("Rezervaci lze změnit jen ve stavu 'Booked'.");
         }
 
-        if (reservation.StartAt <= DateTime.UtcNow)
+        if (reservation.StartAt <= DateTime.Now)
         {
             logger.LogWarning("Reservation {ReservationId} already started. StartAt: {StartAt:u}", reservation.Id, reservation.StartAt);
             throw new ConflictException("Kadeřníka lze změnit pouze před začátkem rezervace.");

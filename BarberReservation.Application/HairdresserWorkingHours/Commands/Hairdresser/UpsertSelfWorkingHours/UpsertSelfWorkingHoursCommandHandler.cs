@@ -14,7 +14,7 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
 {
     public async Task Handle(UpsertSelfWorkingHoursCommand request, CancellationToken ct)
     {
-        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var currentDate = DateOnly.FromDateTime(DateTime.Now);
         var hairdresser = currentAppUser.User;
         const int WeeksDelay = 3;
 

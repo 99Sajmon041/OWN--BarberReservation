@@ -42,11 +42,12 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request, CancellationToken ct)
+        [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Hairdresser))]
+        public async Task<ActionResult<string>> CreateUser([FromBody] CreateUserRequest request, CancellationToken ct)
         {
             var command = request.ToCreateUserCommand();
-            await mediator.Send(command, ct);                  
-            return NoContent();
+            var id = await mediator.Send(command, ct);
+            return Ok(id);
         }
 
         [HttpPatch("{id}/deactivate")]

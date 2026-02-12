@@ -27,7 +27,7 @@ public sealed class DeleteTimeOffCommandHandler(
             throw new NotFoundException("Volno nelze smazat - nebylo nalezeno.");
         }
 
-        var allowedTimeToModify = DateTime.UtcNow.AddHours(1);
+        var allowedTimeToModify = DateTime.Now.AddHours(1);
 
         if (timeOff.StartAt <= allowedTimeToModify)
         {

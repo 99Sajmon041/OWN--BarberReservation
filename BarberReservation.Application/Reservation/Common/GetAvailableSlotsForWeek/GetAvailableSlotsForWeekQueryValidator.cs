@@ -19,7 +19,7 @@ public sealed class GetAvailableSlotsForWeekQueryValidator : AbstractValidator<G
         RuleFor(x => x.WeekStartDate)
             .Must(d => d.DayOfWeek == DayOfWeek.Monday)
             .WithMessage("Datum musí být začátek týdne (pondělí).")
-            .Must(d => d.Date.AddDays(6) >= DateTime.UtcNow.Date)
+            .Must(d => d.Date.AddDays(6) >= DateTime.Now.Date)
             .WithMessage("Týden nesmí být celý v minulosti.");
     }
 }

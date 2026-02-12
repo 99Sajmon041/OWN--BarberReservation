@@ -17,7 +17,7 @@ public sealed class JwtTokenService(IConfiguration configuration, UserManager<Ap
         var audience = configuration["Jwt:Audience"];
 
         var baseMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "60");
-        var expiresAt = DateTime.UtcNow.AddMinutes(rememberMe ? baseMinutes * 24 : baseMinutes);
+        var expiresAt = DateTime.Now.AddMinutes(rememberMe ? baseMinutes * 24 : baseMinutes);
 
         var roles = await userManager.GetRolesAsync(user);
 
@@ -41,7 +41,7 @@ public sealed class JwtTokenService(IConfiguration configuration, UserManager<Ap
             issuer: issuer,
             audience: audience,
             claims: claims,
-            notBefore: DateTime.UtcNow,
+            notBefore: DateTime.Now,
             expires: expiresAt,
             signingCredentials: creds
         );

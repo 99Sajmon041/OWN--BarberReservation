@@ -12,7 +12,7 @@ public sealed class AuthState
     private string? _token;
     private ClaimsPrincipal? _principalCache;
 
-    public string? Token =>  !string.IsNullOrWhiteSpace(_token) && ExpiresAt > DateTime.UtcNow ? _token : null;
+    public string? Token =>  !string.IsNullOrWhiteSpace(_token) && ExpiresAt > DateTime.Now ? _token : null;
     public DateTime ExpiresAt { get; private set; }
     public bool MustChangePassword { get; private set; }
     public bool IsAuthenticated => Token is not null;
@@ -97,7 +97,7 @@ public sealed class AuthState
 
         var data = local.Value;
 
-        if (data.ExpiresAt <= DateTime.UtcNow)
+        if (data.ExpiresAt <= DateTime.Now)
         {
             await _local.DeleteAsync(StorageKey);
             return;

@@ -180,6 +180,7 @@ public sealed class HairdresserServiceRepository(BarberDbContext context) : Base
     {
         return await _context.HairdresserServices
             .AsNoTracking()
+            .Include(x => x.Service)
             .FirstOrDefaultAsync(x => x.HairdresserId == hairdresserId && x.ServiceId == serviceId && x.IsActive, ct);
     }
 }

@@ -12,7 +12,8 @@ namespace BarberReservation.Application.Reservation.Commands.Admin.CreateAdminRe
 public sealed class CreateAdminReservationCommandHandler(
     ILogger<CreateAdminReservationCommandHandler> logger,
     UserManager<ApplicationUser> userManager,
-    IUnitOfWork unitOfWork) : IRequestHandler<CreateAdminReservationCommand, int>
+    IUnitOfWork unitOfWork,
+    IEmailService emailService) : IRequestHandler<CreateAdminReservationCommand, int>
 {
     public async Task<int> Handle(CreateAdminReservationCommand request, CancellationToken ct)
     {
@@ -127,7 +128,7 @@ public sealed class CreateAdminReservationCommandHandler(
             StartAt = request.StartAt,
             EndAt = endAt,
             Status = ReservationStatus.Booked,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
             CustomerId = customerId,
             CustomerName = customerName,
             CustomerEmail = customerEmail,
@@ -136,6 +137,14 @@ public sealed class CreateAdminReservationCommandHandler(
 
         await unitOfWork.ReservationRepository.CreateAsync(reservation, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        await emailService.SendReservationConfirmationEmailAsync(customerEmail,
+            startAt,
+            customerName,
+            hairdresserService.Service.Name,
+            hairdresserService.Price,
+            hairdresserService.DurationMinutes,
+            ct);
 
         logger.LogInformation(
             "Reservation with ID {ReservationId} created by admin. HairdresserId: {HairdresserId}, CustomerName: {CustomerName}, StartAt: {StartAt}.",

@@ -5,7 +5,7 @@ public static class ReservationDateHelper
     private const int WeeksAhead = 3;
     public static DateOnly GetMaxReservationDate()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
 
         var daysToFriday = ((int)DayOfWeek.Friday - (int)now.DayOfWeek + 7) % 7;
 

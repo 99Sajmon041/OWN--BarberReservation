@@ -51,7 +51,7 @@ public sealed class UpdateSelfTimeOffCommandHandler(
             throw new ConflictException("Nelze aby volno začínalo po jeho konci.");
         }
 
-        var freeCanStart = DateTime.UtcNow.AddHours(1);
+        var freeCanStart = DateTime.Now.AddHours(1);
 
         if (request.StartAt < freeCanStart)
         {

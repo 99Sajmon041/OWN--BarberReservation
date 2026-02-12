@@ -7,7 +7,7 @@ public sealed class GetSelfDailyWorkingHoursQueryValidator : AbstractValidator<G
     public GetSelfDailyWorkingHoursQueryValidator()
     {
         RuleFor(x => x.Day)
-            .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
+            .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.Now))
             .WithMessage("Datum nesmí být v minulosti.");
     }
 }

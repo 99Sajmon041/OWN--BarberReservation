@@ -18,7 +18,7 @@ public sealed class ApiClient(IHttpClientFactory factory, AuthState authState) :
             throw new ApiRequestException(await res.ReadProblemMessageAsync("Chyba API."), (int)res.StatusCode);
 
         var result = await res.Content.ReadFromJsonAsync<T>(ct)
-            ?? throw new ApiRequestException("API returned no data.", (int)res.StatusCode);
+            ?? throw new ApiRequestException("API data nenalezena.", (int)res.StatusCode);
 
         return result;
     }
@@ -36,7 +36,7 @@ public sealed class ApiClient(IHttpClientFactory factory, AuthState authState) :
             throw new ApiRequestException(await res.ReadProblemMessageAsync("Chyba API."), (int)res.StatusCode);
 
         var result = await res.Content.ReadFromJsonAsync<TRes>(ct)
-            ?? throw new ApiRequestException("API returned no data.", (int)res.StatusCode);
+            ?? throw new ApiRequestException("API data nenalezena.", (int)res.StatusCode);
 
         return result;
     }

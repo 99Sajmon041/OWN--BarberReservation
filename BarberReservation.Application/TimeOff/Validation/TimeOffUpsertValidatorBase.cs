@@ -13,7 +13,7 @@ public abstract class TimeOffUpsertValidatorBase<T> : AbstractValidator<T> where
             .Length(5, 120).WithMessage("Důvod volna musí být v rozmezí 5 - 120 znaků.");
 
         RuleFor(x => x.StartAt)
-            .Must(x => x >= DateTime.UtcNow.AddHours(1))
+            .Must(x => x >= DateTime.Now.AddHours(1))
             .WithMessage("S volny nelze pracovat v minulosti (nejpozději hodinu předem).");
 
         RuleFor(x => x.EndAt)

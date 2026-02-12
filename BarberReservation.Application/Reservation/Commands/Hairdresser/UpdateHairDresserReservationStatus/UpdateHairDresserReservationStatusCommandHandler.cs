@@ -14,7 +14,7 @@ public sealed class UpdateHairDresserReservationStatusCommandHandler(
 {
     public async Task Handle(UpdateHairDresserReservationStatusCommand request, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
 
         var reservation = await unitOfWork.ReservationRepository.GetForHairdresserAsync(request.Id, currentAppUser.User.Id, ct);
         if(reservation is null)

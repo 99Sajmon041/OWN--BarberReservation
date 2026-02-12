@@ -6,13 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace BarberReservation.Application.Reservation.Common.GetAvailableSlotsForWeek;
 
-public sealed class GetAvailableSlotsForWeekQueryHandler(ILogger<GetAvailableSlotsForWeekQueryHandler> logger, IUnitOfWork unitOfWork) : IRequestHandler<GetAvailableSlotsForWeekQuery, IReadOnlyList<SlotDto>>
+public sealed class GetAvailableSlotsForWeekQueryHandler(
+    ILogger<GetAvailableSlotsForWeekQueryHandler> logger,
+    IUnitOfWork unitOfWork)
+    : IRequestHandler<GetAvailableSlotsForWeekQuery, IReadOnlyList<SlotDto>>
 {
     private const int StepMinutes = 30;
 
     public async Task<IReadOnlyList<SlotDto>> Handle(GetAvailableSlotsForWeekQuery request, CancellationToken ct)
     {
         var existsService = await unitOfWork.HairdresserServiceRepository.ExistsActiveWithSameServiceAsync(request.HairdresserId, request.ServiceId, ct);
+
         if (!existsService)
         {
             logger.LogWarning("Hairdresser or service does not exist. ServiceId: {ServiceId}, HairdresserId: {HairdresserId}.", request.ServiceId, request.HairdresserId);
@@ -21,7 +25,9 @@ public sealed class GetAvailableSlotsForWeekQueryHandler(ILogger<GetAvailableSlo
 
         var weekStartDate = DateOnly.FromDateTime(request.WeekStartDate);
 
-        var workHoursWeek = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(request.HairdresserId, weekStartDate, includeHairdresser: false, tracked: false, ct);
+        var workHoursWeek = await unitOfWork.HairdresserWorkingHoursRepository
+            .GetWeekAsync(request.HairdresserId, weekStartDate, includeHairdresser: false, tracked: false, ct);
+
         if (workHoursWeek.Count == 0)
         {
             logger.LogWarning("Hairdresser does not have set working hours for the week starting at {WeekStartDate}. HairdresserId: {HairdresserId}.",
@@ -32,21 +38,24 @@ public sealed class GetAvailableSlotsForWeekQueryHandler(ILogger<GetAvailableSlo
         }
 
         var serviceDuration = await unitOfWork.HairdresserServiceRepository.GetTimeDurationByHairdresserIdAndServiceIdAsync(request.ServiceId, request.HairdresserId, ct);
+
         if (serviceDuration <= 0)
         {
-            logger.LogWarning("Service duration is invalid: {ServiceDuration}. ServiceId: {ServiceId}, HairdresserId: {HairdresserId}.", 
+            logger.LogWarning("Service duration is invalid: {ServiceDuration}. ServiceId: {ServiceId}, HairdresserId: {HairdresserId}.",
                 serviceDuration,
-                request.ServiceId, 
+                request.ServiceId,
                 request.HairdresserId);
 
             throw new ValidationException("Délka služby není platná.");
         }
 
-        var weekStartDt = request.WeekStartDate.Date;
-        var weekEndExclusive = weekStartDt.AddDays(5);
+        var weekStart = request.WeekStartDate.Date;
+        var weekEndExclusive = weekStart.AddDays(5);
 
-        var timeOffs = await unitOfWork.HairdresserTimeOffRepository.GetAllWeeklyAsync(request.HairdresserId, weekStartDt, ct);
-        var reservations = await unitOfWork.ReservationRepository.GetAllWeeklyAsync(request.HairdresserId, weekStartDt, ct);
+        var timeOffs = await unitOfWork.HairdresserTimeOffRepository.GetAllWeeklyAsync(request.HairdresserId, weekStart, ct);
+        var reservations = await unitOfWork.ReservationRepository.GetAllWeeklyAsync(request.HairdresserId, weekStart, ct);
+
+        var now = DateTime.Now;
 
         var slots = new List<SlotDto>(capacity: 256);
 
@@ -68,10 +77,10 @@ public sealed class GetAvailableSlotsForWeekQueryHandler(ILogger<GetAvailableSlo
                 var startAt = new DateTime(day, start);
                 var endAt = startAt.AddMinutes(serviceDuration);
 
-                if (startAt <= DateTime.UtcNow)
+                if (startAt <= now)
                     continue;
 
-                if (startAt < weekStartDt || startAt >= weekEndExclusive)
+                if (startAt < weekStart || startAt >= weekEndExclusive)
                     continue;
 
                 if (timeOffs.Count > 0 && timeOffs.Any(t => IsOverlapping(startAt, endAt, t.StartAt, t.EndAt)))

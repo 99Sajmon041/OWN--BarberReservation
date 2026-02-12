@@ -13,7 +13,7 @@ public sealed class UpdateAdminReservationStatusCommandHandler(
 {
     public async Task Handle(UpdateAdminReservationStatusCommand request, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
 
         var reservation = await unitOfWork.ReservationRepository.GetForAdminAsync(request.Id, ct);
         if (reservation is null)

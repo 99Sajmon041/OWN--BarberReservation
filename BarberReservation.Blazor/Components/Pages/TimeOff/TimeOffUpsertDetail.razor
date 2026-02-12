@@ -1,5 +1,4 @@
 ﻿@page "/time-off/detail"
-@using BarberReservation.Shared.Models.Reservation
 
 <PageTitle>Úprava volna</PageTitle>
 
@@ -143,8 +142,12 @@
                             @foreach (var item in TimeOffs.OrderBy(x => x.StartAt))
                             {
                                 var isSelected = SelectedTimeOffId == item.Id;
-                                var top = ToTopPx(item.StartAt);
-                                var height = ToHeightPx(item.StartAt, item.EndAt);
+
+                                var startLocal = AsLocal(item.StartAt);
+                                var endLocal = AsLocal(item.EndAt);
+
+                                var top = ToTopPx(startLocal);
+                                var height = ToHeightPx(startLocal, endLocal);
 
                                 <button type="button"
                                         class="gcal-event timeoff warning @(isSelected ? "selected" : "")"
@@ -157,7 +160,7 @@
                                     <div class="evt-row">
                                         <span class="evt-chip">Volno</span>
                                         <span class="evt-dot">•</span>
-                                        <span class="evt-time">@item.StartAt.ToString("HH:mm")–@item.EndAt.ToString("HH:mm")</span>
+                                        <span class="evt-time">@startLocal.ToString("HH:mm")–@endLocal.ToString("HH:mm")</span>
                                         <span class="evt-dot">•</span>
                                         <span class="evt-reason">@item.Reason</span>
                                     </div>
@@ -166,8 +169,11 @@
 
                             @foreach (var r in Reservations.OrderBy(x => x.StartAt))
                             {
-                                var top = ToTopPx(r.StartAt);
-                                var height = ToHeightPx(r.StartAt, r.EndAt);
+                                var startLocal = AsLocal(r.StartAt);
+                                var endLocal = AsLocal(r.EndAt);
+
+                                var top = ToTopPx(startLocal);
+                                var height = ToHeightPx(startLocal, endLocal);
 
                                 <div class="gcal-event reservation success"
                                      @ondblclick:stopPropagation="true"
@@ -177,7 +183,7 @@
                                     <div class="evt-row one-line">
                                         <span class="evt-chip">Rezervace</span>
                                         <span class="evt-dot">•</span>
-                                        <span class="evt-time">@r.StartAt.ToString("HH:mm")–@r.EndAt.ToString("HH:mm")</span>
+                                        <span class="evt-time">@startLocal.ToString("HH:mm")–@endLocal.ToString("HH:mm")</span>
                                         <span class="evt-dot">•</span>
                                         <span class="evt-reason">@r.ServiceName</span>
                                         <span class="evt-dot">•</span>
@@ -272,8 +278,11 @@
         Opravdu chceš smazat vybrané volno?
         @if (SelectedTimeOff is not null)
         {
+            var sLocal = AsLocal(SelectedTimeOff.StartAt);
+            var eLocal = AsLocal(SelectedTimeOff.EndAt);
+
             <div class="mt-12 muted small">
-                @SelectedTimeOff.StartAt.ToString("HH:mm") – @SelectedTimeOff.EndAt.ToString("HH:mm") • @SelectedTimeOff.Reason
+                @sLocal.ToString("HH:mm") – @eLocal.ToString("HH:mm") • @SelectedTimeOff.Reason
             </div>
         }
     </div>
@@ -296,8 +305,19 @@
     private ElementReference CanvasRef;
     private const int SnapMinutes = 15;
 
-    private DateOnly MinAllowedDay => DateOnly.FromDateTime(DateTime.Today);
-    private DateOnly SelectedDay = DateOnly.FromDateTime(DateTime.Today);
+    private static DateTime AsLocal(DateTime value)
+    {
+        if (value.Kind == DateTimeKind.Utc)
+            return value.ToLocalTime();
+
+        if (value.Kind == DateTimeKind.Unspecified)
+            return DateTime.SpecifyKind(value, DateTimeKind.Local);
+
+        return value;
+    }
+
+    private DateOnly MinAllowedDay => DateOnly.FromDateTime(DateTime.Now.Date);
+    private DateOnly SelectedDay = DateOnly.FromDateTime(DateTime.Now.Date);
 
     private List<HairdresserTimeOffDto> TimeOffs = new();
     private List<ReservationDto> Reservations = new();
@@ -535,8 +555,11 @@
         ModalMode = ModalModeEnum.Edit;
         ModalTitle = "Upravit volno";
 
-        FormStartTimeText = SelectedTimeOff.StartAt.ToString("HH:mm");
-        FormEndTimeText = SelectedTimeOff.EndAt.ToString("HH:mm");
+        var sLocal = AsLocal(SelectedTimeOff.StartAt);
+        var eLocal = AsLocal(SelectedTimeOff.EndAt);
+
+        FormStartTimeText = sLocal.ToString("HH:mm");
+        FormEndTimeText = eLocal.ToString("HH:mm");
         FormReason = SelectedTimeOff.Reason;
 
         ModalOpen = true;
@@ -756,7 +779,7 @@
 
     private bool IsWithinAllowedModifyWindow(HairdresserTimeOffDto timeOff)
     {
-        return timeOff.StartAt > DateTime.UtcNow.AddHours(1);
+        return AsLocal(timeOff.StartAt) > DateTime.Now.AddHours(1);
     }
 
     private TimeOnly SnapToMinutes(TimeOnly t, int minutes)
@@ -829,7 +852,6 @@
 
         var snapped = SnapToMinutes(raw, SnapMinutes);
 
-
         if (snapped < TimelineStart || snapped >= TimelineEnd)
             return;
 
@@ -839,8 +861,19 @@
             return;
         }
 
+        if (IsPastSlot(SelectedDay, snapped))
+        {
+            MessageService.ShowWarning("V minulosti nelze vytvořit volno.");
+            return;
+        }
+
         OpenCreateAt(snapped);
         await InvokeAsync(StateHasChanged);
     }
 
+    private bool IsPastSlot(DateOnly day, TimeOnly time)
+    {
+        var clicked = day.ToDateTime(time);
+        return clicked < DateTime.Now;
+    }
 }

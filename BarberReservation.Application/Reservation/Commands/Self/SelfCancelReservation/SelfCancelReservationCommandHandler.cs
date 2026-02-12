@@ -21,7 +21,7 @@ public sealed class SelfCancelReservationCommandHandler(
             throw new NotFoundException("Rezervace nebyla nalezena.");
         }
 
-        var timeUntilReservation = reservation.StartAt - DateTime.UtcNow;
+        var timeUntilReservation = reservation.StartAt - DateTime.Now;
 
         if (timeUntilReservation <= TimeSpan.Zero)
         {
@@ -53,7 +53,7 @@ public sealed class SelfCancelReservationCommandHandler(
 
 
         reservation.Status = ReservationStatus.Canceled;
-        reservation.CanceledAt = DateTime.UtcNow;
+        reservation.CanceledAt = DateTime.Now;
         reservation.CanceledBy = ReservationCanceledBy.Customer;
         reservation.CanceledReason = CanceledReason.CustomerRequest;
 
