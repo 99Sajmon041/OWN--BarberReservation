@@ -1,9 +1,10 @@
-﻿using BarberReservation.Application.Reservation.Common.Interfaces;
+﻿using BarberReservation.Application.Common.Security;
+using BarberReservation.Application.Reservation.Common.Interfaces;
 using MediatR;
 
 namespace BarberReservation.Application.Reservation.Commands.Self.CreateSelfReservation;
 
-public sealed class CreateSelfReservationCommand : IReservationCreate, IRequest
+public sealed class CreateSelfReservationCommand : IRequireActiveUser, IReservationCreate, IRequest
 {
     public string HairdresserId { get; set; } = default!;
     public int ServiceId { get; set; }

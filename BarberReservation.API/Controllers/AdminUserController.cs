@@ -47,7 +47,7 @@ namespace BarberReservation.API.Controllers
         {
             var command = request.ToCreateUserCommand();
             var id = await mediator.Send(command, ct);
-            return Ok(id);
+            return Ok(new { id });
         }
 
         [HttpPatch("{id}/deactivate")]

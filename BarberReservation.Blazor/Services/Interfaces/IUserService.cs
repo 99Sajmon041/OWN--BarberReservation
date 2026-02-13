@@ -12,7 +12,7 @@ public interface IUserService
     Task<UserDto> GetByIdAsync(string id, CancellationToken ct);
     Task DeactivateByIdAsync(string id, CancellationToken ct);
     Task ActivateByIdAsync(string id, CancellationToken ct);
-    Task CreateAsync(CreateUserRequest request, CancellationToken ct);
+    Task<CreateUserResponse> CreateAsync(CreateUserRequest request, CancellationToken ct);
     Task UpdateAsync(string id, UpdateUserRequest request, CancellationToken ct);
     Task UpdateEmailAsync(string id, UpdateUserEmailRequest request, CancellationToken ct);
     Task<UserDto> GetProfileAsync(CancellationToken ct);

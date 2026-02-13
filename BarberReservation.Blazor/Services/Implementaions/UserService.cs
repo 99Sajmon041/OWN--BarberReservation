@@ -54,9 +54,9 @@ public class UserService(IApiClient api, AuthState authState) : IUserService
         await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/activate", null, ct);
     }
 
-    public async Task CreateAsync(CreateUserRequest request, CancellationToken ct)
+    public async Task<CreateUserResponse> CreateAsync(CreateUserRequest request, CancellationToken ct)
     {
-        await api.SendAsync(HttpMethod.Post, "api/users", request, ct);
+        return await api.PostAsyncWithResponse<CreateUserRequest, CreateUserResponse>(HttpMethod.Post, "api/users", request, ct);
     }
 
     public async Task UpdateAsync(string id, UpdateUserRequest request, CancellationToken ct)

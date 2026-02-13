@@ -6,7 +6,6 @@
 @inject ILookUpsService LookUpsService
 @inject AuthState AuthState
 @inject NavigationManager Nav
-@inject IUserService UserService
 
 <PageTitle>Vytvoření rezervace</PageTitle>
 
@@ -76,7 +75,10 @@ else
                     @if (canLookupCustomers)
                     {
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="button" class="btn btn-outline" @onclick="ToggleCustomerLookup">
+                            <button type="button"
+                                    class="btn btn-outline"
+                                    @onclick="ToggleCustomerLookup"
+                                    disabled="@HasSelectedCustomerFromLookup">
                                 @(showCustomerLookup ? "Skrýt výběr zákazníka" : "Vybrat existujícího zákazníka")
                             </button>
 
@@ -216,12 +218,12 @@ else
                 <div class="divider"></div>
 
                 <div style="overflow:auto;">
-                    <table style="width:100%; border-collapse: collapse;">
+                    <table style="width:100%; border-collapse: collapse; table-layout:fixed;">
                         <thead>
                             <tr style="text-align:left; border-bottom: 1px solid var(--line);">
                                 @foreach (var d in workDays)
                                 {
-                                    <th style="padding: 10px 6px; text-align:center;">
+                                    <th style="padding: 10px 6px; text-align:center; width:20%;">
                                         <div>@d.DayLabel</div>
                                         <div class="muted">@d.DateLabel</div>
                                     </th>
@@ -233,7 +235,7 @@ else
                             <tr style="border-bottom: 1px solid var(--line);">
                                 @foreach (var d in workDays)
                                 {
-                                    <td style="padding: 10px 6px; vertical-align: top;">
+                                    <td style="padding: 10px 6px; vertical-align: top; width:20%;">
                                         @if (!tableEnabled)
                                         {
                                             <div class="muted small">@tableHint</div>
@@ -771,7 +773,10 @@ else
         string[] names = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
 
         if (names.Length < 2)
+        {
+            MessageService.ShowError("Zadejte celé jméno a příjmení.");
             return;
+        }
 
         var firstName = names[0];
         var lastName = names[1];
@@ -787,12 +792,19 @@ else
                 Role = nameof(UserRoles.Customer)
             };
 
-            await UserService.CreateAsync(request, CancellationToken.None);
+            var result = await UserService.CreateAsync(request, CancellationToken.None);
+
+            model.CustomerId = result.Id;
+
+            customerFieldsLocked = true;
+            showCustomerLookup = false;
+            ClearCustomerSearch();
+
+            MessageService.ShowSuccess("Zákazník byl úspěšně vytvořen.");
         }
-        catch(ApiRequestException ex)
+        catch (ApiRequestException ex)
         {
             MessageService.ShowError(ex.Message);
-            return;
         }
     }
 }

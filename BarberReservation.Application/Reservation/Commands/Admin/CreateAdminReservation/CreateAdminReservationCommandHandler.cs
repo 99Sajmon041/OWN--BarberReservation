@@ -138,13 +138,14 @@ public sealed class CreateAdminReservationCommandHandler(
         await unitOfWork.ReservationRepository.CreateAsync(reservation, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        await emailService.SendReservationConfirmationEmailAsync(customerEmail,
-            startAt,
-            customerName,
-            hairdresserService.Service.Name,
-            hairdresserService.Price,
-            hairdresserService.DurationMinutes,
-            ct);
+        await emailService.SendReservationConfirmationEmailAsync(
+            email: customerEmail,
+            reservationTime: startAt,
+            hairdresserName: user.FullName,
+            serviceName: hairdresserService.Service.Name,
+            price: hairdresserService.Price,
+            durationTime: hairdresserService.DurationMinutes,
+            ct: ct);
 
         logger.LogInformation(
             "Reservation with ID {ReservationId} created by admin. HairdresserId: {HairdresserId}, CustomerName: {CustomerName}, StartAt: {StartAt}.",
