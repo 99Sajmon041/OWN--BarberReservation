@@ -41,15 +41,15 @@
             <div class="services-grid">
                 @foreach (var s in services)
                 {
-                    <article class="service-card">
-                        <div class="service-card-head">
-                            <div class="service-title">@s.Name</div>
-                        </div>
-
-                        <div class="service-desc muted">
+                    <a class="service-card service-card-link"
+                        href="/reservations/create?serviceId=@s.Id">
+                         <div class="service-card-head">
+                             <div class="service-title">@s.Name</div>
+                         </div>
+                         <div class="service-desc muted">
                             @s.Description
-                        </div>
-                    </article>
+                         </div>
+                    </a>
                 }
             </div>
         }

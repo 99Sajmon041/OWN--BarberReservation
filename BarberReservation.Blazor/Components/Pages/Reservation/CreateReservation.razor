@@ -294,6 +294,9 @@ else
 
 @code
 {
+    [Parameter, SupplyParameterFromQuery(Name = "serviceId")]
+    public int? ServiceIdQuery { get; set; }
+
     private CreateReservationRequest model = new();
 
     private bool _checked;
@@ -379,6 +382,12 @@ else
         ApplyRoleTexts();
 
         services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
+
+        if (ServiceIdQuery is not null)
+        {
+            selectedServiceId = ServiceIdQuery;
+            await OnServiceChangedAsync();
+        }
 
         InitWeekStartOnLoad();
         BuildWorkDaysSkeleton();
