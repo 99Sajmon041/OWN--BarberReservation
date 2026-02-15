@@ -1,0 +1,5 @@
+﻿using BarberReservation.Application.HairdresserWorkingHours.Validations;
+
+namespace BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfWorkingHoursByWeek;
+
+public sealed class GetSelfWorkingHoursByWeekQueryValidator : WorkingHoursByWeekValidator<GetSelfWorkingHoursByWeekQuery> { }

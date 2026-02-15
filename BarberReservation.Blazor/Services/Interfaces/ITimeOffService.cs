@@ -9,5 +9,6 @@ public interface ITimeOffService
     Task CreateAsync(UpsertTimeOffRequest request, CancellationToken ct);
     Task UpdateAsync(int id, UpsertTimeOffRequest request, CancellationToken ct);
     Task DeleteAsync(int id, CancellationToken ct);
-    Task<PagedResult<HairdresserTimeOffDto>> GetAllAsync(HairdresserPagedRequest request, CancellationToken ct);
+    Task<PagedResult<HairdresserTimeOffDto>> GetAllAsync(HairdresserTimeOffPagedRequest request, CancellationToken ct);
+    Task<List<HairdresserTimeOffDto>> GetAllWeeklyAsync(string hairdresserId, DateTime weekStartDate, CancellationToken ct);
 }

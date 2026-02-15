@@ -23,12 +23,7 @@ public sealed class GetAllSelfTimeOffsQueryHandler(
         var hairdresser = currentAppUser.User;
         var hairdresserPagedRequest = request.ToHairdresserPagedRequest();
 
-        var (items, total) = await unitOfWork.HairdresserTimeOffRepository.GetAllPagedForHairdresserAsync(
-            hairdresser.Id,
-            hairdresserPagedRequest,
-            request.Year,
-            request.Month, 
-            ct);
+        var (items, total) = await unitOfWork.HairdresserTimeOffRepository.GetAllPagedForHairdresserAsync(hairdresser.Id, hairdresserPagedRequest, ct);
 
         var dtos = mapper.Map<List<HairdresserTimeOffDto>>(items);
 

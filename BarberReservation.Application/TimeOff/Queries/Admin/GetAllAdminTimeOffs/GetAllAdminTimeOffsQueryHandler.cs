@@ -19,7 +19,7 @@ public sealed class GetAllAdminTimeOffsQueryHandler(
 
         var adminHairdresserPagedRequest = request.ToAdminHairdresserPagedRequest();
 
-        var (items, total) = await unitOfWork.HairdresserTimeOffRepository.GetAllPagedForAdminAsync(adminHairdresserPagedRequest, request.Year, request.Month, ct);
+        var (items, total) = await unitOfWork.HairdresserTimeOffRepository.GetAllPagedForAdminAsync(adminHairdresserPagedRequest, ct);
 
         var itemsDto = mapper.Map<List<HairdresserTimeOffDto>>(items);
 

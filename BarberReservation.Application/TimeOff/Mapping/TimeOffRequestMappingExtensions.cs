@@ -8,28 +8,32 @@ namespace BarberReservation.Application.TimeOff.Mapping;
 
 public static class TimeOffRequestMappingExtensions
 {
-    public static HairdresserPagedRequest ToAdminHairdresserPagedRequest(this GetAllAdminTimeOffsQuery query)
+    public static HairdresserTimeOffPagedRequest ToAdminHairdresserPagedRequest(this GetAllAdminTimeOffsQuery query)
     {
-        return new HairdresserPagedRequest
+        return new HairdresserTimeOffPagedRequest
         {
             Desc = query.Desc,
             HairdresserId = query.HairdresserId,
             Page = query.Page,
             PageSize = query.PageSize,
             Search = query.Search,
-            SortBy = query.SortBy
+            SortBy = query.SortBy,
+            Year = query.Year,
+            Month = query.Month
         };
     }
 
-    public static HairdresserPagedRequest ToHairdresserPagedRequest(this GetAllSelfTimeOffsQuery query)
+    public static HairdresserTimeOffPagedRequest ToHairdresserPagedRequest(this GetAllSelfTimeOffsQuery query)
     {
-        return new HairdresserPagedRequest
+        return new HairdresserTimeOffPagedRequest
         {
             Desc = query.Desc,
             Page = query.Page,
             PageSize = query.PageSize,
             Search = query.Search,
-            SortBy = query.SortBy
+            SortBy = query.SortBy,
+            Year = query.Year,
+            Month = query.Month
         };
     }
 

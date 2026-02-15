@@ -28,7 +28,7 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpGet("available-hairdressers")]
-        public async Task<ActionResult<List<GetLookUpHairdressers>>> GetAvailableHairdressers([FromQuery] int reservationId, CancellationToken ct)
+        public async Task<ActionResult<List<LookUpHairdressersDto>>> GetAvailableHairdressers([FromQuery] int reservationId, CancellationToken ct)
         {
             var result = await mediator.Send(new GetAvailableHairdressersForReservationQuery(reservationId), ct);
             return Ok(result);

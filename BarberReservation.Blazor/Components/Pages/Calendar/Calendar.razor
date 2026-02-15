@@ -1,13 +1,790 @@
 ﻿@page "/calendar/{hairdresserId}"
 
-<PageTitle>Kalednář</PageTitle>
+@implements IDisposable
+@inject AuthState AuthState
+@inject NavigationManager Nav
+@inject MessageService MessageService
+@inject ILookUpsService LookUpsService
+@inject IWorkingHoursService WorkingHoursService
+@inject IReservationService ReservationService
+@inject ITimeOffService TimeOffService
 
-<h1 class="muted">Tady bude kalendář se select listem :-)</h1>
+<PageTitle>Kalendář</PageTitle>
 
+<div class="container">
+    <div class="page-head">
+        <div class="page-head-left">
+            <h1 class="page-title">Kalendář – týdenní přehled</h1>
+            <p class="page-subtitle muted mt-6">
+                Přehled pracovních hodin, volna a rezervací (PO–PÁ). Pouze pro čtení.
+            </p>
 
+            <div class="row-actions mt-10">
+                <button class="btn btn-outline" @onclick="PrevWeekAsync" disabled="@isLoading">←</button>
+                <button class="btn btn-outline" @onclick="GoThisWeekAsync" disabled="@isLoading">Tento týden</button>
+                <button class="btn btn-outline" @onclick="NextWeekAsync" disabled="@isLoading">→</button>
+            </div>
+        </div>
+    </div>
 
-@code {
+    <div class="card mt-16">
+        <div class="timeoff-toolbar">
+            <div class="field field-inline">
+                <label class="label">Týden od</label>
+                <div class="input-wrap">
+                    <input class="input input-date-dark timeoff-date"
+                           type="date"
+                           @bind="weekStartPicker"
+                           @bind:event="onchange"
+                           @bind:after="OnWeekPickedAfterBindAsync"
+                           disabled="@isLoading" />
+                </div>
+            </div>
+
+            @if (isAdmin)
+            {
+                <div class="field field-inline">
+                    <label class="label">Kadeřník</label>
+                    <select class="input" value="@HairdresserId" @onchange="OnHairdresserChanged" disabled="@isLoading">
+                        @foreach (var h in hairdresserLookups)
+                        {
+                            <option value="@h.Id">@h.FullName</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="toolbar-right">
+                <button class="btn btn-outline" @onclick="Reload" disabled="@isLoading">Obnovit</button>
+            </div>
+        </div>
+
+        <div class="muted small mt-10">
+            Zobrazeno: <strong>@weekLabel</strong>
+        </div>
+    </div>
+
+    @if (!isReady)
+    {
+        <div class="page-head page-head-center mt-24">
+            <h2 class="page-title">Načítám...</h2>
+            <p class="page-subtitle muted mt-6">Chvilku strpení.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card mt-16">
+            <div class="timeoff-head">
+                <div class="timeoff-head-left">
+                    <h2 class="card-title">Týdenní osa</h2>
+                    <div class="muted small mt-6">Rezervace, volna a nepracovní doba.</div>
+                </div>
+
+                <div class="muted small">
+                    Rozsah dne: @timelineStart.ToString("HH:mm")–@timelineEnd.ToString("HH:mm")
+                </div>
+            </div>
+
+            <div class="mt-12">
+                <div class="gcal-grid gcal-week">
+                    <div class="gcal-time-col">
+                        @foreach (var t in timelineSlots)
+                        {
+                            <div class="gcal-timecell">
+                                @if (t.Minute == 0)
+                                {
+                                    <span>@t.ToString("H:mm")</span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="gcal-week-cols">
+                        <div class="gcal-week-head">
+                            @for (int i = 0; i < 5; i++)
+                            {
+                                var d = weekStart.AddDays(i);
+                                <div class="gcal-week-th">
+                                    <div>@d.ToString("ddd", new CultureInfo("cs-CZ")).ToUpperInvariant()</div>
+                                    <div class="muted">@d.ToString("d. M.", new CultureInfo("cs-CZ"))</div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="gcal-week-body">
+                            @for (int i = 0; i < 5; i++)
+                            {
+                                var day = weekStart.AddDays(i);
+
+                                <div class="gcal-day-col">
+                                    @foreach (var t in timelineSlots)
+                                    {
+                                        <div class="gcal-rowline @(t.Minute == 0 ? "hour" : "half")"></div>
+                                    }
+
+                                    @foreach (var nw in GetNonWorkBlocks(day))
+                                    {
+                                        var top = ToTopPx(day.ToDateTime(nw.From));
+                                        var height = ToHeightPx(day.ToDateTime(nw.From), day.ToDateTime(nw.To));
+
+                                        <div class="gcal-event nonwork" style="@($"top:{top}px; height:{height}px")">
+                                            <div class="evt-row">
+                                                <span class="evt-chip">Nepracuji</span>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (timeOffByDay.TryGetValue(day, out var dayTimeOffs))
+                                    {
+                                        foreach (var item in dayTimeOffs.OrderBy(x => x.StartAt))
+                                        {
+                                            var startLocal = AsLocal(item.StartAt);
+                                            var endLocal = AsLocal(item.EndAt);
+
+                                            var top = ToTopPx(startLocal);
+                                            var height = ToHeightPx(startLocal, endLocal);
+
+                                            <div class="gcal-event timeoff warning"
+                                                 style="@($"top:{top}px; height:{height}px")"
+                                                 title="@item.Reason">
+                                                <div class="evt-row one-line">
+                                                    <span class="evt-chip">Volno</span>
+                                                    <span class="evt-dot">•</span>
+                                                    <span class="evt-time">@startLocal.ToString("HH:mm")–@endLocal.ToString("HH:mm")</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+
+                                    @if (reservationsByDay.TryGetValue(day, out var dayReservations))
+                                    {
+                                        foreach (var r in dayReservations.OrderBy(x => x.StartAt))
+                                        {
+                                            var startLocal = AsLocal(r.StartAt);
+                                            var endLocal = AsLocal(r.EndAt);
+
+                                            var top = ToTopPx(startLocal);
+                                            var height = ToHeightPx(startLocal, endLocal);
+
+                                            <div class="gcal-event reservation success"
+                                                 style="@($"top:{top}px; height:{height}px")"
+                                                 title="@($"{r.ServiceName} • {r.ClientFullName}")">
+                                                <div class="evt-row one-line">
+                                                    <span class="evt-chip">Rez.</span>
+                                                    <span class="evt-dot">•</span>
+                                                    <span class="evt-time">@startLocal.ToString("HH:mm")–@endLocal.ToString("HH:mm")</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+
+                                    @if (TryGetNowLineTop(day, out var nowTop))
+                                    {
+                                        <div class="gcal-now-line" style="@($"top:{nowTop}px")" title="Aktuální čas"></div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="muted small mt-14">
+                    Slouží pouze ke čtení
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code
+{
     [Parameter]
     public string HairdresserId { get; set; } = default!;
 
+    private bool isReady;
+    private bool loaded;
+    private bool isLoading;
+    private bool isAdmin;
+
+    private string? lastHairdresserId;
+    private DateTime weekStartPicker;
+
+    private List<LookUpHairdressersDto> hairdresserLookups = new();
+
+    private DateOnly weekStart = DateOnly.FromDateTime(DateTime.Now.Date);
+    private DateOnly lastValidWeekStart;
+
+    private CancellationTokenSource? loadCts;
+
+    private Dictionary<DateOnly, WorkingHoursDto?> workingHoursByDay = new();
+    private Dictionary<DateOnly, List<HairdresserTimeOffDto>> timeOffByDay = new();
+    private Dictionary<DateOnly, List<ReservationDto>> reservationsByDay = new();
+
+    private static readonly TimeOnly timelineStart = new(5, 0);
+    private static readonly TimeOnly timelineEnd = new(22, 0);
+    private const int slotMinutes = 30;
+    private const int slotHeightPx = 46;
+
+    private List<TimeOnly> timelineSlots = new();
+
+    private PeriodicTimer? timer;
+    private CancellationTokenSource? timerCts;
+
+    private string weekLabel
+    {
+        get
+        {
+            return $"{weekStart:dd.MM.yyyy} – {weekStart.AddDays(4):dd.MM.yyyy}";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+        lastHairdresserId = HairdresserId;
+
+        try
+        {
+            await AuthState.LoadAsync();
+
+            if (!AuthState.IsAuthenticated)
+            {
+                Nav.NavigateTo("/", replace: true);
+                return;
+            }
+
+            isAdmin = AuthState.Roles.Contains(nameof(UserRoles.Admin));
+            var isHairdresser = AuthState.Roles.Contains(nameof(UserRoles.Hairdresser));
+
+            if (!isAdmin && isHairdresser)
+            {
+                if (!string.Equals(HairdresserId, AuthState.UserId, StringComparison.OrdinalIgnoreCase))
+                {
+                    Nav.NavigateTo($"/calendar/{AuthState.UserId}", replace: true);
+                    return;
+                }
+            }
+
+            loadCts?.Cancel();
+            loadCts?.Dispose();
+            loadCts = new CancellationTokenSource();
+
+            if (isHairdresser)
+            {
+                var hasWorkingHours = await WorkingHoursService.ExistsWorkingHoursAsync(loadCts.Token);
+
+                if (!hasWorkingHours)
+                {
+                    MessageService.ShowWarning("Nejprve si nastavte pracovní dobu.");
+                    Nav.NavigateTo("/", replace: true);
+                    return;
+                }
+            }
+
+            if (isAdmin)
+            {
+                await LoadHairdressersAsync(loadCts.Token);
+
+                if (hairdresserLookups.Count == 0)
+                {
+                    MessageService.ShowWarning("Nejsou dostupní žádní aktivní kadeřníci s nastavenou pracovní dobou.");
+                    Nav.NavigateTo("/", replace: true);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(HairdresserId) ||
+                    !hairdresserLookups.Any(x => x.Id == HairdresserId))
+                {
+                    HairdresserId = hairdresserLookups[0].Id;
+                    lastHairdresserId = HairdresserId;
+                    Nav.NavigateTo($"/calendar/{HairdresserId}", replace: true);
+                    return;
+                }
+            }
+
+            weekStart = StartOfWorkWeek(DateOnly.FromDateTime(DateTime.Now.Date));
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+
+            timelineSlots = BuildTimelineSlots();
+
+            var ok = await LoadWeekAsync(true);
+            if (!ok)
+            {
+                var firstAvailable = await FindFirstAvailableWorkWeekAsync(weekStart, loadCts.Token);
+                if (firstAvailable is not null)
+                {
+                    weekStart = firstAvailable.Value;
+                    weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+                    await LoadWeekAsync(true);
+                }
+            }
+
+            lastValidWeekStart = weekStart;
+
+            StartTimer();
+            isReady = true;
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError(ex.Message);
+            isReady = true;
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!loaded)
+            return;
+
+        if (!string.Equals(lastHairdresserId, HairdresserId, StringComparison.OrdinalIgnoreCase))
+        {
+            lastHairdresserId = HairdresserId;
+            await LoadWeekAsync();
+        }
+    }
+
+    private async Task Reload()
+    {
+        await LoadWeekAsync();
+
+        if (isAdmin)
+        {
+            var token = loadCts?.Token ?? CancellationToken.None;
+            await LoadHairdressersAsync(token);
+
+            if (hairdresserLookups.Count > 0 && !hairdresserLookups.Any(x => x.Id == HairdresserId))
+            {
+                HairdresserId = hairdresserLookups[0].Id;
+                lastHairdresserId = HairdresserId;
+                Nav.NavigateTo($"/calendar/{HairdresserId}", replace: true);
+            }
+        }
+    }
+
+    private async Task NextWeekAsync()
+    {
+        weekStart = weekStart.AddDays(7);
+        weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+
+        var ok = await LoadWeekAsync();
+        if (ok)
+        {
+            lastValidWeekStart = weekStart;
+        }
+        else
+        {
+            weekStart = lastValidWeekStart;
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            await LoadWeekAsync();
+        }
+    }
+
+    private async Task PrevWeekAsync()
+    {
+        weekStart = weekStart.AddDays(-7);
+        weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+
+        var ok = await LoadWeekAsync();
+        if (!ok)
+        {
+            weekStart = lastValidWeekStart;
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            await LoadWeekAsync();
+        }
+        else
+        {
+            lastValidWeekStart = weekStart;
+        }
+    }
+
+    private async Task GoThisWeekAsync()
+    {
+        weekStart = StartOfWorkWeek(DateOnly.FromDateTime(DateTime.Now.Date));
+        weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+
+        var ok = await LoadWeekAsync();
+        if (ok)
+        {
+            lastValidWeekStart = weekStart;
+        }
+        else
+        {
+            weekStart = lastValidWeekStart;
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            await LoadWeekAsync();
+        }
+    }
+
+    private async Task OnWeekPickedAfterBindAsync()
+    {
+        if (!isReady || isLoading)
+            return;
+
+        if (weekStartPicker == default)
+            return;
+
+        var pickedDay = DateOnly.FromDateTime(weekStartPicker.Date);
+        var pickedMonday = StartOfWorkWeek(pickedDay);
+
+        if (pickedDay != pickedMonday)
+        {
+            MessageService.ShowWarning("Datum musí být pondělí.");
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        var token = loadCts?.Token ?? CancellationToken.None;
+
+        DateOnly? firstAvailableMonday = await FindFirstAvailableWorkWeekAsync(pickedMonday, token);
+        if (firstAvailableMonday is null)
+        {
+            MessageService.ShowWarning("Pracovní doba není nastavena.");
+            weekStart = lastValidWeekStart;
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        if (pickedMonday != firstAvailableMonday.Value)
+        {
+            MessageService.ShowWarning("V tomto týdnu není nastavená pracovní doba. Přesměrovávám na první dostupný týden.");
+        }
+
+        weekStart = firstAvailableMonday.Value;
+        weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+
+        var ok = await LoadWeekAsync();
+        if (ok)
+        {
+            lastValidWeekStart = weekStart;
+        }
+        else
+        {
+            weekStart = lastValidWeekStart;
+            weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            await LoadWeekAsync();
+        }
+    }
+
+
+    private async Task<DateOnly?> FindFirstAvailableWorkWeekAsync(DateOnly startMonday, CancellationToken ct)
+    {
+        var monday = startMonday;
+
+        while (true)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                var week = await WorkingHoursService.GetWorkingHoursByWeek(HairdresserId, monday, ct);
+                if (week is not null && week.Count == 5)
+                {
+                    return monday;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+            }
+
+            monday = monday.AddDays(7);
+        }
+    }
+
+    private void OnHairdresserChanged(ChangeEventArgs e)
+    {
+        var id = e?.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return;
+        }
+
+        Nav.NavigateTo($"/calendar/{id}");
+    }
+
+    private async Task<bool> LoadWeekAsync(bool initialLoad = false)
+    {
+        isLoading = true;
+
+        loadCts?.Cancel();
+        loadCts?.Dispose();
+        loadCts = new CancellationTokenSource();
+
+        try
+        {
+            workingHoursByDay.Clear();
+            timeOffByDay.Clear();
+            reservationsByDay.Clear();
+
+            var ok = await LoadWeekDataAsync(weekStart, initialLoad, loadCts.Token);
+            if (ok)
+            {
+                weekStartPicker = weekStart.ToDateTime(TimeOnly.MinValue);
+            }
+
+            return ok;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError(ex.Message);
+            return false;
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private List<(TimeOnly From, TimeOnly To)> GetNonWorkBlocks(DateOnly day)
+    {
+        var result = new List<(TimeOnly From, TimeOnly To)>();
+
+        WorkingHoursDto? wh = null;
+        if (workingHoursByDay.TryGetValue(day, out var v))
+        {
+            wh = v;
+        }
+
+        if (wh is null)
+        {
+            result.Add((timelineStart, timelineEnd));
+            return result;
+        }
+
+        if (!wh.IsWorkingDay)
+        {
+            result.Add((timelineStart, timelineEnd));
+            return result;
+        }
+
+        var from = wh.WorkFrom;
+        var to = wh.WorkTo;
+
+        if (from > timelineStart)
+        {
+            result.Add((timelineStart, Clamp(from, timelineStart, timelineEnd)));
+        }
+
+        if (to < timelineEnd)
+        {
+            result.Add((Clamp(to, timelineStart, timelineEnd), timelineEnd));
+        }
+
+        return result;
+    }
+
+    private List<TimeOnly> BuildTimelineSlots()
+    {
+        var result = new List<TimeOnly>();
+
+        var current = timelineStart;
+        while (current < timelineEnd)
+        {
+            result.Add(current);
+            current = current.AddMinutes(slotMinutes);
+        }
+
+        return result;
+    }
+
+    private bool TryGetNowLineTop(DateOnly day, out int top)
+    {
+        top = 0;
+
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now.Date);
+
+        if (day != today)
+        {
+            return false;
+        }
+
+        var t = TimeOnly.FromDateTime(now);
+        if (t < timelineStart || t > timelineEnd)
+        {
+            return false;
+        }
+
+        top = ToTopPx(now);
+        return true;
+    }
+
+    private void StartTimer()
+    {
+        timerCts?.Cancel();
+        timerCts = new CancellationTokenSource();
+
+        timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (await timer.WaitForNextTickAsync(timerCts.Token))
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch
+            {
+            }
+        });
+    }
+
+    public void Dispose()
+    {
+        if (timerCts is not null)
+        {
+            timerCts.Cancel();
+            timerCts.Dispose();
+        }
+
+        if (timer is not null)
+        {
+            timer.Dispose();
+        }
+
+        if (loadCts is not null)
+        {
+            loadCts.Cancel();
+            loadCts.Dispose();
+        }
+    }
+
+    private static DateTime AsLocal(DateTime value)
+    {
+        if (value.Kind == DateTimeKind.Utc)
+        {
+            return value.ToLocalTime();
+        }
+
+        if (value.Kind == DateTimeKind.Unspecified)
+        {
+            return DateTime.SpecifyKind(value, DateTimeKind.Local);
+        }
+
+        return value;
+    }
+
+    private int ToTopPx(DateTime startAt)
+    {
+        var t = TimeOnly.FromDateTime(startAt);
+        var clamped = Clamp(t, timelineStart, timelineEnd);
+        var minutesFromStart = MinutesBetween(timelineStart, clamped);
+        return (int)Math.Round(minutesFromStart * (slotHeightPx / (double)slotMinutes));
+    }
+
+    private int ToHeightPx(DateTime startAt, DateTime endAt)
+    {
+        var s = Clamp(TimeOnly.FromDateTime(startAt), timelineStart, timelineEnd);
+        var e = Clamp(TimeOnly.FromDateTime(endAt), timelineStart, timelineEnd);
+
+        var minutes = Math.Max(15, MinutesBetween(s, e));
+        return (int)Math.Round(minutes * (slotHeightPx / (double)slotMinutes));
+    }
+
+    private static int MinutesBetween(TimeOnly from, TimeOnly to)
+    {
+        return (int)(to.ToTimeSpan() - from.ToTimeSpan()).TotalMinutes;
+    }
+
+    private static TimeOnly Clamp(TimeOnly x, TimeOnly min, TimeOnly max)
+    {
+        if (x < min)
+        {
+            return min;
+        }
+
+        if (x > max)
+        {
+            return max;
+        }
+
+        return x;
+    }
+
+    private static DateOnly StartOfWorkWeek(DateOnly day)
+    {
+        var dow = (int)day.DayOfWeek;
+
+        if (dow == 0)
+        {
+            return day.AddDays(-6);
+        }
+
+        return day.AddDays(-(dow - 1));
+    }
+
+    private async Task LoadHairdressersAsync(CancellationToken ct)
+    {
+        hairdresserLookups = await LookUpsService.GetAllActiveHairdressersWithWorkingHoursAsync(ct);
+    }
+
+    private async Task<bool> LoadWeekDataAsync(DateOnly monday, bool initialLoad, CancellationToken ct)
+    {
+        try
+        {
+            workingHoursByDay.Clear();
+            timeOffByDay.Clear();
+            reservationsByDay.Clear();
+
+            var week = await WorkingHoursService.GetWorkingHoursByWeek(HairdresserId, monday, ct);
+            if (week is null || week.Count != 5)
+            {
+                MessageService.ShowWarning("Pracovní doba ještě nebyla nastavena v požadaném čase.");
+
+                if (initialLoad)
+                    Nav.NavigateTo("/", replace: true);
+
+                return false;
+            }
+
+            var dateTimeMonday = monday.ToDateTime(TimeOnly.MinValue);
+
+            var timeOffs = await TimeOffService.GetAllWeeklyAsync(HairdresserId, dateTimeMonday, ct);
+            var reservations = await ReservationService.GetWeeklyAsync(HairdresserId, dateTimeMonday, ct);
+
+            for (int day = 0; day < week.Count; day++)
+            {
+                var date = monday.AddDays(day);
+                var dayStart = dateTimeMonday.AddDays(day);
+                var dayEndExclusive = dayStart.AddDays(1);
+
+                workingHoursByDay[date] = week[day];
+                timeOffByDay[date] = timeOffs.Where(x => x.StartAt < dayEndExclusive && x.EndAt > dayStart).ToList();
+                reservationsByDay[date] = reservations.Where(x => x.StartAt < dayEndExclusive && x.EndAt > dayStart).ToList();
+            }
+
+            return true;
+        }
+        catch (ApiRequestException ex)
+        {
+            MessageService.ShowError(ex.Message);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            MessageService.ShowError(ex.Message);
+            return false;
+        }
+    }
 }

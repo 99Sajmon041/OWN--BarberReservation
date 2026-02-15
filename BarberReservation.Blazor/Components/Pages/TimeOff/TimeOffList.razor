@@ -233,7 +233,7 @@ else
     public int? MonthQuery { get; set; }
 
     private PagedResult<HairdresserTimeOffDto> model = new();
-    private List<GetLookUpHairdressers> hairdressers = new();
+    private List<LookUpHairdressersDto> hairdressers = new();
 
     private bool _checked;
     private bool isLoading;
@@ -438,7 +438,7 @@ else
 
         try
         {
-            var req = new HairdresserPagedRequest
+            var req = new HairdresserTimeOffPagedRequest
             {
                 Page = page,
                 PageSize = pageSize,

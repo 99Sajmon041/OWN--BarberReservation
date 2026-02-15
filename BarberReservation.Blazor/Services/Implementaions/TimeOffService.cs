@@ -31,7 +31,7 @@ public sealed class TimeOffService(IApiClient api, AuthState authState) : ITimeO
         await api.SendAsync(HttpMethod.Delete, $"api/me/time-off/{id}", null, ct);
     }
 
-    public async Task<PagedResult<HairdresserTimeOffDto>> GetAllAsync(HairdresserPagedRequest request, CancellationToken ct)
+    public async Task<PagedResult<HairdresserTimeOffDto>> GetAllAsync(HairdresserTimeOffPagedRequest request, CancellationToken ct)
     {
         await authState.LoadAsync();
         var isAdmin = authState.Roles.Contains(nameof(UserRoles.Admin));
@@ -65,5 +65,28 @@ public sealed class TimeOffService(IApiClient api, AuthState authState) : ITimeO
         var url = isAdmin ? $"api/admin/time-off?{qs}" : $"api/me/time-off?{qs}";
 
         return await api.GetAsync<PagedResult<HairdresserTimeOffDto>>(url, ct);
+    }
+
+    public async Task<List<HairdresserTimeOffDto>> GetAllWeeklyAsync(string hairdresserId, DateTime weekStartDate, CancellationToken ct)
+    {
+        await authState.LoadAsync();
+
+        string url = string.Empty;
+
+        if (authState.Roles.Contains(nameof(UserRoles.Admin)))
+            url = "api/admin/time-off/weekly";
+        else if (authState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            url = "api/me/time-off/weekly";
+        else
+            throw new ApiRequestException("Nelze zobrazit kalendnář - nemáte právo.", StatusCodes.Status403Forbidden);
+
+        string parameters;
+
+        if (url.StartsWith("api/admin"))
+            parameters = $"hairdresserId={Uri.EscapeDataString(hairdresserId.Trim())}&weekStartDate={Uri.EscapeDataString(weekStartDate.ToString("yyyy-MM-dd"))}";
+        else
+            parameters = $"weekStartDate={Uri.EscapeDataString(weekStartDate.ToString("yyyy-MM-dd"))}";
+
+        return await api.GetAsync<List<HairdresserTimeOffDto>>($"{url}?{parameters}", ct);
     }
 }

@@ -8,9 +8,13 @@ namespace BarberReservation.Blazor.Services.Implementaions;
 
 public class LookUpsService(IApiClient api, AuthState authState) : ILookUpsService
 {
-    public async Task<List<GetLookUpHairdressers>> GetAllHairdressersAsync(CancellationToken ct)
+    public async Task<List<LookUpHairdressersDto>> GetAllHairdressersAsync(CancellationToken ct)
     {
-        return await api.GetAsync<List<GetLookUpHairdressers>>("api/reservations/lookups/hairdressers", ct);
+        return await api.GetAsync<List<LookUpHairdressersDto>>("api/reservations/lookups/hairdressers", ct);
+    }
+    public async Task<List<LookUpHairdressersDto>> GetAllActiveHairdressersWithWorkingHoursAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<List<LookUpHairdressersDto>>("api/reservations/lookups/active-hairdressers", ct);
     }
 
     public async Task<List<ServiceLookUpDto>> GetAllServicesAsync(CancellationToken ct)
@@ -46,8 +50,8 @@ public class LookUpsService(IApiClient api, AuthState authState) : ILookUpsServi
         return await api.GetAsync<List<ReservationClientLookUpDto>>($"api/reservations/lookups/customers?search={q}", ct);
     }
 
-    public async Task<List<GetLookUpHairdressers>> GetAllHairdressersByServiceAsync(int serviceId, CancellationToken ct)
+    public async Task<List<LookUpHairdressersDto>> GetAllHairdressersByServiceAsync(int serviceId, CancellationToken ct)
     {
-        return await api.GetAsync<List<GetLookUpHairdressers>>($"api/reservations/lookups/service/{serviceId}/hairdressers", ct);
+        return await api.GetAsync<List<LookUpHairdressersDto>>($"api/reservations/lookups/service/{serviceId}/hairdressers", ct);
     }
 }

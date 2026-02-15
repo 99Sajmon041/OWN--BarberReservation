@@ -3,6 +3,7 @@ using BarberReservation.Blazor.Common;
 using BarberReservation.Blazor.Services.Interfaces;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
 using BarberReservation.Shared.Models.Reservation;
 
 namespace BarberReservation.Blazor.Services.Implementaions;
@@ -163,5 +164,32 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
             $"&weekStartDate={Uri.EscapeDataString(weekStartDate.ToString("yyyy-MM-dd"))}";
 
         return await api.GetAsync<List<SlotDto>>($"api/me/reservations/available-slots?{url}", ct);
+    }
+
+    public async Task<List<ReservationDto>> GetWeeklyAsync(string hairdresserId, DateTime monday, CancellationToken ct)
+    {
+        var url = string.Empty;
+
+        await authState.LoadAsync();
+
+        if (authState.Roles.Contains(nameof(UserRoles.Admin)))
+            url = "api/admin/reservations/weekly";
+        else if (authState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            url = "api/hairdresser/reservations/weekly";
+        else
+            throw new ApiRequestException("Nelze zobrazit kalendnář - nemáte právo.", StatusCodes.Status403Forbidden);
+
+        string parameters;
+
+        if (url.StartsWith("api/hairdresser"))
+        {
+            parameters = $"monday={monday.ToString("yyyy-MM-dd")}";
+        }
+        else
+        {
+            parameters = $"hairdresserId={Uri.EscapeDataString(hairdresserId.Trim())}&monday={monday.ToString("yyyy-MM-dd")}";
+        }
+
+        return await api.GetAsync<List<ReservationDto>>($"{url}?{parameters}", ct);
     }
 }

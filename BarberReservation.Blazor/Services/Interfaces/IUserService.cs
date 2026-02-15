@@ -8,7 +8,7 @@ namespace BarberReservation.Blazor.Services.Interfaces;
 public interface IUserService
 {
     Task<PagedResult<UserDto>> GetAllAsync(UserPageRequest request, CancellationToken ct);
-    Task<List<GetLookUpHairdressers>> GetAvailableHairdressersAsync(int reservationId, CancellationToken ct);
+    Task<List<LookUpHairdressersDto>> GetAvailableHairdressersAsync(int reservationId, CancellationToken ct);
     Task<UserDto> GetByIdAsync(string id, CancellationToken ct);
     Task DeactivateByIdAsync(string id, CancellationToken ct);
     Task ActivateByIdAsync(string id, CancellationToken ct);

@@ -1,5 +1,6 @@
 ﻿using BarberReservation.API.Mappings;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllHairdresserReservations;
+using BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllWeeklyHairdressersReservations;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairDresserReservation;
 using BarberReservation.Application.Reservation.Queries.Hairdresser.GetHairdresserReservationByDay;
 using BarberReservation.Shared.Enums;
@@ -51,6 +52,13 @@ namespace BarberReservation.API.Controllers
             var command = request.ToCreateHairDresserReservationCommand();
             var reservationId = await mediator.Send(command, ct);
             return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
+        }
+
+        [HttpGet("weekly")]
+        public async Task<ActionResult<List<ReservationDto>>> GetAllWeekly([FromQuery] DateTime monday, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetAllWeeklyHairdressersReservationsQuery(monday), ct);
+            return Ok(result);
         }
     }
 }

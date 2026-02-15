@@ -7,6 +7,7 @@ public interface IService
 {
     Task<PagedResult<ServiceDto>> GetAllAsync(ServicePageRequest request, CancellationToken ct);
     Task<List<ServiceDto>> GetHomePageServicesAsync(CancellationToken ct);
+    Task<List<ServiceDto>> GetHairdressersServicesAsync(CancellationToken ct);
     Task<ServiceDto> GetByIdAsync(int id, CancellationToken ct);
     Task DeactivateByIdAsync(int id, CancellationToken ct);
     Task ActivateByIdAsync(int id, CancellationToken ct);

@@ -26,7 +26,7 @@ public sealed class GetAvailableSlotsForWeekQueryHandler(
         var weekStartDate = DateOnly.FromDateTime(request.WeekStartDate);
 
         var workHoursWeek = await unitOfWork.HairdresserWorkingHoursRepository
-            .GetWeekAsync(request.HairdresserId, weekStartDate, includeHairdresser: false, tracked: false, ct);
+            .GetCurrentWeekAsync(request.HairdresserId, weekStartDate, false, false, ct);
 
         if (workHoursWeek.Count == 0)
         {

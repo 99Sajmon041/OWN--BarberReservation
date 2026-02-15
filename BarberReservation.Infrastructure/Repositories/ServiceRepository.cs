@@ -82,4 +82,12 @@ public sealed class ServiceRepository(BarberDbContext context) : BaseRepository,
             .OrderBy(x => x.Name)
             .ToListAsync(ct);
     }
+
+    public async Task<List<Service>> GetAllHairdressersLookUpAsync(string hairdresserId, CancellationToken ct)
+    {
+        return await _context.Services
+            .AsNoTracking()
+            .Where(x => x.HairdresserServices.Any(hs => hs.HairdresserId == hairdresserId && hs.IsActive))
+            .ToListAsync(ct);
+    }
 }

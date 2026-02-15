@@ -1,0 +1,5 @@
+﻿using BarberReservation.Application.Reservation.Queries.Self;
+
+namespace BarberReservation.Application.Reservation.Queries.Hairdresser.GetAllWeeklyHairdressersReservations;
+
+public sealed class GetAllWeeklyHairdressersReservationsQueryValidator :  ReservationsByWeekValidator<GetAllWeeklyHairdressersReservationsQuery> { }

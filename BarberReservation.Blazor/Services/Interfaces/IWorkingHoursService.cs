@@ -11,4 +11,6 @@ public interface IWorkingHoursService
     Task<HairdresserWorkingHoursDto> GetNextSelfWorkingHoursAsync(CancellationToken ct);
     Task<HairdresserWorkingHoursDto> GetNextForHairdresserByIdAsync(string hairdresserId, CancellationToken ct);
     Task<WorkingHoursDto> GetByDayAsync(DateOnly day, CancellationToken ct);
+    Task<List<WorkingHoursDto>> GetWorkingHoursByWeek(string hairdresserId, DateOnly monday, CancellationToken ct);
+    Task<bool> ExistsWorkingHoursAsync(CancellationToken ct);
 }

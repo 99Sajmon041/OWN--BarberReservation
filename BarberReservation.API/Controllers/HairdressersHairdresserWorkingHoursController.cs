@@ -1,8 +1,10 @@
 ﻿using BarberReservation.Application.HairdresserWorkingHours.Commands.Hairdresser.UpsertSelfWorkingHours;
 using BarberReservation.Application.HairdresserWorkingHours.Mapping;
+using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.ExistsWorkingHoursByHairdresser;
 using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetNextSelfWorkingHours;
 using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfDailyWorkingHours;
 using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfWorkingHours;
+using BarberReservation.Application.HairdresserWorkingHours.Queries.Hairdresser.GetSelfWorkingHoursByWeek;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.HairdresserWorkingHours;
 using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
@@ -48,6 +50,20 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<WorkingHoursDto>> GetMyDailyWorkingHours([FromQuery] DateOnly day, CancellationToken ct)
         {
             var result = await mediator.Send(new GetSelfDailyWorkingHoursQuery(day), ct);
+            return Ok(result);
+        }
+
+        [HttpGet("selected-week")]
+        public async Task<ActionResult<List<WorkingHoursDto>>> GetSelectedWeekByHairdresser(DateOnly monday, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetSelfWorkingHoursByWeekQuery(monday), ct);
+            return Ok(result);
+        }
+
+        [HttpGet("exists")]
+        public async Task<ActionResult<bool>> ExistsWorkingHours(CancellationToken ct)
+        {
+            var result = await mediator.Send(new ExistsWorkingHoursByHairdresserQuery(), ct);
             return Ok(result);
         }
     }

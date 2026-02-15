@@ -16,7 +16,7 @@ public sealed class GetSelfWorkingHoursQueryHandler(
     {
         var currentDate = DateOnly.FromDateTime(DateTime.Now);
 
-        var response = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
+        var response = await unitOfWork.HairdresserWorkingHoursRepository.GetCurrentWeekAsync(
             currentAppUser.User.Id,
             currentDate,
             false,

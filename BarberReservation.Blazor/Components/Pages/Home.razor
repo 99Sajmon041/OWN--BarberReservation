@@ -1,7 +1,11 @@
 ﻿@page "/"
 
+@implements IDisposable
 @inject MessageService MessageService
 @inject IService Service
+@inject AuthState AuthState
+@inject NavigationManager Nav
+
 
 <PageTitle>Domů</PageTitle>
 
@@ -13,8 +17,19 @@
         <h1>Zarezervujte si svůj střih!</h1>
         <p>Jednoduchá rezervace a profesionální přístup kadeřníků.</p>
 
-        <div class="hero-actions">
-            <a class="btn btn-primary hero-btn" href="/reservations/create">Vytvořit rezervaci</a>
+        <div class="hero-actions hero-actions-split">
+            <a class="btn btn-primary hero-btn" href="/reservations/create">
+                Vytvořit rezervaci
+            </a>
+
+            @if (isHairdresserOrAdmin)
+            {
+                <button class="btn btn-outline hero-btn hero-btn-calendar" @onclick="GoToCalendar">
+                    <span class="hero-btn-icon">🗓️</span>
+                    Kalendář
+                    <span class="hero-badge">plán</span>
+                </button>
+            }
         </div>
     </div>
 </section>
@@ -42,13 +57,13 @@
                 @foreach (var s in services)
                 {
                     <a class="service-card service-card-link"
-                        href="/reservations/create?serviceId=@s.Id">
-                         <div class="service-card-head">
-                             <div class="service-title">@s.Name</div>
-                         </div>
-                         <div class="service-desc muted">
+                       href="/reservations/create?serviceId=@s.Id">
+                        <div class="service-card-head">
+                            <div class="service-title">@s.Name</div>
+                        </div>
+                        <div class="service-desc muted">
                             @s.Description
-                         </div>
+                        </div>
                     </a>
                 }
             </div>
@@ -58,14 +73,55 @@
 
 @code {
     private bool isLoading = true;
+    private bool loaded;
     private List<ServiceDto> services = new();
+    private bool isHairdresserOrAdmin;
+    private string? userId;
 
-    protected override async Task OnInitializedAsync()
+    private string rolesSnapshot = string.Empty;
+    private string userIdSnapshot = string.Empty;
+    private bool isAuthenticatedSnapshot;
+
+    protected override void OnInitialized()
     {
+        AuthState.OnChange += OnAuthChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || loaded)
+            return;
+
+        loaded = true;
+
+        await AuthState.LoadAsync();
+        ApplyAuthFlags();
+
+        await ReloadServicesAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ReloadServicesAsync()
+    {
+        isLoading = true;
+
         try
         {
-            isLoading = true;
-            services = await Service.GetHomePageServicesAsync(CancellationToken.None);
+            await AuthState.LoadAsync();
+
+            var snapshot = BuildSnapshot();
+
+            if (snapshot != BuildSnapshot())
+                snapshot = BuildSnapshot();
+
+            if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) && !AuthState.Roles.Contains(nameof(UserRoles.Admin)))
+                services = await Service.GetHairdressersServicesAsync(CancellationToken.None);
+            else
+                services = await Service.GetHomePageServicesAsync(CancellationToken.None);
+
+            rolesSnapshot = string.Join(",", AuthState.Roles.OrderBy(x => x));
+            userIdSnapshot = AuthState.UserId ?? string.Empty;
+            isAuthenticatedSnapshot = AuthState.IsAuthenticated;
         }
         catch (ApiRequestException ex)
         {
@@ -79,5 +135,75 @@
         {
             isLoading = false;
         }
+    }
+
+    private void OnAuthChanged()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            ApplyAuthFlags();
+
+            var currentSnapshot = BuildSnapshot();
+            var lastSnapshot = BuildLastSnapshot();
+
+            if (!string.Equals(currentSnapshot, lastSnapshot, StringComparison.Ordinal))
+            {
+                await ReloadServicesAsync();
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    private void ApplyAuthFlags()
+    {
+        if (AuthState.Roles.Contains(nameof(UserRoles.Admin)) || AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+        {
+            isHairdresserOrAdmin = true;
+            userId = AuthState.UserId;
+        }
+        else
+        {
+            isHairdresserOrAdmin = false;
+            userId = null;
+        }
+    }
+
+    private string BuildSnapshot()
+    {
+        var roles = string.Join(",", AuthState.Roles.OrderBy(x => x));
+        var uid = AuthState.UserId ?? string.Empty;
+        var auth = AuthState.IsAuthenticated ? "1" : "0";
+        return $"{auth}|{uid}|{roles}";
+    }
+
+    private string BuildLastSnapshot()
+    {
+        var auth = isAuthenticatedSnapshot ? "1" : "0";
+        return $"{auth}|{userIdSnapshot}|{rolesSnapshot}";
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= OnAuthChanged;
+    }
+
+    private async Task GoToCalendar()
+    {
+        await AuthState.LoadAsync();
+
+        if (!AuthState.IsAuthenticated)
+            return;
+
+        if (!AuthState.Roles.Contains(nameof(UserRoles.Admin)) && !AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)))
+            return;
+
+        if (string.IsNullOrWhiteSpace(AuthState.UserId))
+        {
+            MessageService.ShowWarning("Načítám uživatele, zkuste to prosím znovu.");
+            return;
+        }
+
+        Nav.NavigateTo($"/calendar/{AuthState.UserId}");
     }
 }

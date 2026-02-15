@@ -12,9 +12,9 @@ namespace BarberReservation.Application.User.Queries.Admin.GetAvailableHairdress
 public sealed class GetAvailableHairdressersForReservationQueryHandler(
     ILogger<GetAvailableHairdressersForReservationQueryHandler> logger,
     IUnitOfWork unitOfWork,
-    UserManager<ApplicationUser> userManager) : IRequestHandler<GetAvailableHairdressersForReservationQuery, List<GetLookUpHairdressers>>
+    UserManager<ApplicationUser> userManager) : IRequestHandler<GetAvailableHairdressersForReservationQuery, List<LookUpHairdressersDto>>
 {
-    public async Task<List<GetLookUpHairdressers>> Handle(GetAvailableHairdressersForReservationQuery request, CancellationToken ct)
+    public async Task<List<LookUpHairdressersDto>> Handle(GetAvailableHairdressersForReservationQuery request, CancellationToken ct)
     {
         var reservation = await unitOfWork.ReservationRepository.GetForAdminAsync(request.ReservationId, ct);
         if (reservation is null)
@@ -40,7 +40,7 @@ public sealed class GetAvailableHairdressersForReservationQueryHandler(
         var dayOfWeek = reservation.StartAt.DayOfWeek;
 
         var hairdressers  = await userManager.GetUsersInRoleAsync(nameof(UserRoles.Hairdresser));
-        var result = new List<GetLookUpHairdressers>();
+        var result = new List<LookUpHairdressersDto>();
 
         foreach (var hairdresser in hairdressers )
         {
@@ -69,7 +69,7 @@ public sealed class GetAvailableHairdressersForReservationQueryHandler(
             if (!existingHairdresserService)
                 continue;
 
-            result.Add(new GetLookUpHairdressers
+            result.Add(new LookUpHairdressersDto
             {
                 Id = hairdresser.Id,
                 FullName = $"{hairdresser.FirstName} {hairdresser.LastName}"

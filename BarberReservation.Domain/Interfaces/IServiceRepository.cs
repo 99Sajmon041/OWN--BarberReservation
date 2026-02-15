@@ -9,6 +9,7 @@ public interface IServiceRepository
     Task<Service?> GetByIdAsync(int id, CancellationToken ct);
     Task<(IReadOnlyList<Service>, int)> GetAllAsync(ServicePageRequest request, CancellationToken ct);
     Task<IReadOnlyList<Service>> GetAllLookUpAsync(CancellationToken ct);
+    Task<List<Service>> GetAllHairdressersLookUpAsync(string hairdresserId, CancellationToken ct);
     bool Deactivate(Service service);
     Task<bool> ExistsAsync(int id, CancellationToken ct);
     Task<List<Service>> GetAllForHomePageAsync(CancellationToken ct);

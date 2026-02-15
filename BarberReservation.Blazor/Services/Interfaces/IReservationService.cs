@@ -1,6 +1,5 @@
 ﻿using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Reservation;
-using System.Reflection;
 
 namespace BarberReservation.Blazor.Services.Interfaces;
 
@@ -15,4 +14,5 @@ public interface IReservationService
     Task<int> CreateReservationAsync(CreateReservationRequest request, CancellationToken ct);
     Task CreateReservationAsCustomerAsync(CreateReservationRequest request, CancellationToken ct);
     Task<List<SlotDto>> GetFreeSlotsForWeekAsync(string hairdresserId, DateTime weekStartDate, int serviceId, CancellationToken ct);
+    Task<List<ReservationDto>> GetWeeklyAsync(string hairdresserId, DateTime monday, CancellationToken ct);
 }

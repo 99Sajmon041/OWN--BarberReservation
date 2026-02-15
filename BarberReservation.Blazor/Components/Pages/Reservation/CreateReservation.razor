@@ -5,6 +5,7 @@
 @inject IUserService UserService
 @inject ILookUpsService LookUpsService
 @inject AuthState AuthState
+@inject IService Service
 @inject NavigationManager Nav
 
 <PageTitle>Vytvoření rezervace</PageTitle>
@@ -25,7 +26,7 @@ else
         </div>
 
         <div class="card">
-            <EditForm Model="@model" OnValidSubmit="SubmitAsync">
+            <EditForm EditContext="@editContext" OnValidSubmit="SubmitAsync" @key="editContext">
                 <DataAnnotationsValidator />
 
                 <div class="field">
@@ -168,7 +169,7 @@ else
                     @if (canLookupCustomers && !HasSelectedCustomerFromLookup && !customerFieldsLocked)
                     {
                         <div class="mt-10">
-                            <button type="button" class="btn btn-outline" disabled="@(!canCreateCustomer)"  @onclick="CreateCustomerAsync">
+                            <button type="button" class="btn btn-outline" disabled="@(!canCreateCustomer)" @onclick="CreateCustomerAsync">
                                 + Vytvořit zákazníka
                             </button>
                         </div>
@@ -191,7 +192,7 @@ else
                                    class="input"
                                    value="@datePickerValue"
                                    min="@Today.ToString("yyyy-MM-dd")"
-                                   max="@MaxWeekStart.AddDays(4).ToString("yyyy-MM-dd")"
+                                   max="@MaxReservationDate.ToString("yyyy-MM-dd")"
                                    @onchange="OnDatePicked" />
                         </div>
 
@@ -308,13 +309,16 @@ else
 
     private bool canLookupCustomers => isAdmin || isHairdresser;
 
-    private List<GetLookUpHairdressers> hairdressers = new();
+    private List<LookUpHairdressersDto> hairdressers = new();
     private List<ServiceLookUpDto> services = new();
 
     private int? selectedServiceId;
     private string? selectedHairdresserId;
 
     private string hairdresserLabel = "Můj účet";
+
+    private EditContext? editContext;
+    private ValidationMessageStore? validationMessages;
 
     private bool showCustomerLookup;
     private bool customerLookupLoading;
@@ -331,15 +335,21 @@ else
 
     private DateTime MinWeekStart => StartOfWorkWeek(Today);
 
-    private DateTime MaxWeekStart
+    private const int WeeksAhead = 3;
+
+    private DateTime MaxReservationDate
     {
         get
         {
-            var baseMonday = NextMonday(Today);
-            var limit = baseMonday.AddMonths(3);
-            return StartOfWorkWeek(limit);
+            var now = DateTime.Now;
+            var daysToFriday = ((int)DayOfWeek.Friday - (int)now.DayOfWeek + 7) % 7;
+            var upcomingFriday = now.Date.AddDays(daysToFriday);
+            var maxDate = upcomingFriday.AddDays(WeeksAhead * 7);
+            return maxDate.Date;
         }
     }
+
+    private DateTime MaxWeekStart => StartOfWorkWeek(MaxReservationDate);
 
     private bool canGoForward => weekStart < MaxWeekStart;
     private bool canGoBack => weekStart > MinWeekStart;
@@ -360,7 +370,8 @@ else
     private bool canSubmit =>
         tableEnabled
         && model.ServiceId > 0
-        && model.StartAt != default;
+        && model.StartAt != default
+        && model.StartAt.Date <= MaxReservationDate;
 
     private bool HasSelectedCustomerFromLookup =>
         canLookupCustomers && !string.IsNullOrWhiteSpace(model.CustomerId);
@@ -369,6 +380,9 @@ else
     {
         if (!firstRender)
             return;
+
+        editContext = new EditContext(model);
+        validationMessages = new ValidationMessageStore(editContext);
 
         await AuthState.LoadAsync();
 
@@ -381,15 +395,48 @@ else
 
         ApplyRoleTexts();
 
-        services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
-
-        if (ServiceIdQuery is not null)
+        if (isHairdresser)
         {
-            selectedServiceId = ServiceIdQuery;
-            await OnServiceChangedAsync();
+            var servicebyHairdresser = await Service.GetHairdressersServicesAsync(CancellationToken.None);
+
+            services = servicebyHairdresser
+                .OrderBy(x => x.Name)
+                .Select(x => new ServiceLookUpDto
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .ToList();
+
+            if (isHairdresser && services.Count == 0)
+            {
+                MessageService.ShowWarning("Nemáte přiřazené žádné služby. Nejdříve si je nastavte.");
+                Nav.NavigateTo("/", replace: true);
+                _checked = true;
+                StateHasChanged();
+                return;
+            }
+        }
+        else
+        {
+            services = await LookUpsService.GetAllServicesAsync(CancellationToken.None);
         }
 
+        if (isHairdresser && services.Count == 0)
+        {
+            MessageService.ShowWarning("Nemáte přiřazené žádné služby. Nejdříve si je nastavte.");
+            Nav.NavigateTo("/", replace: true);
+            _checked = true;
+            StateHasChanged();
+            return;
+        }
         InitWeekStartOnLoad();
+
+        if (ServiceIdQuery is not null && !services.Any(x => x.Id == ServiceIdQuery.Value))
+        {
+            ServiceIdQuery = null;
+        }
+
         BuildWorkDaysSkeleton();
 
         if (isHairdresser)
@@ -397,6 +444,12 @@ else
             selectedHairdresserId = AuthState.UserId;
             model.HairdresserId = selectedHairdresserId;
             hairdresserLabel = AuthState.FullName ?? "Můj účet";
+        }
+
+        if (ServiceIdQuery is not null)
+        {
+            selectedServiceId = ServiceIdQuery;
+            await OnServiceChangedAsync();
         }
 
         if (isCustomer && !isAnonymous)
@@ -456,6 +509,9 @@ else
         customerFieldsLocked = false;
 
         ClearCustomerSearch();
+        ClearCustomerFieldErrors();
+        ResetEditContext();
+        StateHasChanged();
     }
 
     private void ToggleCustomerLookup()
@@ -500,6 +556,9 @@ else
         showCustomerLookup = false;
 
         ClearCustomerSearch();
+        ClearCustomerFieldErrors();
+        ResetEditContext();
+        StateHasChanged();
     }
 
     private async Task PrefillCustomerFromProfileAsync()
@@ -514,6 +573,8 @@ else
             model.CustomerPhone = profile.PhoneNumber;
 
             customerFieldsLocked = true;
+            ResetEditContext();
+            ClearCustomerFieldErrors();
         }
         catch (ApiRequestException ex)
         {
@@ -530,6 +591,12 @@ else
             weekStart = NextMonday(today);
         else
             weekStart = StartOfWorkWeek(today);
+
+        if (weekStart > MaxWeekStart)
+            weekStart = MaxWeekStart;
+
+        if (weekStart < MinWeekStart)
+            weekStart = MinWeekStart;
     }
 
     private async Task OnDatePicked(ChangeEventArgs e)
@@ -542,8 +609,26 @@ else
         if (picked < Today)
             picked = Today;
 
+        if (picked > MaxReservationDate)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
+            weekStart = MaxWeekStart;
+            BuildWorkDaysSkeleton();
+            await RefreshSlotsAsync();
+            return;
+        }
+
         if (picked.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
             picked = NextMonday(picked);
+
+        if (picked > MaxReservationDate)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
+            weekStart = MaxWeekStart;
+            BuildWorkDaysSkeleton();
+            await RefreshSlotsAsync();
+            return;
+        }
 
         weekStart = StartOfWorkWeek(picked);
 
@@ -551,7 +636,10 @@ else
             weekStart = MinWeekStart;
 
         if (weekStart > MaxWeekStart)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
             weekStart = MaxWeekStart;
+        }
 
         BuildWorkDaysSkeleton();
 
@@ -583,9 +671,16 @@ else
         if (!canGoForward)
             return;
 
-        weekStart = weekStart.AddDays(7);
-        if (weekStart > MaxWeekStart)
+        var next = weekStart.AddDays(7);
+        if (next > MaxWeekStart)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
             weekStart = MaxWeekStart;
+        }
+        else
+        {
+            weekStart = next;
+        }
 
         BuildWorkDaysSkeleton();
         await RefreshSlotsAsync();
@@ -608,6 +703,13 @@ else
         {
             ClearSlots();
             return;
+        }
+
+        if (weekStart > MaxWeekStart)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
+            weekStart = MaxWeekStart;
+            BuildWorkDaysSkeleton();
         }
 
         slotsLoading = true;
@@ -651,12 +753,30 @@ else
 
     private void SelectSlot(DateTime startAt, DateTime endAt)
     {
+        if (startAt.Date > MaxReservationDate)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
+            return;
+        }
+
         model.StartAt = startAt;
         selectedSlotLabel = $"{startAt:dd.MM.yyyy} — {startAt:HH:mm}–{endAt:HH:mm}";
     }
 
     private async Task SubmitAsync()
     {
+        if (model.StartAt == default)
+        {
+            MessageService.ShowError("Vyberte termín rezervace.");
+            return;
+        }
+
+        if (model.StartAt.Date > MaxReservationDate)
+        {
+            MessageService.ShowWarning($"Rezervaci lze vytvořit nejpozději do data: {MaxReservationDate:dd.MM.yyyy}.");
+            return;
+        }
+
         int reservationId = 0;
 
         try
@@ -808,6 +928,9 @@ else
             customerFieldsLocked = true;
             showCustomerLookup = false;
             ClearCustomerSearch();
+            ClearCustomerFieldErrors();
+            ResetEditContext();
+            StateHasChanged();
 
             MessageService.ShowSuccess("Zákazník byl úspěšně vytvořen.");
         }
@@ -815,5 +938,24 @@ else
         {
             MessageService.ShowError(ex.Message);
         }
+    }
+
+    private void ClearCustomerFieldErrors()
+    {
+        if (editContext is null || validationMessages is null)
+            return;
+
+        validationMessages.Clear(new FieldIdentifier(model, nameof(model.CustomerName)));
+        validationMessages.Clear(new FieldIdentifier(model, nameof(model.CustomerEmail)));
+        validationMessages.Clear(new FieldIdentifier(model, nameof(model.CustomerPhone)));
+        validationMessages.Clear(new FieldIdentifier(model, nameof(model.CustomerId)));
+
+        editContext.NotifyValidationStateChanged();
+    }
+
+    private void ResetEditContext()
+    {
+        editContext = new EditContext(model);
+        validationMessages = new ValidationMessageStore(editContext);
     }
 }

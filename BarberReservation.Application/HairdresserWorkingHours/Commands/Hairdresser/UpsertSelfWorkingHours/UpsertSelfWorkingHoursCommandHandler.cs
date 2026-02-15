@@ -18,7 +18,7 @@ public sealed class UpsertSelfWorkingHoursCommandHandler(
         var hairdresser = currentAppUser.User;
         const int WeeksDelay = 3;
 
-        var hairdresserWorkingDays = await unitOfWork.HairdresserWorkingHoursRepository.GetWeekAsync(
+        var hairdresserWorkingDays = await unitOfWork.HairdresserWorkingHoursRepository.GetCurrentWeekAsync(
             hairdresser.Id,
             currentDate,
             true,

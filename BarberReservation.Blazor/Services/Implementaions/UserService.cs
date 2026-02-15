@@ -69,9 +69,9 @@ public class UserService(IApiClient api, AuthState authState) : IUserService
         await api.SendAsync(HttpMethod.Patch, $"api/users/{id}/update-email", request, ct);
     }
 
-    public async Task<List<GetLookUpHairdressers>> GetAvailableHairdressersAsync(int reservationId, CancellationToken ct)
+    public async Task<List<LookUpHairdressersDto>> GetAvailableHairdressersAsync(int reservationId, CancellationToken ct)
     {
-        return await api.GetAsync<List<GetLookUpHairdressers>>($"api/users/available-hairdressers?reservationId={reservationId}", ct);
+        return await api.GetAsync<List<LookUpHairdressersDto>>($"api/users/available-hairdressers?reservationId={reservationId}", ct);
     }
 
     public async Task<UserDto> GetProfileAsync(CancellationToken ct)

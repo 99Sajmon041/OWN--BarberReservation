@@ -1,6 +1,7 @@
 ﻿using BarberReservation.Application.ReservationEnums;
 using BarberReservation.Application.Service.Queries.GetLookUpServices;
 using BarberReservation.Application.User.Queries.Admin.GetLookUpCustomers;
+using BarberReservation.Application.User.Queries.Self.GetLookUpActiveHairdressers;
 using BarberReservation.Application.User.Queries.Self.GetLookUpHairdressers;
 using BarberReservation.Application.User.Queries.Self.GetLookUpHairdressersByService;
 using BarberReservation.Shared.Enums;
@@ -25,15 +26,23 @@ namespace BarberReservation.API.Controllers
 
         [HttpGet("hairdressers")]
         [AllowAnonymous]
-        public async Task<ActionResult<IReadOnlyList<GetLookUpHairdressers>>> GetLookUpHairdressers(CancellationToken ct)
+        public async Task<ActionResult<IReadOnlyList<LookUpHairdressersDto>>> GetActiveLookUpHairdressers(CancellationToken ct)
         {
             var result = await mediator.Send(new GetLookUpHairdressersQuery(), ct);
             return Ok(result);
         }
 
+        [HttpGet("active-hairdressers")]
+        [Authorize(Roles = nameof(UserRoles.Admin))]
+        public async Task<ActionResult<List<LookUpHairdressersDto>>> GetActiveLookUpHairdressersWithWorkingHours(CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetLookUpActiveHairdressersQuery(), ct);
+            return Ok(result);
+        }
+
         [HttpGet("service/{serviceId:int}/hairdressers")]
         [AllowAnonymous]
-        public async Task<ActionResult<IReadOnlyList<GetLookUpHairdressers>>> GetLookUpHaidressersByService(int serviceId, CancellationToken ct)
+        public async Task<ActionResult<IReadOnlyList<LookUpHairdressersDto>>> GetLookUpHaidressersByService(int serviceId, CancellationToken ct)
         {
             var result = await mediator.Send(new GetLookUpHairdressersByServiceQuery(serviceId), ct);
             return Ok(result);

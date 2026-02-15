@@ -1,6 +1,6 @@
 ﻿namespace BarberReservation.Shared.Models.LookUpModels;
 
-public sealed class GetLookUpHairdressers
+public sealed class LookUpHairdressersDto
 {
     public string Id { get; set; } = default!;
     public string FullName { get; set; } = default!;

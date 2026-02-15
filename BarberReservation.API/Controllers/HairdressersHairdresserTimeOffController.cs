@@ -1,6 +1,7 @@
 ﻿using BarberReservation.Application.TimeOff.Commands.Hairdresser.DeleteTimeOff;
 using BarberReservation.Application.TimeOff.Mapping;
 using BarberReservation.Application.TimeOff.Queries.Hairdresser.GetAllSelfTimeOffs;
+using BarberReservation.Application.TimeOff.Queries.Hairdresser.GetAllSelfTimeOffsWeekly;
 using BarberReservation.Application.TimeOff.Queries.Hairdresser.GetSelfTimeOffsByDay;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
@@ -51,6 +52,13 @@ namespace BarberReservation.API.Controllers
         {
             await mediator.Send(new DeleteTimeOffCommand(id), ct);
             return NoContent();
+        }
+
+        [HttpGet("weekly")]
+        public async Task<ActionResult<List<HairdresserTimeOffDto>>> GetAllWeekly([FromQuery] DateTime weekStartDate, CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetAllSelfTimeOffsWeeklyQuery(weekStartDate), ct);
+            return Ok(result);
         }
     }
 }

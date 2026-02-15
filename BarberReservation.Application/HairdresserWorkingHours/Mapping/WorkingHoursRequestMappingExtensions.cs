@@ -35,4 +35,16 @@ public static class WorkingHoursRequestMappingExtensions
         })
         .ToList();
     }
+
+    public static List<WorkingHoursDto> ToWorkingHoursDto(this IEnumerable<BarberReservation.Domain.Entities.HairdresserWorkingHours> source)
+    {
+        return source.Select(x => new WorkingHoursDto
+        {
+            DayOfWeek = x.DayOfWeek,
+            IsWorkingDay = x.IsWorkingDay,
+            WorkFrom = x.WorkFrom,
+            WorkTo = x.WorkTo
+        })
+        .ToList();
+    }
 }

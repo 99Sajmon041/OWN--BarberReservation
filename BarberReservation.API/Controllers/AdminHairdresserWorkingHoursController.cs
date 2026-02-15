@@ -1,6 +1,8 @@
 ﻿using BarberReservation.Application.HairdresserWorkingHours.Queries.Admin.GetNextWorkingHoursForHairdresser;
+using BarberReservation.Application.HairdresserWorkingHours.Queries.Admin.GetWorkingHoursByWeek;
 using BarberReservation.Application.HairdresserWorkingHours.Queries.Admin.GetWorkingHoursForHairdresser;
 using BarberReservation.Shared.Enums;
+using BarberReservation.Shared.Models.HairdresserWorkingHours;
 using BarberReservation.Shared.Models.HairdresserWorkingHours.Hairdresser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -24,6 +26,16 @@ namespace BarberReservation.API.Controllers
         public async Task<ActionResult<HairdresserWorkingHoursDto>> GetAllUpcomingByHairdresser(string hairdresserId, CancellationToken ct)
         {
             var result = await mediator.Send(new GetNextWorkingHoursForHairdresserQuery(hairdresserId), ct);
+            return Ok(result);
+        }
+
+        [HttpGet("selected-week")]
+        public async Task<ActionResult<List<WorkingHoursDto>>> GetSelectedWeekByHairdresser(
+            [FromQuery] string hairdresserId, 
+            [FromQuery]  DateOnly monday,
+            CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetWorkingHoursByWeekQuery(hairdresserId, monday), ct);
             return Ok(result);
         }
     }

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BarberReservation.Shared.Models.TimeOff;
 
-public sealed class HairdresserPagedRequest : PagedRequest 
+public sealed class HairdresserTimeOffPagedRequest : PagedRequest 
 {
     [StringLength(120, ErrorMessage = "ID kadeřníka může mít maximálně 120 znaků.")]
     public string? HairdresserId { get; set; }

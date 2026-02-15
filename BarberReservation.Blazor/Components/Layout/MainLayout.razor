@@ -40,6 +40,7 @@
                         @if (AuthState.Roles.Contains(nameof(UserRoles.Hairdresser)) || AuthState.Roles.Contains(nameof(UserRoles.Admin)))
                         {
                             <a class="nav-link" href="/working-hours">Pracovní doba</a>
+                            <a class="nav-link" href="/calendar/@userId">Kalendář</a>
 
                             <div class="nav-dropdown">
                                 <button type="button"
@@ -47,11 +48,11 @@
                                         @onclick="ToggleTimeOffMenu"
                                         @onclick:stopPropagation="true"
                                         aria-haspopup="menu"
-                                        aria-expanded="@_timeOffMenuOpen">
+                                        aria-expanded="@timeOffMenuOpen">
                                     Volna
                                 </button>
 
-                                @if (_timeOffMenuOpen)
+                                @if (timeOffMenuOpen)
                                 {
                                     <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
                                         <a class="nav-dropdown-item" href="/time-off/list" @onclick="CloseAll">Zobrazit volna</a>
@@ -59,6 +60,7 @@
                                     </div>
                                 }
                             </div>
+
                         }
 
                         @if (AuthState.IsAuthenticated)
@@ -69,11 +71,11 @@
                                         @onclick="ToggleReservationMenu"
                                         @onclick:stopPropagation="true"
                                         aria-haspopup="menu"
-                                        aria-expanded="@_reservationMenuOpen">
+                                        aria-expanded="@reservationMenuOpen">
                                     Rezervace
                                 </button>
 
-                                @if (_reservationMenuOpen)
+                                @if (reservationMenuOpen)
                                 {
                                     <div class="nav-dropdown-menu" @onclick:stopPropagation="true">
                                         <a class="nav-dropdown-item" href="/reservations/list" @onclick="CloseAll">Zobrazit rezervace</a>
@@ -89,7 +91,7 @@
             @if (!AuthState.IsAuthenticated)
             {
                 <div class="topbar-right">
-                    <span class="user-pill muted">Guest</span>
+                    <span class="user-pill muted">Host</span>
                     <a class="btn btn-link" href="/login">Přihlásit se</a>
                     <a class="btn btn-primary" href="/register">Registrovat</a>
                 </div>
@@ -107,7 +109,7 @@
             }
         </div>
 
-        @if (_mobileMenuOpen)
+        @if (mobileMenuOpen)
         {
             <div class="mobile-overlay" @onclick="CloseMobileMenu">
                 <div class="mobile-menu" @onclick:stopPropagation="true">
@@ -133,11 +135,13 @@
                     {
                         <a class="mobile-link" href="/working-hours" @onclick="CloseAll">Pracovní doba</a>
 
+                        <a class="mobile-link" href="/calendar/@userId" @onclick="CloseAll">Kalendář</a>
+
                         <button type="button" class="mobile-link mobile-link-toggle" @onclick="ToggleTimeOffMenu">
                             Volna
                         </button>
 
-                        @if (_timeOffMenuOpen)
+                        @if (timeOffMenuOpen)
                         {
                             <div class="mobile-submenu">
                                 <a class="mobile-link" href="/time-off/list" @onclick="CloseAll">Zobrazit volna</a>
@@ -152,7 +156,7 @@
                             Rezervace
                         </button>
 
-                        @if (_reservationMenuOpen)
+                        @if (reservationMenuOpen)
                         {
                             <div class="mobile-submenu">
                                 <a class="mobile-link" href="/reservations/list" @onclick="CloseAll">Zobrazit rezervace</a>
@@ -201,11 +205,12 @@
 </div>
 
 @code {
-    private bool _disposed;
-    private bool _mobileMenuOpen;
-    private bool _authLoaded;
-    private bool _timeOffMenuOpen;
-    private bool _reservationMenuOpen;
+    private bool disposed;
+    private bool mobileMenuOpen;
+    private bool authLoaded;
+    private bool timeOffMenuOpen;
+    private bool reservationMenuOpen;
+    private string? userId;
 
     private EventHandler<LocationChangedEventArgs>? locationChangedHandler;
 
@@ -216,9 +221,9 @@
 
         locationChangedHandler = (_, __) =>
         {
-            _mobileMenuOpen = false;
-            _timeOffMenuOpen = false;
-            _reservationMenuOpen = false;
+            mobileMenuOpen = false;
+            timeOffMenuOpen = false;
+            reservationMenuOpen = false;
         };
 
         Nav.LocationChanged += locationChangedHandler;
@@ -226,12 +231,14 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender || _authLoaded)
+        if (!firstRender || authLoaded)
             return;
 
-        _authLoaded = true;
+        authLoaded = true;
 
         await AuthState.LoadAsync();
+        userId = AuthState.UserId;
+
         (AuthenticationStateProvider as ApiAuthenticationStateProvider)?.NotifyUserChanged();
 
         EnforcePasswordChange();
@@ -240,7 +247,7 @@
 
     private void OnAuthChanged()
     {
-        if (_disposed) return;
+        if (disposed) return;
 
         try
         {
@@ -270,7 +277,7 @@
 
     private void OnMessageChanged()
     {
-        if (_disposed) return;
+        if (disposed) return;
 
         try
         {
@@ -290,7 +297,7 @@
 
     public void Dispose()
     {
-        _disposed = true;
+        disposed = true;
 
         MessageService.OnChange -= OnMessageChanged;
         AuthState.OnChange -= OnAuthChanged;
@@ -303,38 +310,38 @@
 
     private void ToggleMobileMenu()
     {
-        _mobileMenuOpen = !_mobileMenuOpen;
-        if (_mobileMenuOpen)
+        mobileMenuOpen = !mobileMenuOpen;
+        if (mobileMenuOpen)
         {
-            _timeOffMenuOpen = false;
-            _reservationMenuOpen = false;
+            timeOffMenuOpen = false;
+            reservationMenuOpen = false;
         }
     }
 
     private void ToggleTimeOffMenu()
     {
-        _timeOffMenuOpen = !_timeOffMenuOpen;
-        if (_timeOffMenuOpen) _reservationMenuOpen = false;
+        timeOffMenuOpen = !timeOffMenuOpen;
+        if (timeOffMenuOpen) reservationMenuOpen = false;
     }
 
     private void ToggleReservationMenu()
     {
-        _reservationMenuOpen = !_reservationMenuOpen;
-        if (_reservationMenuOpen) _timeOffMenuOpen = false;
+        reservationMenuOpen = !reservationMenuOpen;
+        if (reservationMenuOpen) timeOffMenuOpen = false;
     }
 
     private void CloseAllDropdowns()
     {
-        _timeOffMenuOpen = false;
-        _reservationMenuOpen = false;
+        timeOffMenuOpen = false;
+        reservationMenuOpen = false;
     }
 
-    private void CloseMobileMenu() => _mobileMenuOpen = false;
+    private void CloseMobileMenu() => mobileMenuOpen = false;
 
     private void CloseAll()
     {
-        _mobileMenuOpen = false;
-        _timeOffMenuOpen = false;
-        _reservationMenuOpen = false;
+        mobileMenuOpen = false;
+        timeOffMenuOpen = false;
+        reservationMenuOpen = false;
     }
 }

@@ -34,7 +34,7 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
         return await _context.HairdresserTimeOffs.FirstOrDefaultAsync(x => x.Id == id && x.HairdresserId == hairdresserId, ct);
     }
 
-    public async Task<(IReadOnlyList<HairdresserTimeOff>, int)> GetAllPagedForAdminAsync(HairdresserPagedRequest request, int? year, int? month, CancellationToken ct)
+    public async Task<(IReadOnlyList<HairdresserTimeOff>, int)> GetAllPagedForAdminAsync(HairdresserTimeOffPagedRequest request, CancellationToken ct)
     {
         var query = _context.HairdresserTimeOffs
             .AsNoTracking()
@@ -51,10 +51,10 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
             query = query.Where(x => x.Reason.Contains(term) || x.Hairdresser.FirstName.Contains(term) || x.Hairdresser.LastName.Contains(term));
         }
 
-        if (year is not null && month is not null)
-            query = query.Where(x => x.StartAt.Year == year && x.StartAt.Month == month);
-        else if (year is not null)
-            query = query.Where(x => x.StartAt.Year == year);
+        if (request.Year is not null && request.Month is not null)
+            query = query.Where(x => x.StartAt.Year == request.Year && x.StartAt.Month == request.Month);
+        else if (request.Year is not null)
+            query = query.Where(x => x.StartAt.Year == request.Year);
 
         var total = await query.CountAsync(ct);
 
@@ -84,10 +84,8 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
     }
 
     public async Task<(IReadOnlyList<HairdresserTimeOff>, int)> GetAllPagedForHairdresserAsync(
-        string hairdresserId,
-        HairdresserPagedRequest request,
-        int? year,
-        int? month,
+        string hairdresserId, 
+        HairdresserTimeOffPagedRequest request, 
         CancellationToken ct)
     {
         var query = _context.HairdresserTimeOffs
@@ -102,10 +100,10 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
             query = query.Where(x => x.Reason.Contains(term));
         }
 
-        if (year is not null && month is not null)
-            query = query.Where(x => x.StartAt.Year == year && x.StartAt.Month == month);
-        else if (year is not null)
-            query = query.Where(x => x.StartAt.Year == year);
+        if (request.Year is not null && request.Month is not null)
+            query = query.Where(x => x.StartAt.Year == request.Year && x.StartAt.Month == request.Month);
+        else if (request.Year is not null)
+            query = query.Where(x => x.StartAt.Year == request.Year);
 
         var total = await query.CountAsync(ct);
 
@@ -149,6 +147,7 @@ public sealed class HairdresserTimeOffRepository(BarberDbContext context) : IHai
 
         return await _context.HairdresserTimeOffs
             .AsNoTracking()
+            .Include(x => x.Hairdresser)
             .Where(x => x.HairdresserId == hairdresserId && x.StartAt < weekEndExclusive && x.EndAt > weekStart)
             .ToListAsync(ct);
     }

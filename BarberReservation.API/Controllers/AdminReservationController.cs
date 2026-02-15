@@ -2,6 +2,7 @@
 using BarberReservation.Application.Reservation.Commands.Admin.ChangeReservationHairdresser;
 using BarberReservation.Application.Reservation.Queries.Admin.GetAdminReservation;
 using BarberReservation.Application.Reservation.Queries.Admin.GetAllAdminReservations;
+using BarberReservation.Application.Reservation.Queries.Admin.GetAllWeeklyAdminReservations;
 using BarberReservation.Shared.Enums;
 using BarberReservation.Shared.Models.Common;
 using BarberReservation.Shared.Models.Reservation;
@@ -51,6 +52,16 @@ namespace BarberReservation.API.Controllers
             var command = request.ToCreateAdminReservationCommand();
             var reservationId = await mediator.Send(command, ct);
             return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
+        }
+
+        [HttpGet("weekly")]
+        public async Task<ActionResult<List<ReservationDto>>> GetAllForHairdresserWeekly(
+            [FromQuery] string hairdresserId,
+            [FromQuery] DateTime monday, 
+            CancellationToken ct)
+        {
+            var result = await mediator.Send(new GetAllWeeklyAdminReservationsQuery(monday, hairdresserId), ct);
+            return Ok(result);
         }
     }
 }

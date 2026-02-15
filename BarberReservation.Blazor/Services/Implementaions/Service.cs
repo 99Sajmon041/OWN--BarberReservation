@@ -62,4 +62,9 @@ public sealed class Service(IApiClient api) : IService
     {
         return await api.GetAsync<List<ServiceDto>>("api/services/home-page", ct);
     }
+
+    public async Task<List<ServiceDto>> GetHairdressersServicesAsync(CancellationToken ct)
+    {
+        return await api.GetAsync<List<ServiceDto>>("api/services/by-hairdresser", ct);
+    }
 }

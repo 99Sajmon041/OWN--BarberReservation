@@ -16,7 +16,7 @@ public sealed class HairdresserWorkingHoursRepository(BarberDbContext context) :
             .FirstOrDefaultAsync(x => x.HairdresserId == hairdresserId && x.DayOfWeek == dayOfWeek && x.IsWorkingDay, ct);
     }
 
-    public async Task<IReadOnlyList<HairdresserWorkingHours>> GetWeekAsync(
+    public async Task<IReadOnlyList<HairdresserWorkingHours>> GetCurrentWeekAsync(
     string hairdresserId,
     DateOnly onDate,
     bool includeHairdresser,
@@ -105,5 +105,56 @@ public sealed class HairdresserWorkingHoursRepository(BarberDbContext context) :
             .Where(x => x.HairdresserId == hairdresserId && x.DayOfWeek == dayOfWeek && x.EffectiveFrom <= day)
             .OrderByDescending(x => x.EffectiveFrom)
             .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<List<HairdresserWorkingHours>> GetWeekAsync(string hairdresserId, DateOnly monday, CancellationToken ct)
+    {
+        var effectiveDatesQuery = _context.HairdresserWorkingHours
+            .AsNoTracking()
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom <= monday)
+            .Select(x => x.EffectiveFrom);
+
+        DateOnly? validDate = await effectiveDatesQuery
+            .OrderByDescending(x => x)
+            .FirstOrDefaultAsync(ct);
+
+        if (validDate is null)
+            return [];
+
+        return await _context.HairdresserWorkingHours
+            .AsNoTracking()
+            .Where(x => x.HairdresserId == hairdresserId && x.EffectiveFrom == validDate.Value)
+            .OrderBy(x => x.DayOfWeek)
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<HairdresserLookupRow>> GetActiveHairdressersWithAnyFullWeekAsync(CancellationToken ct)
+    {
+        var result = await (
+            from u in _context.Users
+            where u.IsActive
+            join wh in _context.HairdresserWorkingHours on u.Id equals wh.HairdresserId
+            group wh by new { wh.HairdresserId, u.FirstName, u.LastName } into g
+            where g.Count() >= 5
+            select new HairdresserLookupRow
+            {
+                Id = g.Key.HairdresserId,
+                FirstName = g.Key.FirstName,
+                LastName = g.Key.LastName
+            }
+         )
+         .Distinct()
+         .OrderBy(x => x.LastName)
+         .ToListAsync(ct);
+
+        return result;
+    }
+
+    public async Task<bool> ExistWorkingHoursByHairdresser(string hairdresserId, CancellationToken ct)
+    {
+        return await context.HairdresserWorkingHours
+            .Where(x => x.HairdresserId == hairdresserId)
+            .Take(5)
+            .CountAsync(ct) == 5;
     }
 }
