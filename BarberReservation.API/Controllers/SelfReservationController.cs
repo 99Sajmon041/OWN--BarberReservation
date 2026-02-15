@@ -42,7 +42,7 @@ namespace BarberReservation.API.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = nameof(UserRoles.Customer))]
         public async Task<IActionResult> Create([FromBody] CreateReservationRequest request, CancellationToken ct)
         {
             var command = request.ToCreateSelfReservationCommand();

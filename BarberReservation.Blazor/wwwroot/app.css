@@ -1798,3 +1798,40 @@ select.input option {
         min-width: 100%;
     }
 }
+
+.detail-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--panel2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: .3px;
+}
+
+.detail-value {
+    font-weight: 500;
+    text-align: right;
+}
+
+.detail-value.strong {
+    font-weight: 600;
+}
+
+.actions-row {
+    border-top: none !important;
+    padding-top: 18px;
+    margin-top: 18px;
+}

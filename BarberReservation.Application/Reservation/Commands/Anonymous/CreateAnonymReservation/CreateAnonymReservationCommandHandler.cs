@@ -1,6 +1,5 @@
 ﻿using BarberReservation.Application.Common.DateHelpers;
 using BarberReservation.Application.Exceptions;
-using BarberReservation.Application.UserIdentity;
 using BarberReservation.Domain.Entities;
 using BarberReservation.Domain.Interfaces;
 using BarberReservation.Shared.Enums;
@@ -8,20 +7,28 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
-namespace BarberReservation.Application.Reservation.Commands.Self.CreateSelfReservation;
+namespace BarberReservation.Application.Reservation.Commands.Anonymous.CreateAnonymReservation;
 
-public sealed class CreateSelfReservationCommandHandler(
-    ILogger<CreateSelfReservationCommandHandler> logger,
+public sealed class CreateAnonymReservationCommandHandler(
+    ILogger<CreateAnonymReservationCommandHandler> logger,
     IUnitOfWork unitOfWork,
-    ICurrentAppUser currentAppUser,
     UserManager<ApplicationUser> userManager,
-    IEmailService emailService) : IRequestHandler<CreateSelfReservationCommand>
+    IEmailService emailService) : IRequestHandler<CreateAnonymReservationCommand>
 {
-    public async Task Handle(CreateSelfReservationCommand request, CancellationToken ct)
+    public async Task Handle(CreateAnonymReservationCommand request, CancellationToken ct)
     {
+        var email = request.CustomerEmail.Trim();
+
+        var existingUser = await userManager.FindByEmailAsync(email);
+        if (existingUser is not null)
+        {
+            logger.LogWarning("Create reservation blocked: email already exists. Email: {Email}", email);
+            throw new ConflictException("E-mail již existuje, Přihlašte se nebo použijte jiný e-mail.");
+        }
+
         var maxReservationDate = ReservationDateHelper.GetMaxReservationDate();
 
-        if (DateOnly.FromDateTime(request.StartAt )> maxReservationDate)
+        if (DateOnly.FromDateTime(request.StartAt) > maxReservationDate)
         {
             logger.LogWarning("Requested reservation date {RequestedDate} by Customer name {CustomerName} exceeds maximum allowed date.",
                 request.StartAt,
@@ -98,25 +105,9 @@ public sealed class CreateSelfReservationCommandHandler(
             throw new ConflictException("V tomto čase již existuje rezervace.");
         }
 
-        string? customerId;
-        string? customerName;
-        string? customerEmail;
-        string? customerPhone;
-
-        if (currentAppUser.User is not null)
-        {
-            customerId = currentAppUser.User.Id;
-            customerName = currentAppUser.User.FullName;
-            customerEmail = currentAppUser.User.Email ?? request.CustomerEmail;
-            customerPhone = currentAppUser.User.PhoneNumber ?? request.CustomerPhone;
-        }
-        else
-        {
-            customerId = null;
-            customerName = request.CustomerName;
-            customerEmail = request.CustomerEmail;
-            customerPhone = request.CustomerPhone;
-        }
+        string? customerName = request.CustomerName;
+        string? customerEmail = request.CustomerEmail;
+        string? customerPhone = request.CustomerPhone;
 
         var reservation = new BarberReservation.Domain.Entities.Reservation
         {
@@ -126,7 +117,7 @@ public sealed class CreateSelfReservationCommandHandler(
             EndAt = endAt,
             Status = ReservationStatus.Booked,
             CreatedAt = DateTime.Now,
-            CustomerId = customerId,
+            CustomerId = null,
             CustomerName = customerName,
             CustomerEmail = customerEmail,
             CustomerPhone = customerPhone

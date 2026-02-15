@@ -8,6 +8,7 @@
 @inject IService Service
 @inject NavigationManager Nav
 
+
 <PageTitle>Vytvoření rezervace</PageTitle>
 
 @if (!_checked)
@@ -216,7 +217,7 @@ else
                     </div>
                 </div>
 
-                <div class="divider"></div>
+                <div class="mb-12 divider"></div>
 
                 <div style="overflow:auto;">
                     <table style="width:100%; border-collapse: collapse; table-layout:fixed;">
@@ -271,14 +272,19 @@ else
 
                 @if (selectedSlotLabel is not null)
                 {
-                    <div class="divider"></div>
-                    <div class="muted">Vybraný termín: <strong>@selectedSlotLabel</strong></div>
+                    <div class="mt-12 muted">Vybraný termín: <strong>@selectedSlotLabel</strong></div>
                 }
 
-                <div class="divider"></div>
+                @if (isAnonymous)
+                {
+                    <div class="mt-12 mb-12 muted">
+                        Chcete si vytvořit účet?
+                        <a href="/register">Zaregistrujte se</a> a příště už nebudete muset znovu vyplňovat své údaje.
+                    </div>
+                }
 
-                <div class="row-between" style="margin:0;">
-                    <button type="button" class="btn btn-link" @onclick="Cancel">
+                <div class="row-between actions-row" style="margin:0;">
+                    <button type="button" class="btn btn-outline" @onclick="Cancel">
                         Zrušit
                     </button>
 
@@ -430,6 +436,7 @@ else
             StateHasChanged();
             return;
         }
+
         InitWeekStartOnLoad();
 
         if (ServiceIdQuery is not null && !services.Any(x => x.Id == ServiceIdQuery.Value))
@@ -881,13 +888,13 @@ else
     }
 
     private bool canCreateCustomer =>
-    canLookupCustomers
-    && tableEnabled
-    && !HasSelectedCustomerFromLookup
-    && !customerFieldsLocked
-    && !string.IsNullOrWhiteSpace(model.CustomerName)
-    && !string.IsNullOrWhiteSpace(model.CustomerEmail)
-    && !string.IsNullOrWhiteSpace(model.CustomerPhone);
+        canLookupCustomers
+        && tableEnabled
+        && !HasSelectedCustomerFromLookup
+        && !customerFieldsLocked
+        && !string.IsNullOrWhiteSpace(model.CustomerName)
+        && !string.IsNullOrWhiteSpace(model.CustomerEmail)
+        && !string.IsNullOrWhiteSpace(model.CustomerPhone);
 
     private async Task CreateCustomerAsync()
     {

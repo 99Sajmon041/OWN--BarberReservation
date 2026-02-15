@@ -20,7 +20,16 @@ public sealed class CreateUserCommandHandler(
     {
         ct.ThrowIfCancellationRequested();
 
-        if(request.Role == nameof(UserRoles.Admin))
+        var email = request.Email.Trim();
+
+        var existingUser = await userManager.FindByEmailAsync(email);
+        if (existingUser is not null)
+        {
+            logger.LogWarning("Create user blocked: email already exists. Email: {Email}", email);
+            throw new ConflictException("Uživatel s tímto e-mailem existuje, použijte jiný e-mail.");
+        }
+
+        if (request.Role == nameof(UserRoles.Admin))
         {
             logger.LogWarning("Admin tries create user with role Admin. Not allowed - admin is system role.");
             throw new ConflictException("Nelze vytvořit roli Admina - ta je systémově daná.");

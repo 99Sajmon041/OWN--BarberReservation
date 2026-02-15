@@ -382,6 +382,8 @@ public sealed class ReservationRepository(BarberDbContext context) : IReservatio
 
         return await _context.Reservations
             .AsNoTracking()
+            .Include(x => x.HairdresserService)
+            .ThenInclude(x => x.Service)
             .Where(x => x.HairdresserId == hairdresserId && x.Status != ReservationStatus.Canceled && x.StartAt < weekEndExclusive && x.EndAt > weekStart)
             .ToListAsync(ct);
     }

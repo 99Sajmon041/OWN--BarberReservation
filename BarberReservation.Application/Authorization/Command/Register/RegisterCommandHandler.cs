@@ -17,6 +17,15 @@ public sealed class RegisterCommandHandler(
     {
         ct.ThrowIfCancellationRequested();
 
+        var email = request.Email.Trim();
+
+        var existingUser = await userManager.FindByEmailAsync(email);
+        if (existingUser is not null)
+        {
+            logger.LogWarning("Registration blocked: email already exists. Email: {Email}", email);
+            throw new ConflictException("Uživatel s tímto e-mailem existuje. Přihlašte se nebo použijte jiný e-mail.");
+        }
+
         var user = mapper.Map<ApplicationUser>(request);
         user.IsActive = true;
         user.MustChangePassword = false;

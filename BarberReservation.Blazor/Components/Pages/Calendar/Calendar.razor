@@ -167,8 +167,10 @@
                                             var height = ToHeightPx(startLocal, endLocal);
 
                                             <div class="gcal-event reservation success"
-                                                 style="@($"top:{top}px; height:{height}px")"
-                                                 title="@($"{r.ServiceName} • {r.ClientFullName}")">
+                                                 style="@($"top:{top}px; height:{height}px; cursor:pointer;")"
+                                                 title="@($"{r.ServiceName} • {r.ClientFullName}")"
+                                                 @onclick="() => OpenReservationDetail(r)">
+
                                                 <div class="evt-row one-line">
                                                     <span class="evt-chip">Rez.</span>
                                                     <span class="evt-dot">•</span>
@@ -195,6 +197,77 @@
         </div>
     }
 </div>
+
+<UiModal @bind-Open="reservationModalOpen"
+         Title="Detail rezervace"
+         Subtitle="Pouze pro čtení">
+
+    @if (selectedReservation is not null)
+    {
+        var start = AsLocal(selectedReservation.StartAt);
+        var end = AsLocal(selectedReservation.EndAt);
+
+        <div class="detail-grid">
+
+            <div class="detail-row">
+                <div class="detail-label">Datum</div>
+                <div class="detail-value">
+                    @start.ToString("dd.MM.yyyy")
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Čas</div>
+                <div class="detail-value">
+                    @start.ToString("HH:mm")–@end.ToString("HH:mm")
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Zákazník</div>
+                <div class="detail-value strong">
+                    @selectedReservation.ClientFullName
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Služba</div>
+                <div class="detail-value">
+                    @selectedReservation.ServiceName
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Cena</div>
+                <div class="detail-value">
+                    @selectedReservation.Price.ToString("0.##") Kč
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Délka</div>
+                <div class="detail-value">
+                    @selectedReservation.DurationMinutes min
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    @Helper.GetCzechreservationStatus(selectedReservation.Status)
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Telefon</div>
+                <div class="detail-value">
+                    @selectedReservation.ClientPhone
+                </div>
+            </div>
+
+        </div>
+    }
+</UiModal>
 
 @code
 {
@@ -229,6 +302,15 @@
 
     private PeriodicTimer? timer;
     private CancellationTokenSource? timerCts;
+
+    private bool reservationModalOpen;
+    private ReservationDto? selectedReservation;
+
+    private void OpenReservationDetail(ReservationDto reservation)
+    {
+        selectedReservation = reservation;
+        reservationModalOpen = true;
+    }
 
     private string weekLabel
     {

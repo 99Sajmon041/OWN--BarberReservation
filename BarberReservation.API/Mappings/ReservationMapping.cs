@@ -1,5 +1,6 @@
 ﻿using BarberReservation.Application.Reservation.Commands.Admin.CreateAdminReservation;
 using BarberReservation.Application.Reservation.Commands.Admin.UpdateAdminReservationStatuss;
+using BarberReservation.Application.Reservation.Commands.Anonymous.CreateAnonymReservation;
 using BarberReservation.Application.Reservation.Commands.Hairdresser.CreateHairDresserReservation;
 using BarberReservation.Application.Reservation.Commands.Hairdresser.UpdateHairDresserReservationStatus;
 using BarberReservation.Application.Reservation.Commands.Self.CreateSelfReservation;
@@ -58,6 +59,19 @@ namespace BarberReservation.API.Mappings
         public static CreateSelfReservationCommand ToCreateSelfReservationCommand(this CreateReservationRequest request)
         {
             return new CreateSelfReservationCommand
+            {
+                HairdresserId = request.HairdresserId ?? "",
+                ServiceId = request.ServiceId,
+                StartAt = request.StartAt,
+                CustomerName = request.CustomerName,
+                CustomerEmail = request.CustomerEmail,
+                CustomerPhone = request.CustomerPhone
+            };
+        }
+
+        public static CreateAnonymReservationCommand ToCreateAnonymReservationCommand(this CreateReservationRequest request)
+        {
+            return new CreateAnonymReservationCommand
             {
                 HairdresserId = request.HairdresserId ?? "",
                 ServiceId = request.ServiceId,

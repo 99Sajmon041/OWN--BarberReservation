@@ -148,13 +148,26 @@ public sealed class ReservationService(IApiClient api, AuthState authState) : IR
         }
         else
         {
-            throw new ApiRequestException("Nemáte dostatečné práva pro tuto akci.", StatusCodes.Status403Forbidden);
+            throw new ApiRequestException("Nepodařilo se vytvořit rezervaci.", StatusCodes.Status403Forbidden);
         }
     }
 
     public async Task CreateReservationAsCustomerAsync(CreateReservationRequest request, CancellationToken ct)
     {
-        await api.SendAsync(HttpMethod.Post, "api/me/reservations", request, ct);
+        await authState.LoadAsync();
+        if (authState.Roles.Contains(nameof(UserRoles.Customer)))
+        {
+            await api.SendAsync(HttpMethod.Post, "api/me/reservations", request, ct);
+
+        }
+        else if (!authState.IsAuthenticated)
+        {
+            await api.SendAsync(HttpMethod.Post, "api/anonymous/reservations", request, ct);
+        }
+        else
+        {
+            throw new ApiRequestException("Nepodařilo se vytvořit rezervaci.", StatusCodes.Status403Forbidden);
+        }
     }
 
     public async Task<List<SlotDto>> GetFreeSlotsForWeekAsync(string hairdresserId, DateTime weekStartDate, int serviceId, CancellationToken ct)
